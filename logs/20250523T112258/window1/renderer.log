@@ -1,0 +1,6 @@
+2025-05-23 11:22:59.569 [info] Started local extension host with pid 36907.
+2025-05-23 11:22:59.583 [info] Started initializing default profile extensions in extensions installation folder. file:///root/.vscode/extensions
+2025-05-23 11:22:59.729 [info] Completed initializing default profile extensions in extensions installation folder. file:///root/.vscode/extensions
+2025-05-23 11:22:59.993 [info] Settings Sync: Account status changed from uninitialized to unavailable
+2025-05-23 11:23:02.381 [info] [perf] Render performance baseline is 23ms
+2025-05-23 11:25:02.872 [warning] [backup tracker] suspended, ignoring unregister event file:///home/mducrocq/repository/mviewer_hdf/mviewer/package.json 

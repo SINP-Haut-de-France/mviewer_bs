@@ -1,0 +1,8 @@
+{{#features}}
+
+    <p>Indentifiant du jeu de donnee : {{idJdd}}</p>
+    {{#infos_observations}}
+        <li>{{idSujObs}} - <a href="{{url_inpn}}" target="_blank">{{lb_nom}}</a></li>
+    {{/infos_observations}}
+  </li>
+{{/features}}
