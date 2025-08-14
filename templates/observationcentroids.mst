@@ -1,10 +1,13 @@
 {{#features}}
-  <p>Identifiant du jeu de donnée : {{idJdd}}</p>
-  <li id="{{feature_ol_uid}}" class="item" style="width:238px;">
-      <ul>
-        {{#fields_kv}}
-          <li>{{key}} : {{value}}</li>
-        {{/fields_kv}}
-      </ul>
-  </li>
+  Code INSEE: {{code_insee}}
+  <br>
+  <br>
+  Contenu brut: {{infos_observations}}
+  <br>
+  {{#infos_observations}}
+    <div>
+      - Nom vernaculaire: {{nom_vernaculaire}}<br>
+      - cd_nom: {{cd_nom}}<br>
+    </div>
+  {{/infos_observations}}
 {{/features}}
