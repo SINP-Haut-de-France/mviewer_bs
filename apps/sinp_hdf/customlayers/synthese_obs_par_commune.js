@@ -7,4 +7,4 @@ const layer =  new ol.layer.Vector({
     }),
 
 });
-new CustomLayer('obs_par_commune', layer);
+new CustomLayer('mat_synthese_obs_par_commune_full_tooltip', layer);

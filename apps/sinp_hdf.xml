@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
-    <application title="Mviewer" mouseposition="false" logo="" help="mviewer_help.html" measuretools="true" mapprint="true" exportpng="true" style="css/themes/wet_asphalt.css" togglealllayersfromtheme="true"/>
+    <application title="SINP Hauts-de-France" mouseposition="false" logo="apps/commons/img/logo/logo-irpn.png" help="mviewer_help.html" measuretools="true" mapprint="true" exportpng="true" style="css/themes/sinp_hdf.css" togglealllayersfromtheme="true"/>
     <mapoptions maxzoom="19" projection="EPSG:2154" center="700000,7000000" zoom="9" projextent="-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244" />
 
     <baselayers style="gallery">
@@ -10,15 +10,19 @@
     </baselayers>
     <proxy url=""/>
     <searchparameters bbox="false" localities="true" features="false" />
+	<extensions>
+    	<extension type="component" id="filter" path="demo/addons"/>
+	</extensions>
     <themes>
-        <theme name="Synthèse par communes"  collapsed="false" id="mat_synthese_obs_par_commune_full_tooltip" icon="fas fa-users">
-			<layer id="mat_synthese_obs_par_commune_full_tooltip" visible="false" tiled="false"
+        <theme name="Synthèse par communes"  collapsed="false" id="mat_detail_observations_par_commune" icon="fas fa-users">
+			<layer id="mat_detail_observations_par_commune" visible="false" tiled="false"
 				searchable="false" queryable="true"
-				name="Détail des observations par communes" opacity="50"
+				name="Détail des observations par communes" opacity="50" jsonfields="infos_observations"
                 infopanel="right-panel" infoformat="application/vnd.ogc.gml" featurecount="20"
 				url="http://localhost:8080/geoserver/sinp_test_dev/wms?service=WMS">
+				<template url="/apps/sinp_hdf/templates/commune_detail_light.mst"></template>
 			</layer>
-            <layer id="obs_par_commune" showintoc="false"
+            <layer id="mat_synthese_obs_par_commune_full_tooltip" showintoc="false"
 				name="Synthese Observations par communes"
 				visible="true"
 				type="customlayer"
@@ -27,5 +31,4 @@
 			</layer>
 		</theme>
     </themes>
-
 </config>

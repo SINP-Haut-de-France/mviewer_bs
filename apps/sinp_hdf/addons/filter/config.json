@@ -69,37 +69,6 @@
                 "updateOnChange": true
               }
             ]
-          },
-          {
-            "layerId": "structures",
-            "filter": [
-              {
-                "attribut": "dep",
-                "type": "button",
-                "label": "Départements",
-                "updateOnChange": true
-              },
-              {
-                "attribut": "ville",
-                "type": "textbox",
-                "label": "Ville",
-                "updateOnChange": true
-              },
-              {
-                "attribut": "form_jur",
-                "type": "button",
-                "label": "Forme juridique",
-                "updateOnChange": true,
-                "dataSeparator": ","
-              },
-              {
-                "attribut": "marche",
-                "type": "combobox",
-                "label": "Marché",
-                "dataSeparator": ";",
-                "updateOnChange": true
-              }
-            ]
           }
         ]
       }

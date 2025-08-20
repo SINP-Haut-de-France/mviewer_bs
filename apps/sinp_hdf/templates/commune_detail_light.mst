@@ -1,0 +1,19 @@
+{{#features}}
+    <h4>{{nom_commune}}</h4>
+    <div class="row">
+    {{#infos_observations}}
+        <div class="caption">
+            <span class="glyphicon glyphicon-search" aria-hidden="true"></span><h5>{{lb_nom}}</h5>
+            <a href="{{url_inpn}}" target="_blank">INPN</a>
+            <a href="https://clicnat.fr/espece/{{cd_ref}}" target="_blank">Clicnat</a>
+            <p>Nb Observations : {{nb_observations}}</p>
+        </div>
+    {{/infos_observations}}
+    </div>
+    <style>
+    .caption {
+        margin: 20px;
+    }
+    </style>
+{{/features}}
+

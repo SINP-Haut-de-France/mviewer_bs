@@ -19,7 +19,7 @@
         },
         "layers": [
           {
-            "layerId": "structure_illetrisme",
+            "layerId": "mat_synthese_obs_par_commune_full_tooltip",
             "downloadFormats": [
               { "label": "CSV", "format": "CSV" },
               { "label": "Shapefiles", "format": "SHAPE-ZIP" },

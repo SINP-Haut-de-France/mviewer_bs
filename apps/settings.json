@@ -1,1 +1,4 @@
-{}
+{
+  "base_geoserver_url": "http://localhost:8080/geoserver/sinp_test_dev/",
+  "base_g2f_server_url": "https://osm.geo2france.fr/mapcache/"
+}
