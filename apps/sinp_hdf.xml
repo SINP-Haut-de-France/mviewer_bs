@@ -14,19 +14,17 @@
     	<extension type="component" id="filter" path="demo/addons"/>
 	</extensions>
     <themes>
-        <theme name="Synthèse par communes"  collapsed="false" id="mat_detail_observations_par_commune" icon="fas fa-users">
-			<layer id="mat_detail_observations_par_commune" visible="false" tiled="false"
+        <theme name="Synthèse par communes"  collapsed="false" id="vm_referentiel_communes_hdf" icon="fas fa-users">
+			<layer id="vm_referentiel_communes_hdf" visible="true" tiled="true"
 				searchable="false" queryable="true"
-				name="Détail des observations par communes" opacity="50" jsonfields="infos_observations"
+				name="Référentiel des communes" opacity="50"
                 infopanel="right-panel" infoformat="application/vnd.ogc.gml" featurecount="20"
-				url="http://localhost:8080/geoserver/sinp_test_dev/wms?service=WMS">
+				url="http://localhost:8080/geoserver/sinp_hdf_dev/wms?service=WFS">
 				<template url="/apps/sinp_hdf/templates/commune_detail_light.mst"></template>
 			</layer>
-            <layer id="mat_synthese_obs_par_commune_full_tooltip" showintoc="false"
-				name="Synthese Observations par communes"
-				visible="true"
-				type="customlayer"
-				opacity="1" tooltip="true" tooltipcontent="Commune : {{nom_commune}}&lt;/br&gt;Nombre d&apos;observations : {{nb_observations}}&lt;/br&gt;Nombre espèces observées :{{nb_especes_distinctes}}&lt;/br&gt;Nombre d&apos;observateurs : {{nb_observateurs}}"
+            <layer id="synthese_evt_par_date_et_commune" visible="true" 
+				name="Synthese Observations par communes" searchable="true" queryable="false"
+				type="customlayer"	opacity="100" tooltip="true" tooltipcontent="{{libelle_commune}} &lt;br/&gt; Nb Observations : {{nb_observations}} &lt;br/&gt; Dernière observation : {{derniere_obs_date}}"
 				url="apps/sinp_hdf/customlayers/synthese_obs_par_commune.js">
 			</layer>
 		</theme>
