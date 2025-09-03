@@ -101,6 +101,7 @@ const filter = (function () {
    * Recour au setTimeout car aucun event ne se déclenche correctement à la fin du chargement des données
    */
   var _initFilterPanel = function () {
+    console.log("PAS LE BON FILTER  !!!!!!!");
     var options = mviewer.customComponents.filter.config.options;
     // Parse all layers to get params
     for (var [layerId, params] of _layersFiltersParams) {

@@ -23,6 +23,8 @@
     <link href="lib/font-awesome-5.13.0/css/all.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="lib/ol8.2/ol.css" type="text/css" />
     <link rel="stylesheet" href="css/mviewer.css" type="text/css" />
+    <link rel="stylesheet" href="apps/commons/css/custom_mviewer.css" type="text/css" />
+    <link rel="stylesheet" href="css/mviewer.css" type="text/css" />
     <link rel="stylesheet" href="css/print.css" type="text/css" media="print" />
     <style>
       @import url("https://fonts.googleapis.com/css?family=Roboto");
@@ -81,6 +83,11 @@
         }
       }
     </style>
+    <script src="apps/sinp_hdf/customcontrols/custom_filters/v_synthese_observation_par_commune.js"></script>
+    <script src="apps/sinp_hdf/customlayers/v_synthese_commune.js"></script>
+    <script src="apps/sinp_hdf/addons/filter/customlayers/communes.js"></script>
+    <link rel="stylesheet" href="apps/sinp_hdf/addons/filter/css/filter.css" />
+    <script src="apps/sinp_hdf/addons/filter/js/filter.js"></script>
   </head>
 
   <body>
@@ -993,6 +1000,10 @@
     <script type="text/javascript" src="js/sensorFeature.js"></script>
     <script type="module" src="js/urlParams/urlParams.js"></script>
     <script type="module" src="js/cookies/main.js"></script>
+    <script
+      type="module"
+      src="apps/sinp_hdf/customcontrols/custom_filters/v_synthese_observation_par_commune.js"></script>
+    <script type="module" src="apps/sinp_hdf/customlayers/v_synthese_commune.js"></script>
     <script>
       if (
         typeof mviewer == "undefined" ||

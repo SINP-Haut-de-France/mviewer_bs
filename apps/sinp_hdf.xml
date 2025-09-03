@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
-    <application title="SINP Hauts-de-France" mouseposition="false" logo="apps/commons/img/logo/logo-irpn.png" help="mviewer_help.html" measuretools="true" mapprint="true" exportpng="true" style="css/themes/sinp_hdf.css" togglealllayersfromtheme="true"/>
+	<application
+		id="sinp_hdf"
+		title="SINP Hauts-de-France"
+		logo='apps/commons/img/logo/logo-irpn.png'
+		help="apps/commons/sinp_aide.html"
+		showhelp="false"
+		favicon='css/themes/theme-designfr/dsfr-v1.6.0/dist/favicon/favicon.ico'
+		style='css/themes/theme-designfr/theme_designfr.css'
+	/> 
+    <!--<application  mouseposition="false" logo="apps/commons/img/logo/logo-irpn.png" help="mviewer_help.html" measuretools="true" mapprint="true" exportpng="true" style="css/themes/sinp_hdf.css" togglealllayersfromtheme="true"/>-->
     <mapoptions maxzoom="19" projection="EPSG:2154" center="700000,7000000" zoom="9" projextent="-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244" />
 
     <baselayers style="gallery">
@@ -8,25 +17,52 @@
             url="https://osm.geo2france.fr/mapcache/" layers="naturaliste" format="image/png" visible="true"
             attribution="GéoBretagne. Données : les contributeurs d'&lt;a href='https://www.openstreetmap.org/' target='_blank'>OpenStreetMap &lt;/a>,  &lt;a href='https://www.openstreetmap.org/copyright' target='_blank'>ODbL &lt;/a>" />
     </baselayers>
+	<olscompletion url="https://data.geopf.fr/geocodage/search/" type="ban" attribution="La recherche d'adresse est un service proposé par la geoplateforme IGN"/>
     <proxy url=""/>
     <searchparameters bbox="false" localities="true" features="false" />
 	<extensions>
-    	<extension type="component" id="filter" path="demo/addons"/>
+    	<extension type="component" id="filter" path="apps/sinp_hdf/addons"/>
 	</extensions>
     <themes>
-        <theme name="Synthèse par communes"  collapsed="false" id="vm_referentiel_communes_hdf" icon="fas fa-users">
-			<layer id="vm_referentiel_communes_hdf" visible="true" tiled="true"
-				searchable="false" queryable="true"
-				name="Référentiel des communes" opacity="50"
-                infopanel="right-panel" infoformat="application/vnd.ogc.gml" featurecount="20"
-				url="http://localhost:8080/geoserver/sinp_hdf_dev/wms?service=WFS">
-				<template url="/apps/sinp_hdf/templates/commune_detail_light.mst"></template>
+<!--		<theme name="Détails des observations"  collapsed="false" id="v_synthese_observation_par_commune" icon="fas fa-search-plus">-->
+<!--			<layer id="v_synthese_observation_par_commune" visible="false" tiled="false"-->
+<!--				searchable="true" queryable="true"-->
+<!--				name="Niveau communal" opacity="50" jsonfields="detailObs"-->
+<!--				customcontrol="true" customcontrolpath="apps/sinp_hdf/customcontrols/custom_filters/"-->
+<!--                infopanel="right-panel" infoformat="application/vnd.ogc.gml" featurecount="20"-->
+<!--				url="http://localhost:8080/geoserver/sinp_hdf_dev/wfs">-->
+<!--				<template url="/apps/sinp_hdf/templates/commune_detail_light.mst"></template>-->
+<!--			</layer>-->
+<!--		</theme>-->
+<!--		<theme name="Synthèse par communes"  collapsed="true" id="v_synthese_commune" icon="fa fa-search-minus">
+			<layer id="v_synthese_commune" visible="true" tiled="true"
+				searchable="true" queryable="true"
+				name="Nombre de données" opacity="50"
+				infopanel="right-panel" infoformat="application/vnd.ogc.gml" featurecount="20"
+				url="http://localhost:8080/geoserver/sinp_hdf_dev/ows">
 			</layer>
-            <layer id="synthese_evt_par_date_et_commune" visible="true" 
-				name="Synthese Observations par communes" searchable="true" queryable="false"
-				type="customlayer"	opacity="100" tooltip="true" tooltipcontent="{{libelle_commune}} &lt;br/&gt; Nb Observations : {{nb_observations}} &lt;br/&gt; Dernière observation : {{derniere_obs_date}}"
-				url="apps/sinp_hdf/customlayers/synthese_obs_par_commune.js">
+			<layer id="v_synthese_commune" visible="true" showintoc="false"
+				name="Biodiversité communale" searchable="true" queryable="false"
+				type="customlayer"	opacity="0" tooltip="true" tooltipcontent="{{libCommune}} &lt;br/&gt; Nb Observations : {{nbSujObs}} &lt;br/&gt; Dernière observation : {{derObsDat}}"
+				url="apps/sinp_hdf/customlayers/v_synthese_commune.js">
 			</layer>
-		</theme>
+		</theme>-->
+		<theme name="Communes" collapsed="true" id="Communes">
+			<layer
+				id="commune"
+				name="Commune"
+				visible="true"
+				queryable="false"
+				fields="libelle_commune"
+				aliases="libelle_commune"
+				type="customlayer"
+				style=""
+				opacity="1"
+				legendurl="img/legend/commune.png"
+				url="apps/sinp_hdf/addons/filter/customlayers/communes.js"
+				tooltip="true"
+				attribution="Source: IGN" >
+			</layer>
+    	</theme>
     </themes>
 </config>

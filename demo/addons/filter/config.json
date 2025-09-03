@@ -46,7 +46,7 @@
           }
         ]
       },
-      "filter": {
+      "sinp_hdf": {
         "tooltipPosition": "bottom-left",
         "title": "Filtrer",
         "open": true,
@@ -63,7 +63,7 @@
             "layerId": "commune",
             "filter": [
               {
-                "attribut": "nom",
+                "attribut": "libelle_commune",
                 "type": "textbox",
                 "label": "Commune",
                 "updateOnChange": true

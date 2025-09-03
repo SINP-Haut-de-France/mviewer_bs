@@ -1,0 +1,27 @@
+.scientific_name{
+    font-style: italic !important;
+    font-size: 12.5px !important;
+    margin : 0 0 0 0 !important;
+}
+
+.carousel-inner{
+    overflow-y: scroll !important;
+}
+
+#right-panel.active{
+    width: 400px !important;
+}
+
+#right-panel .carousel-inner {
+    width: 380px !important;
+}
+
+#right-panel-selector .row {
+    font-size: 11px !important;
+    margin-right: 0px !important;
+    margin-left: 0px !important;
+}
+
+.tabs-left .nav.nav-tabs{
+    margin-left: -20px !important;
+}
