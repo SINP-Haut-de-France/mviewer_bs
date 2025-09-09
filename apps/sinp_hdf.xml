@@ -20,49 +20,49 @@
 	<olscompletion url="https://data.geopf.fr/geocodage/search/" type="ban" attribution="La recherche d'adresse est un service proposé par la geoplateforme IGN"/>
     <proxy url=""/>
     <searchparameters bbox="false" localities="true" features="false" />
-	<extensions>
-    	<extension type="component" id="filter" path="apps/sinp_hdf/addons"/>
-	</extensions>
+<!--	<extensions>-->
+<!--    	<extension type="component" id="filter" path="apps/sinp_hdf/addons"/>-->
+<!--	</extensions>-->
     <themes>
-<!--		<theme name="Détails des observations"  collapsed="false" id="v_synthese_observation_par_commune" icon="fas fa-search-plus">-->
-<!--			<layer id="v_synthese_observation_par_commune" visible="false" tiled="false"-->
-<!--				searchable="true" queryable="true"-->
-<!--				name="Niveau communal" opacity="50" jsonfields="detailObs"-->
-<!--				customcontrol="true" customcontrolpath="apps/sinp_hdf/customcontrols/custom_filters/"-->
-<!--                infopanel="right-panel" infoformat="application/vnd.ogc.gml" featurecount="20"-->
-<!--				url="http://localhost:8080/geoserver/sinp_hdf_dev/wfs">-->
-<!--				<template url="/apps/sinp_hdf/templates/commune_detail_light.mst"></template>-->
+<!--		<theme name="TEST COMMUNES GEOJSON" collapsed="true" id="Communes">-->
+<!--			<layer-->
+<!--				id="commune"-->
+<!--				name="Commune"-->
+<!--				visible="true"-->
+<!--				queryable="false"-->
+<!--				fields="libelle_commune"-->
+<!--				aliases="libelle_commune"-->
+<!--				type="customlayer"-->
+<!--				style=""-->
+<!--				opacity="1"-->
+<!--				legendurl="img/legend/commune.png"-->
+<!--				url="apps/sinp_hdf/addons/filter/customlayers/communes.js"-->
+<!--				tooltip="true"-->
+<!--				attribution="Source: IGN" >-->
 <!--			</layer>-->
-<!--		</theme>-->
-<!--		<theme name="Synthèse par communes"  collapsed="true" id="v_synthese_commune" icon="fa fa-search-minus">
-			<layer id="v_synthese_commune" visible="true" tiled="true"
+<!--    	</theme>-->
+		<theme name="TEST CUSTOM CONTROL"  collapsed="true" id="v_commune_geometry_detaillee" icon="fa fa-search-minus">
+			<layer id="v_commune_geometry_detaillee" visible="true" tiled="true"
 				searchable="true" queryable="true"
 				name="Nombre de données" opacity="50"
-				infopanel="right-panel" infoformat="application/vnd.ogc.gml" featurecount="20"
-				url="http://localhost:8080/geoserver/sinp_hdf_dev/ows">
-			</layer>
-			<layer id="v_synthese_commune" visible="true" showintoc="false"
-				name="Biodiversité communale" searchable="true" queryable="false"
-				type="customlayer"	opacity="0" tooltip="true" tooltipcontent="{{libCommune}} &lt;br/&gt; Nb Observations : {{nbSujObs}} &lt;br/&gt; Dernière observation : {{derObsDat}}"
-				url="apps/sinp_hdf/customlayers/v_synthese_commune.js">
-			</layer>
-		</theme>-->
-		<theme name="Communes" collapsed="true" id="Communes">
-			<layer
-				id="commune"
-				name="Commune"
-				visible="true"
-				queryable="false"
-				fields="libelle_commune"
-				aliases="libelle_commune"
+				infopanel="right-panel" infoformat="application/vnd.ogc.gml"
 				type="customlayer"
-				style=""
-				opacity="1"
-				legendurl="img/legend/commune.png"
-				url="apps/sinp_hdf/addons/filter/customlayers/communes.js"
-				tooltip="true"
-				attribution="Source: IGN" >
+				customcontrol="true" 
+				fields="libCommune,nbSujObs,derObsDat"
+				tooltip="true" tooltipcontent="{{libCommune}} &lt;br/&gt; Nb Observations : {{nbSujObs}} &lt;br/&gt; Dernière observation : {{derObsDat}}"
+				attribution="Source: SINP Hauts-de-France"
+				metadata=""
+				metadata-csw=""
+				customcontrolpath="apps/sinp_hdf/customcontrols/geom_detaillee_filter/"
+				url="apps/sinp_hdf/customcontrols/geom_detaillee_filter/customlayer.js">
 			</layer>
-    	</theme>
+		</theme>
+<!--		<theme name="TEST CUSTOM LAYER"  collapsed="true" id="v_synthese_commune" icon="fa fa-search-minus">-->
+<!--			<layer id="v_synthese_commune" visible="true" showintoc="false"-->
+<!--				name="Biodiversité communale" searchable="true" queryable="false"-->
+<!--				type="customlayer"	opacity="0" tooltip="true" tooltipcontent="{{libCommune}} &lt;br/&gt; Nb Observations : {{nbSujObs}} &lt;br/&gt; Dernière observation : {{derObsDat}}"-->
+<!--				url="apps/sinp_hdf/customlayers/v_synthese_commune.js">-->
+<!--			</layer>-->
+<!--		</theme>-->
     </themes>
 </config>

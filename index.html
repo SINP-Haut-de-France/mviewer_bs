@@ -83,13 +83,8 @@
         }
       }
     </style>
-    <script src="apps/sinp_hdf/customcontrols/custom_filters/v_synthese_observation_par_commune.js"></script>
-    <script src="apps/sinp_hdf/customlayers/v_synthese_commune.js"></script>
-    <script src="apps/sinp_hdf/addons/filter/customlayers/communes.js"></script>
     <link rel="stylesheet" href="apps/sinp_hdf/addons/filter/css/filter.css" />
-    <script src="apps/sinp_hdf/addons/filter/js/filter.js"></script>
   </head>
-
   <body>
     <div id="loading-page">
       <div class="single4"></div>
@@ -1000,10 +995,6 @@
     <script type="text/javascript" src="js/sensorFeature.js"></script>
     <script type="module" src="js/urlParams/urlParams.js"></script>
     <script type="module" src="js/cookies/main.js"></script>
-    <script
-      type="module"
-      src="apps/sinp_hdf/customcontrols/custom_filters/v_synthese_observation_par_commune.js"></script>
-    <script type="module" src="apps/sinp_hdf/customlayers/v_synthese_commune.js"></script>
     <script>
       if (
         typeof mviewer == "undefined" ||
@@ -1014,7 +1005,6 @@
       }
     </script>
     <script type="text/javascript" src="lib/olms/8.2.1/olms.js"></script>
-
     <script type="text/javascript">
       var API = {};
       $(document).ready(function () {
@@ -1183,5 +1173,7 @@
       });
     </script>
     <script type="text/javascript" src="lib/simple-slidebar/slidebar_menu.js"></script>
+    <script src="apps/sinp_hdf/customcontrols/geom_detaillee_filter/customlayer.js"></script>
+    <script src="apps/sinp_hdf/customcontrols/geom_detaillee_filter/v_commune_geometry_detaillee.js"></script>
   </body>
 </html>
