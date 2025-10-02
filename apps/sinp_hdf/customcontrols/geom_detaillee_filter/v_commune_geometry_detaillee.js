@@ -42,8 +42,8 @@ mviewer.customControls.v_commune_geometry_detaillee = (function () {
     emptySelect(select);
     data.forEach(function (item) {
       let option = document.createElement("option");
-      option.text = item.properties[text];
-      option.value = item.properties[value];
+      option.text = item.properties["code_insee"] + " - "+ item.properties["libelle_commune"];
+      option.value = item.properties["code_insee"];
       tempOptions.push(option);
     });
     if (!numbers) {
@@ -86,7 +86,7 @@ mviewer.customControls.v_commune_geometry_detaillee = (function () {
       TYPENAME: "CP.CadastralZoning",
       CQL_FILTER: "code_insee='" + insee + "'",
     };
-    mviewer.customLayers.mviewer.v_commune_geometry_detaillee.update_commune(insee);
+    mviewer.customLayers.v_commune_geometry_detaillee.update_commune(insee);
     document.getElementById("loading-cad").style.display = "block";
     fetch(querybuilder(options)).then((response) => {
       response
@@ -125,13 +125,6 @@ mviewer.customControls.v_commune_geometry_detaillee = (function () {
       if (previousParcelle) {
         previousParcelle.setStyle(mviewer.customLayers.cad.defaultStyle);
       }
-    },
-    editSelectedParcelle: function (value) {
-      if (value) {
-        previousParcelle = value;
-        document.getElementById("parcelle-select").value = value.get("geo_parcelle");
-      }
-      return previousParcelle;
     },
   };
 })();
