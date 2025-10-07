@@ -37,12 +37,13 @@
 				fields=""
 				tooltip="true"
 				tooltipenabled="true"
-				tooltipcontent="{{nom_comm}} ({{insee}}) : {{nb_obs}} obs."
+				tooltipcontent="{{libelle_commune}} ({{code_insee}}) : {{nb_observations}} obs."
 				attribution="Source: SINP Hauts-de-France. Synthèse des observations naturalistes par commune."
 				nohighlight="false"
 				metadata=""
 				metadata-csw=""
-			>
+				infopanel="bottom-panel">
+				<template url="apps/sinp_hdf/customlayers/sopctemplate.mst"></template>
 			</layer>
 
 		</theme>

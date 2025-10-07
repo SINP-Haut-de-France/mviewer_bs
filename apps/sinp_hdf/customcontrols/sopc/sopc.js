@@ -74,9 +74,9 @@ mviewer.customControls.sopc = (function () {
   var onDptChange = function (e) {
     let selectedDpt = e.target.value;
     let options = {
-      TYPENAME: "sinp_hdf_dev:v_synthese_observation_par_commune",
-      PROPERTYNAME: "codeInsee,libCommune",
-      CQL_FILTER: "ref_dep='" + selectedDpt + "'",
+      TYPENAME: "sinp_hdf_dev:v_synthese_commune",
+      PROPERTYNAME: "code_insee,libelle_commune",
+      CQL_FILTER: "code_dpt='" + selectedDpt + "'",
     };
     let communes = _data.communes.filter(function (com) {
       return com.properties.code_insee.startsWith(selectedDpt);
