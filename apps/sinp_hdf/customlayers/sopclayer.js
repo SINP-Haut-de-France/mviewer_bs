@@ -38,45 +38,88 @@ mviewer.customLayers.sopc = (function () {
     }),
   });
 
-  var _handle = function (features) {
+  var _handle = function (features, views) {
+    var _renderHTML = function (features) {
+      var l = mviewer.getLayer("sopc");
+      var html;
+      if (l.template) {
+        html = info.templateHTMLContent(features, l);
+      } else {
+        html = info.formatHTMLContent(features, l);
+      }
+      var panel = "";
+      if (configuration.getConfiguration().mobile) {
+        panel = "modal-panel";
+      } else {
+        panel = "right-panel";
+      }
+      var view = views[panel];
+      view.layers.push({
+        id: view.layers.length + 1,
+        firstlayer: false,
+        manyfeatures: features.length > 1,
+        nbfeatures: features.length,
+        name: l.name,
+        layerid: "sopc",
+        theme_icon: l.icon,
+        html: html,
+      });
+    };
     let cad_control = mviewer.customControls.sopc;
     let src = _layer.getSource();
     src.getFeatures().every(function (feature) {
       console.log(feature);
       return true;
     });
+    if (features) {
+      _renderHTML(features);
+    }
   };
-  var update_communes = function (insee) {
+
+  var update_communes = async function (insee) {
     let options = {
       TYPENAME: "sinp_diffusion:v_synthese_commune",
       CQL_FILTER: "code_insee='" + insee + "'",
     };
-    fetch(querybuilder(options)).then((response) => {
-      response.json().then((data) => {
-        if (data.features && data.features.length > 0) {
-          let commune = new ol.format.GeoJSON().readFeature(data.features[0]);
-          let details_options = {
-            TYPENAME: "sinp_diffusion:v_obs_detaillee",
-            CQL_FILTER: "code_insee='" + insee + "'",
-          };
-          fetch(querybuilder(details_options)).then((response) => {
-            response.json().then((data) => {
-              if (data.features && data.features.length > 0) {
-                commune.details = data.features;
-              }
-            });
-          });
-          let src = _layer.getSource();
-          src.clear(); // Clear existing features
-          src.addFeature(commune); // Add the new feature
-          mviewer
-            .getMap()
-            .getView()
-            .fit(commune.getGeometry(), { duration: 500, maxZoom: 15 });
+    let details_options = {
+      TYPENAME: "sinp_diffusion:v_obs_detaillee",
+      CQL_FILTER: "code_insee='" + insee + "'",
+    };
+
+    try {
+      // Fetch commune data
+      const response = await fetch(querybuilder(options));
+      const data = await response.json();
+
+      if (data.features && data.features.length > 0) {
+        let commune = new ol.format.GeoJSON().readFeature(data.features[0]);
+
+        // Fetch observation details
+        const detailsResponse = await fetch(querybuilder(details_options));
+        const detailsData = await detailsResponse.json();
+
+        if (detailsData.features && detailsData.features.length > 0) {
+          // Extract only the properties of each feature
+          const propertiesList = detailsData.features.map(
+            (feature) => feature.properties
+          );
+          commune.set("details", propertiesList);
         }
-        $("#bottom-panel").show();
-      });
-    });
+        // Update the layer with the new feature
+        let src = _layer.getSource();
+        src.clear(); // Clear existing features
+        src.addFeature(commune); // Add the new feature
+        // Zoom to the commune geometry
+        mviewer
+          .getMap()
+          .getView()
+          .fit(commune.getGeometry(), { duration: 500, maxZoom: 15 });
+        // Activate the bottom-panel
+        $("right-panel").addClass("active");
+      }
+    } catch (error) {
+      console.error("Error updating communes:", error);
+    }
   };
   return {
     layer: _layer,

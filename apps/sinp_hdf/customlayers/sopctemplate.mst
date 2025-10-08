@@ -1,5 +1,5 @@
+
 {{#features}}
-<p>POWNEDDDD !!!!!!!!</p>
   <li id="{{feature_ol_uid}}" class="item" style="width:238px;">
       <ul>
         {{#fields_kv}}
@@ -7,4 +7,11 @@
         {{/fields_kv}}
       </ul>
   </li>
+  {{#details}}
+  <li>
+    <ul>
+        Nom vernaculaire : {{nom_vern}}
+    </ul>
+  </li>
+  {{/details}}
 {{/features}}
