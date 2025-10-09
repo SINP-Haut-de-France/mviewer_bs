@@ -51,7 +51,7 @@ mviewer.customLayers.sopc = (function () {
       if (configuration.getConfiguration().mobile) {
         panel = "modal-panel";
       } else {
-        panel = "right-panel";
+        panel = l.infopanel;
       }
       var view = views[panel];
       view.layers.push({

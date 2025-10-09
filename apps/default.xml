@@ -20,13 +20,13 @@
     <searchparameters bbox="false" localities="true" features="false" />
     <themes>
 		<theme 
-			name="TEST CUSTOM CONTROL" 
+			name="Couches SINP" 
 			collapsed="true" 
 			id="sopc" 
 			icon="fa fa-search-minus">
 			<layer 
-				id="sopc" 
-				name="Synthèse des observations par commune" 
+				id="sopc"
+				name="Communes"
 				visible="true" 
 				queryable="true"
 				type="customlayer" 

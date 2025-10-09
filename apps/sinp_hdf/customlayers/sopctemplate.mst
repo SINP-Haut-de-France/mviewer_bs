@@ -1,17 +1,25 @@
 
 {{#features}}
-  <li id="{{feature_ol_uid}}" class="item" style="width:238px;">
-      <ul>
-        {{#fields_kv}}
-          <li>{{key}} : {{value}}</li>
-        {{/fields_kv}}
-      </ul>
-  </li>
-  {{#details}}
-  <li>
-    <ul>
-        Nom vernaculaire : {{nom_vern}}
-    </ul>
-  </li>
-  {{/details}}
+<style>
+.bottom-panel .nav-tabs {
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  flex-direction: row !important;
+  justify-content: flex-start;
+}
+
+.bottom-panel .nav-tabs > li {
+  float: none !important;
+  display: inline-block !important;
+  margin-bottom: -1px;
+}
+
+.bottom-panel .nav-tabs > li > a {
+  border-radius: 4px 4px 0 0;
+  margin-right: 2px;
+}
+</style>
+<div class="bottom-panel-content">
+
+</div>
 {{/features}}
