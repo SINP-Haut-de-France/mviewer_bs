@@ -1,5 +1,6 @@
 mviewer.customControls.sopc = (function () {
-  var _data = false;
+  var _communes = false;
+  var _departements = false;
   var defaultParameters = {
     BASEURL: "http://localhost:8080/geoserver/sinp_hdf_dev/wfs",
     SERVICE: "WFS",
@@ -18,14 +19,16 @@ mviewer.customControls.sopc = (function () {
     });
     return encodeURI(url);
   };
-  var setData = function (data) {
-    _data = data;
+  var setDepartements = function (data) {
+    _departements = data;
   };
-
+  var setCommunes = function (data) {
+    _communes = data;
+  };
   /// Mise à jour de l'interface de recherche (IHM)
   ///
   var updateIHM = function () {
-    appendSelect("dep-select", _data.departements, "label", "value");
+    appendSelect("dep-select", _departements, "label", "value");
     document.getElementById("dep-select").addEventListener("change", onDptChange);
     document.getElementById("com-select").addEventListener("change", onComChange);
   };
@@ -43,8 +46,8 @@ mviewer.customControls.sopc = (function () {
     emptySelect(select);
     data.forEach(function (item) {
       let option = document.createElement("option");
-      option.text = item.properties[value] + " - " + item.properties[text];
-      option.value = item.properties[value];
+      option.text = item[value] + " - " + item[text];
+      option.value = item[value];
       tempOptions.push(option);
     });
     if (!numbers) {
@@ -78,8 +81,8 @@ mviewer.customControls.sopc = (function () {
       PROPERTYNAME: "code_insee,libelle_commune",
       CQL_FILTER: "code_dpt='" + selectedDpt + "'",
     };
-    let communes = _data.communes.filter(function (com) {
-      return com.properties.code_insee.startsWith(selectedDpt);
+    let communes = _communes.filter(function (com) {
+      return com.code_insee.startsWith(selectedDpt);
     });
     appendSelect("com-select", communes, "libelle_commune", "code_insee");
   };
@@ -95,20 +98,20 @@ mviewer.customControls.sopc = (function () {
      */
 
     init: function () {
-      if (!_data) {
+      if (!_departements) {
         fetch("apps/sinp_hdf/data/departements_hdf.json")
           .then(function (response) {
             return response.json();
           })
           .then(function (data) {
-            setData(data);
-            return fetch("apps/sinp_hdf/data/commune_simple.geojson");
+            setDepartements(data);
+            return fetch("apps/sinp_hdf/data/communes_hdf.json");
           })
           .then(function (response) {
             return response.json();
           })
           .then(function (data) {
-            setData(Object.assign(Object.assign({}, _data), { communes: data.features }));
+            setCommunes(data);
           })
           .finally(function () {
             updateIHM();

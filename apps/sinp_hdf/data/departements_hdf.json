@@ -1,34 +1,22 @@
-{
-  "departements": [
+[
     {
-      "properties": {
         "value": "02",
         "label": "Aisne"
-      }
     },
     {
-      "properties": {
         "value": "59",
         "label": "Nord"
-      }
     },
     {
-      "properties": {
         "value": "60",
         "label": "Oise"
-      }
     },
     {
-      "properties": {
         "value": "62",
         "label": "Pas-de-Calais"
-      }
     },
     {
-      "properties": {
         "value": "80",
         "label": "Somme"
-      }
     }
   ]
-}
