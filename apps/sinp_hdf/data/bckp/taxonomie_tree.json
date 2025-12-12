@@ -1,0 +1,1977 @@
+[
+  {
+    "id": 4,
+    "vernacular_name": "Vertébrés",
+    "scientific_name": null,
+    "level": 1,
+    "parent_id": null,
+    "children": [
+      {
+        "id": 5,
+        "vernacular_name": "Mammiferes",
+        "scientific_name": null,
+        "level": 2,
+        "parent_id": 4,
+        "children": [
+          {
+            "id": 93,
+            "vernacular_name": "Mammifères marins",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 5,
+            "children": [
+              {
+                "id": 272,
+                "vernacular_name": "Phoques et Morses",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 93,
+                "children": [
+                  {
+                    "id": 274,
+                    "vernacular_name": "Morses",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 272,
+                    "children": []
+                  },
+                  {
+                    "id": 275,
+                    "vernacular_name": "Phoques",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 272,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 273,
+                "vernacular_name": "Cétacés",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 93,
+                "children": [
+                  {
+                    "id": 276,
+                    "vernacular_name": "Cétacés à fanons",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 273,
+                    "children": [
+                      {
+                        "id": 277,
+                        "vernacular_name": "Rorquals",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 276,
+                        "children": []
+                      },
+                      {
+                        "id": 278,
+                        "vernacular_name": "Baleines franches",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 276,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": 279,
+                    "vernacular_name": "Cétacés à dents",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 273,
+                    "children": [
+                      {
+                        "id": 280,
+                        "vernacular_name": "Cachalots",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 279,
+                        "children": []
+                      },
+                      {
+                        "id": 281,
+                        "vernacular_name": "Baleines à bec",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 279,
+                        "children": []
+                      },
+                      {
+                        "id": 282,
+                        "vernacular_name": "Marsouins",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 279,
+                        "children": []
+                      },
+                      {
+                        "id": 283,
+                        "vernacular_name": "Dauphins, Orque et apparentés",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 279,
+                        "children": [
+                          {
+                            "id": 284,
+                            "vernacular_name": "Dauphins",
+                            "scientific_name": null,
+                            "level": 7,
+                            "parent_id": 283,
+                            "children": []
+                          },
+                          {
+                            "id": 285,
+                            "vernacular_name": "Orque",
+                            "scientific_name": null,
+                            "level": 7,
+                            "parent_id": 283,
+                            "children": []
+                          },
+                          {
+                            "id": 286,
+                            "vernacular_name": "Globicéphales et apparentés",
+                            "scientific_name": null,
+                            "level": 7,
+                            "parent_id": 283,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 259,
+            "vernacular_name": "Mammifères continentaux",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 5,
+            "children": [
+              {
+                "id": 72,
+                "vernacular_name": "Chiroptères",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 259,
+                "children": [
+                  {
+                    "id": 287,
+                    "vernacular_name": "Rhinolophes",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 72,
+                    "children": []
+                  },
+                  {
+                    "id": 288,
+                    "vernacular_name": "Molosse",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 72,
+                    "children": []
+                  },
+                  {
+                    "id": 289,
+                    "vernacular_name": "Minioptères",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 72,
+                    "children": []
+                  },
+                  {
+                    "id": 290,
+                    "vernacular_name": "Murins, Pipistrelles et apparentés",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 72,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 73,
+                "vernacular_name": "Mammifères (non volant)",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 259,
+                "children": [
+                  {
+                    "id": 76,
+                    "vernacular_name": "Carnivores",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 73,
+                    "children": [
+                      {
+                        "id": 260,
+                        "vernacular_name": "Félins",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 76,
+                        "children": []
+                      },
+                      {
+                        "id": 261,
+                        "vernacular_name": "Blaireau, Loutre et apparentés (Mustelidés)",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 76,
+                        "children": []
+                      },
+                      {
+                        "id": 262,
+                        "vernacular_name": "Loup, Renard et apparentés (Canidés)",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 76,
+                        "children": []
+                      },
+                      {
+                        "id": 263,
+                        "vernacular_name": "Ours",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 76,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": 78,
+                    "vernacular_name": "Lapin et Lièvre",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 73,
+                    "children": []
+                  },
+                  {
+                    "id": 79,
+                    "vernacular_name": "Cerfs, sanglier et apparentés",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 73,
+                    "children": [
+                      {
+                        "id": 266,
+                        "vernacular_name": "Cerfs, Chevreuil et Daim",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 79,
+                        "children": []
+                      },
+                      {
+                        "id": 267,
+                        "vernacular_name": "Bouquetin, Chamois et apparentés",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 79,
+                        "children": []
+                      },
+                      {
+                        "id": 268,
+                        "vernacular_name": "Sanglier",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 79,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": 80,
+                    "vernacular_name": "Rongeurs",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 73,
+                    "children": [
+                      {
+                        "id": 264,
+                        "vernacular_name": "Souris, mulots et apparentés",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 80,
+                        "children": []
+                      },
+                      {
+                        "id": 265,
+                        "vernacular_name": "Campagnols et Rat musqué",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 80,
+                        "children": []
+                      },
+                      {
+                        "id": 291,
+                        "vernacular_name": "Loir, Lérot et Muscardin",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 80,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": 108,
+                    "vernacular_name": "Musaraignes, hérissons et taupes",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 73,
+                    "children": [
+                      {
+                        "id": 269,
+                        "vernacular_name": "Hérissons",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 108,
+                        "children": []
+                      },
+                      {
+                        "id": 270,
+                        "vernacular_name": "Musaraignes",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 108,
+                        "children": []
+                      },
+                      {
+                        "id": 271,
+                        "vernacular_name": "Taupes et Desmans",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 108,
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "vernacular_name": "Oiseaux",
+        "scientific_name": null,
+        "level": 2,
+        "parent_id": 4,
+        "children": [
+          {
+            "id": 95,
+            "vernacular_name": "Passereaux",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": [
+              {
+                "id": 167,
+                "vernacular_name": "Corbeaux, Pies, Geais et apparentés (Corvidés)",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 95,
+                "children": []
+              },
+              {
+                "id": 168,
+                "vernacular_name": "Pies-grièches",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 95,
+                "children": []
+              },
+              {
+                "id": 169,
+                "vernacular_name": "Loriots",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 95,
+                "children": []
+              },
+              {
+                "id": 170,
+                "vernacular_name": "Mésanges et Rémiz",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 95,
+                "children": []
+              },
+              {
+                "id": 171,
+                "vernacular_name": "Fauvettes et apparentés",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 95,
+                "children": [
+                  {
+                    "id": 204,
+                    "vernacular_name": "Fauvettes",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 171,
+                    "children": []
+                  },
+                  {
+                    "id": 205,
+                    "vernacular_name": "Pouillots",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 171,
+                    "children": []
+                  },
+                  {
+                    "id": 206,
+                    "vernacular_name": "Rousserolles, Phragmites et Hypolaïs",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 171,
+                    "children": []
+                  },
+                  {
+                    "id": 207,
+                    "vernacular_name": "Locustelles",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 171,
+                    "children": []
+                  },
+                  {
+                    "id": 208,
+                    "vernacular_name": "Bouscarles et Cisticoles",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 171,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 172,
+                "vernacular_name": "Alouettes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 95,
+                "children": []
+              },
+              {
+                "id": 173,
+                "vernacular_name": "Merles, Rougegorges, Étourneaux et apparentés",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 95,
+                "children": [
+                  {
+                    "id": 209,
+                    "vernacular_name": "Merles et Grives",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 173,
+                    "children": []
+                  },
+                  {
+                    "id": 210,
+                    "vernacular_name": "Rossignols, Rougegorges et apparentés",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 173,
+                    "children": []
+                  },
+                  {
+                    "id": 211,
+                    "vernacular_name": "Gobemouches",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 173,
+                    "children": []
+                  },
+                  {
+                    "id": 212,
+                    "vernacular_name": "Etourneaux",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 173,
+                    "children": []
+                  },
+                  {
+                    "id": 213,
+                    "vernacular_name": "Cincles",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 173,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 174,
+                "vernacular_name": "Accenteurs",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 95,
+                "children": []
+              },
+              {
+                "id": 175,
+                "vernacular_name": "Pinsons, Chardonnerets et apparentés (Fringilles)",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 95,
+                "children": []
+              },
+              {
+                "id": 176,
+                "vernacular_name": "Pipits et Bergeronnettes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 95,
+                "children": [
+                  {
+                    "id": 214,
+                    "vernacular_name": "Bergeronnettes",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 176,
+                    "children": []
+                  },
+                  {
+                    "id": 215,
+                    "vernacular_name": "Pipits",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 176,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 177,
+                "vernacular_name": "Hirondelles",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 95,
+                "children": []
+              },
+              {
+                "id": 178,
+                "vernacular_name": "Bruants",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 95,
+                "children": []
+              },
+              {
+                "id": 179,
+                "vernacular_name": "Moineaux et apparentés",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 95,
+                "children": []
+              },
+              {
+                "id": 180,
+                "vernacular_name": "Sittelles, Grimpereaux et Troglodytes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 95,
+                "children": []
+              },
+              {
+                "id": 181,
+                "vernacular_name": "Roitelets",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 95,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 96,
+            "vernacular_name": "Rapaces",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": [
+              {
+                "id": 97,
+                "vernacular_name": "Rapaces diurnes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 96,
+                "children": [
+                  {
+                    "id": 197,
+                    "vernacular_name": "Faucons",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 97,
+                    "children": []
+                  },
+                  {
+                    "id": 198,
+                    "vernacular_name": "Vautours et Gypaètes",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 97,
+                    "children": []
+                  },
+                  {
+                    "id": 199,
+                    "vernacular_name": "Aigles",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 97,
+                    "children": []
+                  },
+                  {
+                    "id": 200,
+                    "vernacular_name": "Buses",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 97,
+                    "children": []
+                  },
+                  {
+                    "id": 201,
+                    "vernacular_name": "Eperviers et Autours",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 97,
+                    "children": []
+                  },
+                  {
+                    "id": 202,
+                    "vernacular_name": "Busards",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 97,
+                    "children": []
+                  },
+                  {
+                    "id": 203,
+                    "vernacular_name": "Milans",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 97,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 98,
+                "vernacular_name": "Rapaces nocturnes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 96,
+                "children": [
+                  {
+                    "id": 195,
+                    "vernacular_name": "Chouettes",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 98,
+                    "children": []
+                  },
+                  {
+                    "id": 196,
+                    "vernacular_name": "Hiboux",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 98,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 99,
+            "vernacular_name": "Limicoles",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": [
+              {
+                "id": 158,
+                "vernacular_name": "Oedicnèmes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 99,
+                "children": []
+              },
+              {
+                "id": 159,
+                "vernacular_name": "Gravelots, Pluviers et Vanneaux",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 99,
+                "children": []
+              },
+              {
+                "id": 160,
+                "vernacular_name": "Echasses, Avocettes et Huîtriers",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 99,
+                "children": []
+              },
+              {
+                "id": 161,
+                "vernacular_name": "Courlis",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 99,
+                "children": []
+              },
+              {
+                "id": 162,
+                "vernacular_name": "Barges",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 99,
+                "children": []
+              },
+              {
+                "id": 163,
+                "vernacular_name": "Bécasses et Bécassines",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 99,
+                "children": []
+              },
+              {
+                "id": 164,
+                "vernacular_name": "Bécasseaux et Tournepierres",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 99,
+                "children": []
+              },
+              {
+                "id": 165,
+                "vernacular_name": "Chevaliers",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 99,
+                "children": []
+              },
+              {
+                "id": 166,
+                "vernacular_name": "Phalaropes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 99,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 132,
+            "vernacular_name": "Canards, Oies et Cygnes",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": [
+              {
+                "id": 146,
+                "vernacular_name": "Canards",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 132,
+                "children": [
+                  {
+                    "id": 191,
+                    "vernacular_name": "Canards de surface",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 146,
+                    "children": []
+                  },
+                  {
+                    "id": 192,
+                    "vernacular_name": "Canards plongeurs",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 146,
+                    "children": []
+                  },
+                  {
+                    "id": 193,
+                    "vernacular_name": "Canards marins",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 146,
+                    "children": []
+                  },
+                  {
+                    "id": 194,
+                    "vernacular_name": "Tadornes et Ouettes",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 146,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 147,
+                "vernacular_name": "Cygnes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 132,
+                "children": []
+              },
+              {
+                "id": 148,
+                "vernacular_name": "Oies et Bernaches",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 132,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 133,
+            "vernacular_name": "Gallinacés",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": [
+              {
+                "id": 149,
+                "vernacular_name": "Cailles et Colins",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 133,
+                "children": []
+              },
+              {
+                "id": 150,
+                "vernacular_name": "Faisans",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 133,
+                "children": []
+              },
+              {
+                "id": 151,
+                "vernacular_name": "Perdrix",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 133,
+                "children": []
+              },
+              {
+                "id": 152,
+                "vernacular_name": "Tétras et Lagopèdes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 133,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 134,
+            "vernacular_name": "Pigeons et Tourterelles",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": [
+              {
+                "id": 153,
+                "vernacular_name": "Pigeons",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 134,
+                "children": []
+              },
+              {
+                "id": 154,
+                "vernacular_name": "Tourterelles",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 134,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 135,
+            "vernacular_name": "Cigognes, Hérons, Ibis et Spatules",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": [
+              {
+                "id": 155,
+                "vernacular_name": "Cigognes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 135,
+                "children": []
+              },
+              {
+                "id": 156,
+                "vernacular_name": "Hérons, Aigrettes et Butors",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 135,
+                "children": []
+              },
+              {
+                "id": 157,
+                "vernacular_name": "Ibis et Spatules",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 135,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 136,
+            "vernacular_name": "Grèbes",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": []
+          },
+          {
+            "id": 137,
+            "vernacular_name": "Flamants",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": []
+          },
+          {
+            "id": 138,
+            "vernacular_name": "Coucous",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": []
+          },
+          {
+            "id": 139,
+            "vernacular_name": "Outardes",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": []
+          },
+          {
+            "id": 140,
+            "vernacular_name": "Engoulevents et Martinets",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": []
+          },
+          {
+            "id": 141,
+            "vernacular_name": "Pics et Torcols",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": []
+          },
+          {
+            "id": 142,
+            "vernacular_name": "Perroquets et Perruches",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": []
+          },
+          {
+            "id": 143,
+            "vernacular_name": "Martin-pêcheur, Huppes, Guêpiers et Rolliers",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": []
+          },
+          {
+            "id": 144,
+            "vernacular_name": "Oiseaux marins",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": [
+              {
+                "id": 182,
+                "vernacular_name": "Mouettes et Goélands",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 144,
+                "children": []
+              },
+              {
+                "id": 183,
+                "vernacular_name": "Sternes et Guifettes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 144,
+                "children": []
+              },
+              {
+                "id": 184,
+                "vernacular_name": "Labbes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 144,
+                "children": []
+              },
+              {
+                "id": 185,
+                "vernacular_name": "Guillemots, Macareux et Pingouins (Alcidés)",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 144,
+                "children": []
+              },
+              {
+                "id": 186,
+                "vernacular_name": "Cormorans",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 144,
+                "children": []
+              },
+              {
+                "id": 187,
+                "vernacular_name": "Fous",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 144,
+                "children": []
+              },
+              {
+                "id": 188,
+                "vernacular_name": "Pélicans",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 144,
+                "children": []
+              },
+              {
+                "id": 189,
+                "vernacular_name": "Plongeons",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 144,
+                "children": []
+              },
+              {
+                "id": 190,
+                "vernacular_name": "Pétrels, Océanites et Albatros",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 144,
+                "children": [
+                  {
+                    "id": 216,
+                    "vernacular_name": "Albatros",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 190,
+                    "children": []
+                  },
+                  {
+                    "id": 217,
+                    "vernacular_name": "Océanites",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 190,
+                    "children": []
+                  },
+                  {
+                    "id": 218,
+                    "vernacular_name": "Pétrels, Puffins et Fulmars",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 190,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 145,
+            "vernacular_name": "Grues, Râles et apparentés",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 12,
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": 23,
+        "vernacular_name": "Amphibiens",
+        "scientific_name": null,
+        "level": 2,
+        "parent_id": 4,
+        "children": [
+          {
+            "id": 103,
+            "vernacular_name": "Grenouilles, Crapauds et Rainettes (Anoures)",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 23,
+            "children": [
+              {
+                "id": 231,
+                "vernacular_name": "Rainettes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 103,
+                "children": []
+              },
+              {
+                "id": 232,
+                "vernacular_name": "Grenouilles",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 103,
+                "children": []
+              },
+              {
+                "id": 233,
+                "vernacular_name": "Crapauds",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 103,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 104,
+            "vernacular_name": "Tritons, Salamandres et Spéléomantes (Urodèles)",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 23,
+            "children": [
+              {
+                "id": 228,
+                "vernacular_name": "Spéléomantes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 104,
+                "children": []
+              },
+              {
+                "id": 229,
+                "vernacular_name": "Salamandres",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 104,
+                "children": []
+              },
+              {
+                "id": 230,
+                "vernacular_name": "Tritons",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 104,
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 29,
+        "vernacular_name": "Reptiles",
+        "scientific_name": null,
+        "level": 2,
+        "parent_id": 4,
+        "children": [
+          {
+            "id": 100,
+            "vernacular_name": "Serpents",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 29,
+            "children": [
+              {
+                "id": 226,
+                "vernacular_name": "Vipères",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 100,
+                "children": []
+              },
+              {
+                "id": 227,
+                "vernacular_name": "Couleuvres",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 100,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 101,
+            "vernacular_name": "Lézards et apparentés",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 29,
+            "children": [
+              {
+                "id": 222,
+                "vernacular_name": "Gekkos",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 101,
+                "children": []
+              },
+              {
+                "id": 223,
+                "vernacular_name": "Orvets",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 101,
+                "children": []
+              },
+              {
+                "id": 224,
+                "vernacular_name": "Lézards",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 101,
+                "children": []
+              },
+              {
+                "id": 225,
+                "vernacular_name": "Scinques",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 101,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 102,
+            "vernacular_name": "Tortues",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 29,
+            "children": [
+              {
+                "id": 219,
+                "vernacular_name": "Tortues de mer",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 102,
+                "children": []
+              },
+              {
+                "id": 220,
+                "vernacular_name": "Tortues d’eau douce",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 102,
+                "children": []
+              },
+              {
+                "id": 221,
+                "vernacular_name": "Tortues terrestres",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 102,
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 33,
+        "vernacular_name": "Poissons",
+        "scientific_name": null,
+        "level": 2,
+        "parent_id": 4,
+        "children": [
+          {
+            "id": 294,
+            "vernacular_name": "Poissons à squelette osseux",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 33,
+            "children": []
+          },
+          {
+            "id": 295,
+            "vernacular_name": "Lamproies",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 33,
+            "children": []
+          },
+          {
+            "id": 300,
+            "vernacular_name": "Poissons cartilagineux",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 33,
+            "children": [
+              {
+                "id": 301,
+                "vernacular_name": "Chimères",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 300,
+                "children": []
+              },
+              {
+                "id": 302,
+                "vernacular_name": "Raies",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 300,
+                "children": []
+              },
+              {
+                "id": 303,
+                "vernacular_name": "Requins",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 300,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 36,
+    "vernacular_name": "Arthropodes",
+    "scientific_name": null,
+    "level": 1,
+    "parent_id": null,
+    "children": [
+      {
+        "id": 74,
+        "vernacular_name": "Insectes",
+        "scientific_name": null,
+        "level": 2,
+        "parent_id": 36,
+        "children": [
+          {
+            "id": 38,
+            "vernacular_name": "Lepidoptères",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 74,
+            "children": [
+              {
+                "id": 39,
+                "vernacular_name": "Rhopalocères",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 38,
+                "children": [
+                  {
+                    "id": 235,
+                    "vernacular_name": "Hespéries",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 39,
+                    "children": []
+                  },
+                  {
+                    "id": 236,
+                    "vernacular_name": "Piérides et apparentés",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 39,
+                    "children": [
+                      {
+                        "id": 241,
+                        "vernacular_name": "Piérides",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 236,
+                        "children": []
+                      },
+                      {
+                        "id": 242,
+                        "vernacular_name": "Aurores",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 236,
+                        "children": []
+                      },
+                      {
+                        "id": 243,
+                        "vernacular_name": "Citrons",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 236,
+                        "children": []
+                      },
+                      {
+                        "id": 244,
+                        "vernacular_name": "Soufrés, Soucis et Fluorés",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 236,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": 237,
+                    "vernacular_name": "Machaons, Flambés et Apollons",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 39,
+                    "children": [
+                      {
+                        "id": 245,
+                        "vernacular_name": "Machaons et Flambés",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 237,
+                        "children": []
+                      },
+                      {
+                        "id": 246,
+                        "vernacular_name": "Apollons",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 237,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": 238,
+                    "vernacular_name": "Lucines",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 39,
+                    "children": []
+                  },
+                  {
+                    "id": 239,
+                    "vernacular_name": "Azurés, Cuivrés et Théclas",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 39,
+                    "children": [
+                      {
+                        "id": 247,
+                        "vernacular_name": "Cuivrés",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 239,
+                        "children": []
+                      },
+                      {
+                        "id": 248,
+                        "vernacular_name": "Azurés",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 239,
+                        "children": []
+                      },
+                      {
+                        "id": 249,
+                        "vernacular_name": "Théclas",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 239,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": 240,
+                    "vernacular_name": "Vanesses, Mélitées et apparentés (Nymphalidés)",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 39,
+                    "children": [
+                      {
+                        "id": 250,
+                        "vernacular_name": "Vanesses",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 240,
+                        "children": []
+                      },
+                      {
+                        "id": 251,
+                        "vernacular_name": "Mélitées et Damiers",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 240,
+                        "children": []
+                      },
+                      {
+                        "id": 252,
+                        "vernacular_name": "Nacrés",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 240,
+                        "children": []
+                      },
+                      {
+                        "id": 253,
+                        "vernacular_name": "Sylvains",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 240,
+                        "children": []
+                      },
+                      {
+                        "id": 254,
+                        "vernacular_name": "Moirés, Fadets et apparentés",
+                        "scientific_name": null,
+                        "level": 6,
+                        "parent_id": 240,
+                        "children": [
+                          {
+                            "id": 255,
+                            "vernacular_name": "Moirés",
+                            "scientific_name": null,
+                            "level": 7,
+                            "parent_id": 254,
+                            "children": []
+                          },
+                          {
+                            "id": 256,
+                            "vernacular_name": "Fadets",
+                            "scientific_name": null,
+                            "level": 7,
+                            "parent_id": 254,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": 94,
+                "vernacular_name": "Hétérocères",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 38,
+                "children": [
+                  {
+                    "id": 75,
+                    "vernacular_name": "Zygènes",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 94,
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 40,
+            "vernacular_name": "Odonates",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 74,
+            "children": [
+              {
+                "id": 257,
+                "vernacular_name": "Demoiselles",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 40,
+                "children": []
+              },
+              {
+                "id": 258,
+                "vernacular_name": "Libellules",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 40,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 81,
+            "vernacular_name": "Orthoptères",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 74,
+            "children": [
+              {
+                "id": 112,
+                "vernacular_name": "Sauterelles, grillons et courtilières",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 81,
+                "children": [
+                  {
+                    "id": 306,
+                    "vernacular_name": "Sauterelles",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 112,
+                    "children": []
+                  },
+                  {
+                    "id": 307,
+                    "vernacular_name": "Grillons",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 112,
+                    "children": []
+                  },
+                  {
+                    "id": 308,
+                    "vernacular_name": "Coutilières",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 112,
+                    "children": []
+                  },
+                  {
+                    "id": 309,
+                    "vernacular_name": "Autres",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 112,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 113,
+                "vernacular_name": "Criquets",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 81,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 90,
+            "vernacular_name": "Hyménoptères",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 74,
+            "children": [
+              {
+                "id": 122,
+                "vernacular_name": "Apiformes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 90,
+                "children": []
+              },
+              {
+                "id": 123,
+                "vernacular_name": "Vespiformes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 90,
+                "children": [
+                  {
+                    "id": 131,
+                    "vernacular_name": "Fourmis",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 123,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 124,
+                "vernacular_name": "Sphéciformes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 90,
+                "children": []
+              },
+              {
+                "id": 125,
+                "vernacular_name": "Symphytes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 90,
+                "children": []
+              },
+              {
+                "id": 129,
+                "vernacular_name": "Ichneumons",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 90,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 92,
+            "vernacular_name": "Coléoptères",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 74,
+            "children": [
+              {
+                "id": 83,
+                "vernacular_name": "Coléoptères phytophages et saproxyliques",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 92,
+                "children": [
+                  {
+                    "id": 116,
+                    "vernacular_name": "Chrysomèles",
+                    "scientific_name": null,
+                    "level": 5,
+                    "parent_id": 83,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 117,
+                "vernacular_name": "Méloïdés",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 92,
+                "children": []
+              },
+              {
+                "id": 118,
+                "vernacular_name": "Lycidés",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 92,
+                "children": []
+              },
+              {
+                "id": 119,
+                "vernacular_name": "Lampyridés",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 92,
+                "children": []
+              },
+              {
+                "id": 120,
+                "vernacular_name": "Oedemèridés",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 92,
+                "children": []
+              },
+              {
+                "id": 121,
+                "vernacular_name": "Omalisidés",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 92,
+                "children": []
+              },
+              {
+                "id": 130,
+                "vernacular_name": "Géotrupes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 92,
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 114,
+            "vernacular_name": "Dermaptères",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 74,
+            "children": []
+          },
+          {
+            "id": 115,
+            "vernacular_name": "Mécoptères",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 74,
+            "children": []
+          },
+          {
+            "id": 126,
+            "vernacular_name": "Diptères",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 74,
+            "children": [
+              {
+                "id": 128,
+                "vernacular_name": "Syrphes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 126,
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 86,
+        "vernacular_name": "Arachnides",
+        "scientific_name": null,
+        "level": 2,
+        "parent_id": 36,
+        "children": [
+          {
+            "id": 89,
+            "vernacular_name": "Araignées",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 86,
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": 91,
+        "vernacular_name": "Malacostracés",
+        "scientific_name": null,
+        "level": 2,
+        "parent_id": 36,
+        "children": [
+          {
+            "id": 105,
+            "vernacular_name": "Décapodes",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 91,
+            "children": [
+              {
+                "id": 82,
+                "vernacular_name": "Ecrevisses",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 105,
+                "children": []
+              },
+              {
+                "id": 110,
+                "vernacular_name": "Crabes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 105,
+                "children": []
+              },
+              {
+                "id": 111,
+                "vernacular_name": "Crevettes",
+                "scientific_name": null,
+                "level": 4,
+                "parent_id": 105,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 85,
+    "vernacular_name": "Mollusques",
+    "scientific_name": null,
+    "level": 1,
+    "parent_id": null,
+    "children": [
+      {
+        "id": 87,
+        "vernacular_name": "Gastéropodes",
+        "scientific_name": null,
+        "level": 2,
+        "parent_id": 85,
+        "children": [
+          {
+            "id": 299,
+            "vernacular_name": "Nudibranches",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 87,
+            "children": []
+          },
+          {
+            "id": 305,
+            "vernacular_name": "Escargots et limaces",
+            "scientific_name": null,
+            "level": 3,
+            "parent_id": 87,
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": 88,
+        "vernacular_name": "Bivalves",
+        "scientific_name": null,
+        "level": 2,
+        "parent_id": 85,
+        "children": []
+      }
+    ]
+  },
+  {
+    "id": 107,
+    "vernacular_name": "Autres",
+    "scientific_name": null,
+    "level": 1,
+    "parent_id": null,
+    "children": []
+  },
+  {
+    "id": 297,
+    "vernacular_name": "Annélides",
+    "scientific_name": null,
+    "level": 1,
+    "parent_id": null,
+    "children": []
+  },
+  {
+    "id": 298,
+    "vernacular_name": "Cnidaires",
+    "scientific_name": null,
+    "level": 1,
+    "parent_id": null,
+    "children": []
+  },
+  {
+    "id": 304,
+    "vernacular_name": "Tuniciers",
+    "scientific_name": null,
+    "level": 1,
+    "parent_id": null,
+    "children": []
+  }
+]

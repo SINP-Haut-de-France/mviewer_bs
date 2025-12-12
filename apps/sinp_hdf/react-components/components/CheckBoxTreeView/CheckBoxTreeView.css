@@ -1,0 +1,95 @@
+/* Conteneur principal */
+.tree-view-ui {
+  padding: 5px;
+  max-width: 270px;
+  width: 100%;
+  font-family: Arial, sans-serif;
+}
+
+/* Header */
+.tree-header {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+/* Nœud */
+.tree-node {
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.node-content {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+  min-height: 24px; /* Hauteur minimale pour maintenir l'alignement */
+}
+
+/* Conteneur du bouton d'expansion - maintient l'espace même sans bouton */
+.expand-btn-wrapper {
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  flex-shrink: 0; /* Ne pas réduire la taille */
+}
+
+/* Bouton d'expansion - rond gris avec + à l'intérieur */
+.expand-btn-node {
+  width: 14px;
+  height: 14px;
+  min-width: 14px; /* Force la largeur minimale */
+  min-height: 14px; /* Force la hauteur minimale */
+  border-radius: 50%; /* Rond */
+  background-color: #6c757d !important; /* Gris foncé pour les nœuds expandables */
+  border: none;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: bold;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.expand-btn-node:hover {
+  background-color: #5a6268; /* Gris plus foncé au survol */
+  transform: scale(1.1); /* Légère animation */
+}
+
+.expand-btn-node:active {
+  transform: scale(0.95); /* Animation au clic */
+}
+
+/* Label avec meilleur espacement */
+.node-content label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  line-height: 20px; /* Alignement vertical avec le bouton */
+}
+
+.node-content label input[type="checkbox"] {
+  margin-right: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Gestion des enfants */
+.tree-children {
+  margin-left: 24px; /* Décalage pour aligner avec le label parent (16px bouton + 8px margin) */
+  border-left: 1px dashed #ddd;
+  padding-left: 8px;
+}/* Gestion des enfants */
+.tree-children {
+  margin-left: 22px; /* Décalage pour aligner avec le label parent (14px bouton + 8px margin) */
+  border-left: 1px dashed #ddd;
+  padding-left: 8px;
+}

@@ -1,0 +1,112 @@
+.scientific_name{
+    font-style: italic !important;
+    font-size: 12.5px !important;
+    margin : 0 0 0 0 !important;
+}
+
+.carousel-inner{
+    overflow-y: scroll !important;
+}
+
+#right-panel.active{
+    width: 400px !important;
+}
+
+#right-panel .carousel-inner {
+    width: 380px !important;
+}
+
+#right-panel-selector .row {
+    font-size: 11px !important;
+    margin-right: 0px !important;
+    margin-left: 0px !important;
+}
+
+.tabs-left .nav.nav-tabs{
+    margin-left: -20px !important;
+}
+
+.navbar {
+    min-height:80px !important;
+}
+
+#sidebar-wrapper {
+    height: 100% !important;
+    margin-top: 30px !important;
+}
+
+#legend{
+    margin-top: 30px !important;
+}
+
+.mv-logo{
+    max-height: 70px !important;
+    margin-top: -14px !important;
+}
+
+.mv-title{
+    margin-top: 14px !important;
+}
+
+/* ========================================
+   React Modal Responsive Styles
+   ======================================== */
+
+/* Limiter la modale au viewport */
+.base-modal-content {
+    margin: 0 !important;
+}
+
+/* Assurer que la modale se redimensionne correctement */
+.modal-filters-wrapper {
+    max-width: calc(90vw - 40px);
+}
+
+/* Améliorer la lisibilité des filtres dans la modale */
+.global-filters-container {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Améliorer l'adaptabilité des filtres */
+.collapsible-filter-section {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.section-content {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Assurer que les composants multisearch sont responsive */
+.multi-select-container {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.search-input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Responsive pour petit écran */
+@media (max-width: 768px) {
+    .base-modal-content {
+        max-width: 95vw !important;
+    }
+    
+    .modal-filters-wrapper {
+        max-width: calc(95vw - 30px);
+    }
+}
+
+@media (max-width: 480px) {
+    .base-modal-content {
+        max-width: 98vw !important;
+    }
+    
+    .modal-filters-wrapper {
+        max-width: calc(98vw - 20px);
+    }
+}

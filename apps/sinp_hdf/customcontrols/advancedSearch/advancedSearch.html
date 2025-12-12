@@ -1,0 +1,17 @@
+<a
+  id="btn-filters"
+  onclick="window.reactComponentManager.openFilterModal({
+    activeLayerId: 'advancedSearch',
+    onSubmit: (params) => {
+      console.log('Filtres soumis:', params);
+      if (window.mviewer?.customLayers?.advancedSearch) {
+        mviewer.customLayers.advancedSearch.get_datas(params);
+      }
+    }
+  });"
+  title="Afficher les filtres de recherche"
+  i18n="filters.open"
+  href="#">
+  <span class="glyphicon glyphicon-search"></span>
+  Lancer une recherche avancée
+</a>

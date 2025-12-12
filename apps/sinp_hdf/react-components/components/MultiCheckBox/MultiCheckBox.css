@@ -1,0 +1,99 @@
+/* Conteneur principal */
+.multi-select-container {
+  padding: 5px;
+  max-width: 270px;
+  width: 100%;
+  font-family: Arial, sans-serif;
+}
+
+/* Header */
+.multi-select-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+}
+
+.multi-select-label {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.expand-btn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* Conteneur pour les tags sélectionnés */
+.selected-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 5px 0;
+}
+
+.selected-tag {
+  background-color: #e0e0e0;
+  color: #333;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.read-only {
+  cursor: not-allowed;
+}
+
+/* Responsive (largeurs ajustées pour les conteneurs étroits) */
+@media (max-width: 300px) {
+  .multi-select-container {
+    max-width: 200px;
+  }
+
+  .multi-select-label {
+    font-size: 10px;
+  }
+
+  .expand-btn {
+    font-size: 10px;
+  }
+}
+
+/* Conteneur principal de l'arbre */
+.tree-container {
+  padding: 0; /* Suppression des marges pour éviter le décalage horizontal */
+}
+
+.tree-node {
+  margin-left: 8px; /* Réduction du décalage */
+  font-size: 10px;
+}
+
+.node-content {
+  display: flex;
+  align-items: center;
+  margin-bottom: 3px; /* Réduction des espacements des nœuds */
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.expand-btn-node {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 10px;
+  margin-right: 5px;
+}
+
+.tree-children {
+  margin-left: 12px; /* Réduction de l'indentation pour les enfants */
+}

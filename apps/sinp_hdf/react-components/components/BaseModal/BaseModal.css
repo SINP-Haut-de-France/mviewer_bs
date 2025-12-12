@@ -1,0 +1,180 @@
+/* BaseModal.css */
+
+/* Style de l'arrière-plan (overlay) */
+.base-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); /* Assombrit l'arrière-plan */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999; /* Très élevé pour être au-dessus de tout */
+}
+
+/* Overlay caché quand la modale est minimisée */
+.base-modal-overlay-hidden {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent; /* Pas d'assombrissement */
+  pointer-events: none; /* Permet les clics à travers l'overlay */
+  z-index: 999999;
+}
+
+/* Style de la modal principale */
+.base-modal-content {
+  position: fixed;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  max-width: 90%;
+  width: auto;
+  max-height: 85%;
+  overflow: hidden; /* Masque le contenu quand minimisé */
+  padding: 0;
+  z-index: 1000000; /* Encore plus élevé que l'overlay */
+  display: flex;
+  flex-direction: column;
+  transition: max-height 0.3s ease, height 0.3s ease;
+  pointer-events: auto; /* La modale reste cliquable même quand l'overlay est transparent */
+  min-width: 300px;
+  box-sizing: border-box;
+}
+
+/* Responsive pour mobile */
+@media (max-width: 768px) {
+  .base-modal-content {
+    max-width: 95%;
+    max-height: 90%;
+    min-width: 280px;
+  }
+}
+
+@media (max-width: 480px) {
+  .base-modal-content {
+    max-width: 98%;
+    max-height: 95%;
+    min-width: 260px;
+  }
+}
+
+/* En-tête de la modal */
+.base-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none; /* Désactive la sélection de texte */
+  border-bottom: 1px solid #ddd;
+  padding: 0;
+  background-color: #f8f9fa;
+  border-radius: 10px 10px 0 0;
+  flex-shrink: 0;
+}
+
+/* Zone de drag (titre) */
+.base-modal-drag-handle {
+  flex: 1;
+  padding: 15px 20px;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.base-modal-drag-handle:active {
+  cursor: grabbing;
+}
+
+.base-modal-drag-handle h2 {
+  margin: 0;
+  font-size: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+  .base-modal-drag-handle {
+    padding: 12px 15px;
+  }
+
+  .base-modal-drag-handle h2 {
+    font-size: 16px;
+  }
+}
+
+/* Conteneur des boutons */
+.base-modal-buttons {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+/* Boutons de contrôle */
+.minimize-button,
+.close-button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  font-weight: bold;
+  color: #666;
+  cursor: pointer;
+  padding: 5px 10px;
+  margin-left: 5px;
+  transition: color 0.2s, background-color 0.2s;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.minimize-button:hover {
+  color: #333;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.close-button:hover {
+  color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+@media (max-width: 480px) {
+  .minimize-button,
+  .close-button {
+    font-size: 16px;
+    padding: 4px 8px;
+  }
+}
+
+/* Corps principal de la modal */
+.base-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .base-modal-body {
+    padding: 15px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .base-modal-body {
+    padding: 12px;
+    gap: 10px;
+  }
+}

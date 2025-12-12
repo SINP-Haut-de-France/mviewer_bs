@@ -1,0 +1,81 @@
+.date-filter-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+  font-family: Arial, sans-serif;
+}
+
+.date-filter-label {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.date-filter-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.date-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.date-filter-field label {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.date-filter-field input[type="date"] {
+  padding: 6px 8px;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.date-filter-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+  font-family: Arial, sans-serif;
+}
+
+.date-filter-label {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.date-filter-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.date-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.date-filter-field label {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.date-filter-field input[type="date"] {
+  padding: 6px 8px;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.date-filter-error {
+  color: red;
+  font-size: 0.9rem;
+  font-weight: bold;
+}

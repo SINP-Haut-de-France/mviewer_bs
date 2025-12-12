@@ -1,0 +1,216 @@
+[
+  {
+    "vernacular_name": "Vertébrés",
+    "level": 1,
+    "parent_id": null,
+    "children": [
+      {
+        "vernacular_name": "Mammiferes",
+        "level": 2,
+        "children": [
+          {
+            "vernacular_name": "Mammifères marins",
+            "level": 3,
+            "children": []
+          },
+          {
+            "vernacular_name": "Mammifères continentaux",
+            "level": 3,
+            "children": [
+              {
+                "vernacular_name": "Chiroptères",
+                "level": 4,
+                "children": []
+              },
+              {
+                "vernacular_name": "Mammifères (non volant)",
+                "level": 4,
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "vernacular_name": "Oiseaux",
+        "level": 2,
+        "children": []
+      },
+      {
+        "vernacular_name": "Amphibiens",
+        "level": 2,
+        "children": []
+      },
+      {
+        "vernacular_name": "Reptiles",
+        "level": 2,
+        "children": []
+      },
+      {
+        "vernacular_name": "Poissons",
+        "level": 2,
+        "children": []
+      }
+    ]
+  },
+  {
+    "vernacular_name": "Arthropodes",
+    "level": 1,
+    "children": [
+      {
+        "vernacular_name": "Insectes",
+        "level": 2,
+        "children": [
+          {
+            "vernacular_name": "Lepidoptères",
+            "level": 3,
+            "children": [
+              {
+                "vernacular_name": "Rhopalocères",
+                "level": 4,
+                "children": []
+              },
+              {
+                "vernacular_name": "Hétérocères",
+                "level": 4,
+                "children": []
+              }
+            ]
+          },
+          {
+            "vernacular_name": "Odonates",
+            "level": 3,
+            "children": []
+          },
+          {
+            "vernacular_name": "Orthoptères",
+            "level": 3,
+            "children": []
+          },
+          {
+            "vernacular_name": "Hyménoptères",
+            "level": 3,
+            "children": []
+          },
+          {
+            "vernacular_name": "Coléoptères",
+            "level": 3,
+            "children": []
+          },
+          {
+            "vernacular_name": "Diptères",
+            "level": 3,
+            "children": []
+          },
+          {
+            "vernacular_name": "Autres insectes",
+            "level": 3,
+            "children": []
+          }
+        ]
+      },
+      {
+        "vernacular_name": "Arachnides",
+        "level": 2,
+        "children": [
+          {
+            "vernacular_name": "Araignées",
+            "level": 3,
+            "children": []
+          }
+        ]
+      },
+      {
+        "vernacular_name": "Décapodes",
+        "level": 3,
+        "children": [
+          {
+            "vernacular_name": "Ecrevisses",
+            "level": 4,
+            "children": []
+          },
+          {
+            "vernacular_name": "Crabes",
+            "level": 4,
+            "children": []
+          },
+          {
+            "vernacular_name": "Crevettes",
+            "level": 4,
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "vernacular_name": "Mollusques",
+    "level": 1,
+    "children": [
+      {
+        "id": 300,
+        "vernacular_name": "Gastéropodes",
+        "scientific_name": "Gastropoda",
+        "level": 2,
+        "parent_id": 3,
+        "children": []
+      },
+      {
+        "id": 310,
+        "vernacular_name": "Bivalves",
+        "scientific_name": "Bivalvia",
+        "level": 2,
+        "parent_id": 3,
+        "children": []
+      }
+    ]
+  },
+  {
+    "vernacular_name": "Flore/Fonge",
+    "level": 1,
+    "children": [
+      {
+        "vernacular_name": "Flore",
+        "level": 1,
+        "children": [
+          {
+            "vernacular_name": "Flore vasculaire",
+            "level": 1,
+            "children": []
+          },
+          {
+            "vernacular_name": "Mousses (Bryophites)",
+            "level": 1,
+            "children": []
+          },
+          {
+            "vernacular_name": "Algues",
+            "level": 1,
+            "children": []
+          }
+        ]
+      },
+      {
+        "vernacular_name": "Fonge",
+        "level": 1,
+        "children": [
+          {
+            "vernacular_name": "Lichens",
+            "level": 1,
+            "children": []
+          },
+          {
+            "vernacular_name": "Champignons",
+            "level": 1,
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "vernacular_name": "Autres",
+    "level": 1,
+    "children": []
+  }
+]

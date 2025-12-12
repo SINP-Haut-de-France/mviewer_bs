@@ -1,0 +1,91 @@
+.collapsible-filter-section {
+  margin-bottom: 10px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background-color: #f8f9fa;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid transparent;
+}
+
+.section-header:hover {
+  background-color: #e9ecef;
+}
+
+.collapsible-filter-section.expanded .section-header {
+  border-bottom-color: #dee2e6;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.section-title i {
+  color: #0d6efd;
+  font-size: 14px;
+}
+
+.section-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  background-color: #0d6efd;
+  color: white;
+  border-radius: 10px;
+  margin-left: 4px;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 14px;
+  transition: color 0.2s;
+  line-height: 1;
+}
+
+.toggle-btn:hover {
+  color: #495057;
+}
+
+.section-content {
+  padding: 12px;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+/* Espacement compact pour les éléments internes */
+.section-content > * {
+  margin-bottom: 8px;
+}
+
+.section-content > *:last-child {
+  margin-bottom: 0;
+}

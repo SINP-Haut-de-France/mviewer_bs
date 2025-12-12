@@ -1,0 +1,77 @@
+/**Vibe Coding amélioré d'un query builder pour le sinp_hdf (inspiré des QueryBuilder et Expression en C#)**/
+window.sinpRepository = (function () {
+  const _defaultParameters = {
+    BASEURL: `${mviewer.env?.[mviewer.env?.CURRENT_ENV]?.GEOSERVER_BASE_URL}/wfs`,
+    SERVICE: "WFS",
+    VERSION: "2.0.0",
+    REQUEST: "GetFeature",
+    outputFormat: "application/json",
+    srsName: "EPSG:2154",
+  };
+
+  /**
+   * Construit une URL GeoServer à partir des paramètres donnés
+   * @param {Object} options - Paramètres optionnels pour la requête WFS
+   * @return {string} - URL GeoServer encodée
+   */
+  const _buildQueryURL = function (options = {}) {
+    const finalParams = { ..._defaultParameters, ...options };
+    let url = finalParams.BASEURL + "?";
+
+    Object.keys(finalParams).forEach((key) => {
+      if (key !== "BASEURL" && key !== "VIEW_PARAMS") {
+        url += `&${key}=${encodeURIComponent(finalParams[key])}`;
+      }
+    });
+
+    if (finalParams.VIEW_PARAMS) {
+      const viewParams = Object.entries(finalParams.VIEW_PARAMS)
+        .map(([paramKey, paramValue]) => `${paramKey}:${paramValue}`)
+        .join(";");
+      url += `&VIEWPARAMS=${encodeURIComponent(viewParams)}`;
+    }
+
+    return url;
+  };
+
+  /**
+   * Effectue une requête WFS et retourne les données sous forme JSON
+   * @param {Object} options - Paramètres pour la requête
+   * @param {number} timeoutDuration - Durée du timeout en millisecondes (par défaut 1 minute)
+   * @return {Promise<Object>} - Résultat de la requête au format JSON
+   */
+  const _fetchGeoServerData = async function (options = {}, timeoutDuration = 60000) {
+    const url = _buildQueryURL(options);
+
+    // Créer un AbortController pour gérer le timeout
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutDuration); // Timeout après 'timeoutDuration' ms
+
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+
+      if (!response.ok) {
+        throw new Error(`Erreur lors de la requête GeoServer : ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      if (error.name === "AbortError") {
+        console.log("Requête annulée en raison du timeout");
+      } else {
+        console.error(`Erreur GeoServerAPI : ${error.message}`);
+      }
+      throw error; // Relancer l'erreur pour la gestion en aval
+    } finally {
+      clearTimeout(timeout); // Annuler le timeout une fois la requête terminée
+    }
+  };
+
+  // ========== API PUBLIQUE ==========
+
+  return {
+    // Fonctions principales
+    buildQueryURL: _buildQueryURL,
+    fetchGeoServerData: _fetchGeoServerData,
+  };
+})();

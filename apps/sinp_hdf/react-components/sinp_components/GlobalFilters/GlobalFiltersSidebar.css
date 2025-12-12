@@ -1,0 +1,372 @@
+/* 
+ * CSS pour adapter GlobalFilters au sidebar mviewer (250px de largeur)
+ * Ce fichier surcharge les styles des composants pour qu'ils s'affichent correctement dans le sidebar
+ */
+
+/* Conteneur principal dans le sidebar */
+#react-sidebar-filter-panel {
+  width: 100%;
+  max-width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  overflow-x: hidden; /* Empêcher le débordement horizontal */
+}
+
+/* Conteneur global des filtres dans le sidebar */
+#react-sidebar-filter-panel .global-filters-container {
+  width: 100%;
+  max-width: 100%;
+  font-size: 12px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Sections de filtres collapsibles */
+#react-sidebar-filter-panel .collapsible-filter-section {
+  margin-bottom: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+#react-sidebar-filter-panel .section-header {
+  padding: 8px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#react-sidebar-filter-panel .section-header i {
+  font-size: 12px;
+  width: 14px;
+}
+
+#react-sidebar-filter-panel .section-header .badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  margin-left: auto;
+}
+
+#react-sidebar-filter-panel .section-content {
+  padding: 10px;
+  background-color: #fff;
+}
+
+/* MultiSelectSearch dans le sidebar */
+#react-sidebar-filter-panel .multi-select-container {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+#react-sidebar-filter-panel .multi-select-container label {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  display: block;
+}
+
+#react-sidebar-filter-panel .multi-select-input-wrapper {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#react-sidebar-filter-panel .multi-select-input {
+  width: 100%;
+  max-width: 100%;
+  padding: 6px 8px;
+  font-size: 11px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+
+#react-sidebar-filter-panel .multi-select-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#react-sidebar-filter-panel .multi-select-item {
+  padding: 6px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+#react-sidebar-filter-panel .multi-select-item:hover {
+  background-color: #f0f0f0;
+}
+
+#react-sidebar-filter-panel .selected-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+#react-sidebar-filter-panel .selected-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  font-size: 10px;
+  background-color: #e7f3ff;
+  border: 1px solid #b3d9ff;
+  border-radius: 3px;
+}
+
+#react-sidebar-filter-panel .selected-item button {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* DateFilter dans le sidebar */
+#react-sidebar-filter-panel .date-filter-container {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+#react-sidebar-filter-panel .date-filter-container label {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  display: block;
+}
+
+#react-sidebar-filter-panel .date-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#react-sidebar-filter-panel .date-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+#react-sidebar-filter-panel .date-input-group label {
+  font-size: 10px;
+  font-weight: normal;
+  color: #666;
+}
+
+#react-sidebar-filter-panel .date-input-group input[type="date"] {
+  width: 100%;
+  padding: 5px 6px;
+  font-size: 11px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+
+/* CheckBoxTreeView dans le sidebar */
+#react-sidebar-filter-panel .tree-view-container {
+  width: 100%;
+  font-size: 11px;
+}
+
+#react-sidebar-filter-panel .tree-node {
+  padding: 3px 0;
+}
+
+#react-sidebar-filter-panel .tree-node-content {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 5px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+#react-sidebar-filter-panel .tree-node-content:hover {
+  background-color: #f5f5f5;
+}
+
+#react-sidebar-filter-panel .tree-node-content input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+#react-sidebar-filter-panel .tree-node-content label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: normal;
+  cursor: pointer;
+  flex: 1;
+}
+
+#react-sidebar-filter-panel .tree-node-children {
+  margin-left: 15px;
+  border-left: 1px solid #ddd;
+  padding-left: 5px;
+}
+
+#react-sidebar-filter-panel .tree-toggle {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  cursor: pointer;
+  color: #666;
+}
+
+/* Actions des filtres dans le sidebar */
+#react-sidebar-filter-panel .filter-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
+}
+
+#react-sidebar-filter-panel .filter-actions .btn {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+#react-sidebar-filter-panel .filter-actions .btn i {
+  font-size: 11px;
+}
+
+#react-sidebar-filter-panel .filter-actions .btn-apply {
+  background-color: #0d6efd;
+  color: white;
+}
+
+#react-sidebar-filter-panel .filter-actions .btn-apply:hover:not(:disabled) {
+  background-color: #0b5ed7;
+}
+
+#react-sidebar-filter-panel .filter-actions .btn-reset {
+  background-color: #6c757d;
+  color: white;
+}
+
+#react-sidebar-filter-panel .filter-actions .btn-reset:hover:not(:disabled) {
+  background-color: #5c636a;
+}
+
+#react-sidebar-filter-panel .filter-actions .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Spinner */
+#react-sidebar-filter-panel .fa-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Messages de chargement et d'erreur */
+#react-sidebar-filter-panel .loading-message,
+#react-sidebar-filter-panel .error-message {
+  padding: 8px;
+  font-size: 11px;
+  text-align: center;
+  color: #666;
+}
+
+#react-sidebar-filter-panel .error-message {
+  color: #dc3545;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 3px;
+}
+
+/* Scrollbar pour les listes déroulantes */
+#react-sidebar-filter-panel .multi-select-results::-webkit-scrollbar {
+  width: 6px;
+}
+
+#react-sidebar-filter-panel .multi-select-results::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#react-sidebar-filter-panel .multi-select-results::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+#react-sidebar-filter-panel .multi-select-results::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Responsive - pour les très petits écrans */
+@media (max-width: 768px) {
+  #react-sidebar-filter-panel {
+    padding: 8px;
+  }
+  
+  #react-sidebar-filter-panel .section-header {
+    padding: 6px 8px;
+  }
+  
+  #react-sidebar-filter-panel .section-content {
+    padding: 8px;
+  }
+}
+
+/* S'assurer que le conteneur reste dans le sidebar */
+#sidebar-wrapper #react-sidebar-filter-panel,
+#sidebar-wrapper #react-filters-menu {
+  position: relative;
+  width: 100%;
+  max-width: 250px;
+  box-sizing: border-box;
+}
+
+/* Forcer tous les enfants à respecter la largeur du sidebar */
+#react-sidebar-filter-panel * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* S'assurer que les actions restent dans le sidebar */
+#react-sidebar-filter-panel .filter-actions {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+#react-sidebar-filter-panel .filter-actions .btn {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}

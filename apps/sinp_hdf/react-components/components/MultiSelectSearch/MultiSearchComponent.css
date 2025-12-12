@@ -1,0 +1,314 @@
+/* Conteneur principal */
+.multi-select-container {
+  font-family: Arial, sans-serif;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Champ de recherche avec les tags */
+.search-input {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: flex-start;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 5px;
+  min-height: 40px;
+  background: white;
+  box-sizing: border-box;
+  overflow-y: auto;
+  max-height: 250px;
+}
+
+.search-input input {
+  border: none;
+  outline: none;
+  font-size: 12px;
+  flex-grow: 1;
+  padding: 5px;
+  min-width: 80px;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+/* Liste déroulante des résultats */
+.results-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  margin-top: 5px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+}
+
+/* Élément de liste */
+.result-item {
+  padding: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+  box-sizing: border-box;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.result-item:last-child {
+  border-bottom: none;
+}
+
+.result-item:hover {
+  background: #f0f0f0;
+}
+
+/* Tags */
+.selected-tag {
+  background: #007bff;
+  color: white;
+  padding: 5px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 4px;
+  font-size: 11px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.selected-tag span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.selected-tag .remove-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.selected-tag .remove-btn:hover {
+  color: #ffcccc;
+}
+
+/* Messages */
+.loading-message,
+.error-message,
+.no-results-message {
+  text-align: center;
+  padding: 10px;
+  font-size: 12px;
+  color: #666;
+  box-sizing: border-box;
+  white-space: normal;
+}
+
+/* Style pour le libellé */
+.multi-select-label {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+  color: #333;
+}
+
+.multi-select-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 10px;
+}
+
+/* ======== STYLES POUR LABEL TAXON ======== */
+
+/* Conteneur du label taxon dans les résultats */
+.result-item .taxon-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.result-item .taxon-label .taxon-vernacular {
+  font-weight: 500;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.3;
+}
+
+.result-item .taxon-label .taxon-scientific {
+  font-style: italic;
+  font-size: 11px;
+  color: #555;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.3;
+}
+
+/* Conteneur du label taxon dans les tags sélectionnés */
+.selected-tag .taxon-label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.selected-tag .taxon-label .taxon-vernacular {
+  font-weight: 500;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.selected-tag .taxon-label .taxon-scientific {
+  font-style: italic;
+  font-size: 10px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .search-input {
+    font-size: 11px;
+    min-height: 36px;
+    max-height: 200px;
+  }
+
+  .search-input input {
+    font-size: 11px;
+    padding: 4px;
+  }
+
+  .selected-tag {
+    font-size: 10px;
+    padding: 4px 6px;
+  }
+
+  .selected-tag .taxon-label .taxon-vernacular {
+    font-size: 10px;
+  }
+
+  .selected-tag .taxon-label .taxon-scientific {
+    font-size: 9px;
+  }
+
+  .result-item {
+    font-size: 11px;
+    padding: 6px;
+  }
+
+  .result-item .taxon-label .taxon-vernacular {
+    font-size: 11px;
+  }
+
+  .result-item .taxon-label .taxon-scientific {
+    font-size: 10px;
+  }
+
+  .multi-select-label {
+    font-size: 11px;
+  }
+
+  .results-list {
+    max-height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-input {
+    font-size: 10px;
+    min-height: 34px;
+    padding: 4px;
+    gap: 3px;
+    max-height: 180px;
+  }
+
+  .search-input input {
+    font-size: 10px;
+    padding: 3px;
+    min-width: 60px;
+  }
+
+  .selected-tag {
+    font-size: 9px;
+    padding: 3px 5px;
+  }
+
+  .selected-tag .taxon-label .taxon-vernacular {
+    font-size: 9px;
+  }
+
+  .selected-tag .taxon-label .taxon-scientific {
+    font-size: 8px;
+  }
+
+  .result-item {
+    font-size: 10px;
+    padding: 5px;
+  }
+
+  .result-item .taxon-label .taxon-vernacular {
+    font-size: 10px;
+  }
+
+  .result-item .taxon-label .taxon-scientific {
+    font-size: 9px;
+  }
+
+  .multi-select-label {
+    font-size: 10px;
+  }
+
+  .results-list {
+    max-height: 180px;
+  }
+}
+
+.multi-select-label {
+  font-size: 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+.expand-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 5px;
+  color: #007bff;
+}
+
+.expand-btn:hover {
+  color: #0056b3;
+}
