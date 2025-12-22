@@ -45,11 +45,11 @@ var reactInjector = (function () {
         const header = document.createElement("a");
         header.href = "#";
         header.innerHTML = `
-          <span class="fa-stack fa-lg pull-left col-sm-3">
+          <span class="fa-stack">
             <i class="fa fa-filter fa-stack-1x"></i>
-          </span>Filtres avancés
+          </span><span>Filtres avancés</span>
         `;
-        
+
         // Créer le conteneur des filtres (initialement caché)
         const filtersContainer = document.createElement("ul");
         filtersContainer.className = "nav-pills nav-stacked";
@@ -64,27 +64,28 @@ var reactInjector = (function () {
         reactContainer.style.lineHeight = "10px";
         reactContainer.style.textIndent = "10px";
         reactContainer.style.maxWidth = "inherit";
-        
+
         filtersContainer.appendChild(reactContainer);
-        
+
         // Ajouter le comportement de toggle au clic sur le header
-        header.addEventListener("click", function(e) {
+        header.addEventListener("click", function (e) {
           e.preventDefault();
           const isHidden = filtersContainer.style.display === "none";
           filtersContainer.style.display = isHidden ? "block" : "none";
           filterTheme.classList.toggle("active", isHidden);
         });
-        
+
         // Assembler la structure
         filterTheme.appendChild(header);
         filterTheme.appendChild(filtersContainer);
         filtersWrapper.appendChild(filterTheme);
-        
+
         // L'ajouter après le ul.sidebar-nav existant dans le sidebar-wrapper
         sidebarWrapper.appendChild(filtersWrapper);
 
         // Injecter le CSS pour le sidebar
-        const cssHref = "apps/sinp_hdf/react-components/sinp_components/GlobalFilters/GlobalFiltersSidebar.css";
+        const cssHref =
+          "apps/sinp_hdf/react-components/sinp_components/GlobalFilters/GlobalFiltersSidebar.css";
         if (!document.querySelector(`link[href='${cssHref}']`)) {
           const link = document.createElement("link");
           link.rel = "stylesheet";
@@ -94,16 +95,18 @@ var reactInjector = (function () {
         }
 
         console.log("React sidebar filter container injected successfully");
-        
+
         // Déclencher un événement pour notifier que le conteneur est prêt
-        window.dispatchEvent(new CustomEvent('sidebarFilterContainerReady', {
-          detail: { containerId: 'react-sidebar-filter-panel' }
-        }));
+        window.dispatchEvent(
+          new CustomEvent("sidebarFilterContainerReady", {
+            detail: { containerId: "react-sidebar-filter-panel" },
+          })
+        );
       };
 
       // Attendre que mviewer soit complètement initialisé
       const waitForMviewerInit = () => {
-        if (typeof mviewer !== 'undefined' && mviewer.customLayers) {
+        if (typeof mviewer !== "undefined" && mviewer.customLayers) {
           // mviewer est prêt, attendre que le sidebar soit complètement généré
           setTimeout(injectSidebarFilterContainer, 1000);
         } else {
@@ -112,8 +115,8 @@ var reactInjector = (function () {
       };
 
       // Démarrer l'attente
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', waitForMviewerInit);
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", waitForMviewerInit);
       } else {
         waitForMviewerInit();
       }
@@ -134,7 +137,8 @@ var reactInjector = (function () {
         document.body.appendChild(mainScript);
       }
 
-      const reactCompManagerSrc = "apps/sinp_hdf/addons/reactInjector/dist/reactComponentManager.js";
+      const reactCompManagerSrc =
+        "apps/sinp_hdf/addons/reactInjector/dist/reactComponentManager.js";
       if (!document.querySelector(`script[src='${reactCompManagerSrc}']`)) {
         const reactCompManagerScript = document.createElement("script");
         reactCompManagerScript.src = reactCompManagerSrc;

@@ -1,0 +1,146 @@
+/* ========================================
+   SINP HDF - Variables de personnalisation
+   ======================================== 
+   
+   Ce fichier permet de personnaliser l'apparence
+   de l'application SINP HDF sans modifier les
+   fichiers CSS principaux.
+   
+   Utilisez ce fichier pour :
+   - Adapter les couleurs au thème mviewer
+   - Ajuster les espacements
+   - Modifier les tailles des panneaux
+   
+   ======================================== */
+
+:root {
+  /* =================================
+     COULEURS
+     ================================= */
+  
+  /* Couleur principale (héritée du thème mviewer par défaut) */
+  /* Décommenter pour surcharger */
+  /* --sinp-primary: #191c36; */
+  
+  /* Couleur secondaire (héritée du thème mviewer par défaut) */
+  /* Décommenter pour surcharger */
+  /* --sinp-secondary: #0d6efd; */
+  
+  /* Couleur de texte atténué */
+  /* --sinp-text-muted: #6c757d; */
+  
+  /* Couleur de fond clair */
+  /* --sinp-bg-light: #f8f9fa; */
+  
+  /* Couleur des bordures */
+  /* --sinp-border-color: #dee2e6; */
+  
+  
+  /* =================================
+     DIMENSIONS
+     ================================= */
+  
+  /* Hauteur de la navbar (héritée de mviewer par défaut) */
+  /* --sinp-navbar-height: 80px; */
+  
+  /* Largeur du panneau droit sur desktop */
+  /* --sinp-rightpanel-width: 400px; */
+  
+  /* Rayon des bordures arrondies (hérité de mviewer par défaut) */
+  /* --sinp-border-radius: 4px; */
+  
+  
+  /* =================================
+     MODALES
+     ================================= */
+  
+  /* Z-index des modales */
+  /* --modal-z-index: 1055; */
+  
+  /* Z-index du backdrop */
+  /* --modal-backdrop-z-index: 1050; */
+  
+  /* Ombre des modales */
+  /* --modal-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); */
+  
+  
+  /* =================================
+     TYPOGRAPHIE
+     ================================= */
+  
+  /* Police principale (héritée de Bootstrap 5 par défaut) */
+  /* --bs-body-font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; */
+  
+  /* Taille de police de base */
+  /* --bs-body-font-size: 1rem; */
+  
+  
+  /* =================================
+     EXEMPLES D'UTILISATION
+     ================================= */
+  
+  /* Exemple 1 : Thème sombre
+  --sinp-primary: #2c3e50;
+  --sinp-secondary: #3498db;
+  --sinp-text-muted: #95a5a6;
+  --sinp-bg-light: #34495e;
+  --sinp-border-color: #7f8c8d;
+  */
+  
+  /* Exemple 2 : Thème vert
+  --sinp-primary: #27ae60;
+  --sinp-secondary: #2ecc71;
+  --sinp-text-muted: #7f8c8d;
+  --sinp-bg-light: #ecf0f1;
+  --sinp-border-color: #bdc3c7;
+  */
+  
+  /* Exemple 3 : Panneau droit plus large
+  --sinp-rightpanel-width: 500px;
+  */
+  
+  /* Exemple 4 : Bordures plus arrondies
+  --sinp-border-radius: 8px;
+  */
+}
+
+
+/* =================================
+   STYLES PERSONNALISÉS ADDITIONNELS
+   ================================= 
+   
+   Ajoutez ici vos styles personnalisés
+   qui ne modifient pas les variables
+   
+   ================================= */
+
+/* Exemple : Personnalisation du logo */
+/*
+.mv-logo {
+  filter: brightness(1.2);
+}
+*/
+
+/* Exemple : Personnalisation des titres de section */
+/*
+.section-title {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+*/
+
+/* Exemple : Personnalisation des badges */
+/*
+.section-badge {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+*/

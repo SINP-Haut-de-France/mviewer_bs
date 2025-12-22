@@ -1,81 +1,92 @@
+/* DateFilter.css - Bootstrap 5 Compatible */
+
 .date-filter-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin: 16px 0;
-  font-family: Arial, sans-serif;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  font-family: var(--bs-body-font-family, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
 }
 
+/* Label avec style form-label Bootstrap */
 .date-filter-label {
   font-size: 1rem;
-  font-weight: bold;
-  color: #333;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--bs-body-color, #212529);
 }
 
 .date-filter-inputs {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 1rem;
 }
 
 .date-filter-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.375rem;
+  flex: 1;
+  min-width: 10rem;
 }
 
 .date-filter-field label {
-  font-size: 0.9rem;
-  color: #555;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--bs-body-color, #212529);
+  margin-bottom: 0.25rem;
 }
 
+/* Input avec style form-control Bootstrap */
 .date-filter-field input[type="date"] {
-  padding: 6px 8px;
-  font-size: 0.9rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.date-filter-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 16px 0;
-  font-family: Arial, sans-serif;
-}
-
-.date-filter-label {
+  padding: 0.375rem 0.75rem;
   font-size: 1rem;
-  font-weight: bold;
-  color: #333;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--bs-body-color, #212529);
+  background-color: var(--bs-body-bg, white);
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: var(--bs-border-radius, 0.375rem);
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  appearance: none;
 }
 
-.date-filter-inputs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
+.date-filter-field input[type="date"]:focus {
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
-.date-filter-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.date-filter-field input[type="date"]:disabled {
+  background-color: var(--bs-secondary-bg, #e9ecef);
+  opacity: 1;
 }
 
-.date-filter-field label {
-  font-size: 0.9rem;
-  color: #555;
-}
-
-.date-filter-field input[type="date"] {
-  padding: 6px 8px;
-  font-size: 0.9rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
+/* Message d'erreur avec style alert Bootstrap */
 .date-filter-error {
-  color: red;
-  font-size: 0.9rem;
-  font-weight: bold;
+  color: var(--bs-danger, #dc3545);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+/* Responsive - Smartphones */
+@media (max-width: 480px) {
+  .date-filter-container {
+    gap: 0.625rem;
+    margin: 0.875rem 0;
+  }
+
+  .date-filter-inputs {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .date-filter-field {
+    min-width: 100%;
+  }
+
+  .date-filter-field input[type="date"] {
+    font-size: 1rem;
+  }
 }

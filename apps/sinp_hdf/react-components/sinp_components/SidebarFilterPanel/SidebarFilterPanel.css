@@ -1,122 +1,289 @@
+/* SidebarFilterPanel.css - Bootstrap 5 Compatible */
 
-.react-sidebar-filter-panel{
-  border:none !important;
+/* Conteneur React du panneau dans le sidebar */
+.react-sidebar-filter-panel {
+  border: none !important;
   line-height: 10px !important;
   text-indent: 10px !important;
   max-width: inherit !important;
-}
-/*css spécifique Sidebar*/
-.sidebar-filter-panel {
-  background-color: #ffffff;
-  border-bottom: 1px solid #dee2e6;
-  transition: all 0.3s ease;
   width: 100%;
 }
 
+/* Panneau principal du sidebar - S'adapte à la largeur du sidebar */
+.sidebar-filter-panel {
+  background-color: var(--bs-body-bg, white);
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* En-tête du panneau - S'adapte automatiquement */
 .filter-panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+  padding: 0.75rem 1rem;
+  background-color: var(--bs-light, #f8f9fa);
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
   cursor: pointer;
   user-select: none;
-  transition: background-color 0.2s;
+  transition: background-color 0.15s ease-in-out;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .filter-panel-header:hover {
-  background-color: #e9ecef;
+  background-color: var(--bs-gray-200, #e9ecef);
 }
 
 .filter-panel-header h4 {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #495057;
+  color: var(--bs-body-color, #212529);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .filter-panel-header h4 i {
-  color: #0d6efd;
-  font-size: 14px;
+  color: var(--bs-primary, #0d6efd);
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
+/* Bouton toggle */
 .toggle-button {
   background: none;
   border: none;
-  color: #6c757d;
+  color: var(--bs-secondary, #6c757d);
   cursor: pointer;
-  padding: 4px;
-  font-size: 14px;
-  transition: color 0.2s;
+  padding: 0.25rem;
+  font-size: 1rem;
+  transition: color 0.15s ease-in-out, transform 0.15s ease-in-out;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .toggle-button:hover {
-  color: #495057;
+  color: var(--bs-body-color, #212529);
 }
 
+.toggle-button:focus {
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  border-radius: 0.25rem;
+}
+
+/* Contenu du panneau - Scroll adaptatif */
 .filter-panel-content {
-  padding: 8px;
+  padding: 1rem;
   max-height: 70vh;
   overflow-y: auto;
   overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
+/* Scrollbar personnalisée pour cohérence Bootstrap */
 .filter-panel-content::-webkit-scrollbar {
-  width: 6px;
+  width: 0.5rem;
 }
 
 .filter-panel-content::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background-color: var(--bs-light, #f8f9fa);
 }
 
 .filter-panel-content::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 3px;
+  background-color: var(--bs-secondary, #6c757d);
+  border-radius: 0.25rem;
 }
 
 .filter-panel-content::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background-color: var(--bs-dark, #343a40);
 }
 
-/* Style compact pour les filtres dans la sidebar */
+/* Styles compacts pour les filtres dans la sidebar - S'adaptent à la largeur */
 .sidebar-filter-panel .global-filters-container {
-  font-size: 12px;
+  font-size: 0.875rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .sidebar-filter-panel .collapsible-filter-section {
-  margin-bottom: 6px;
+  margin-bottom: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sidebar-filter-panel .section-header {
+  padding: 0.625rem 0.75rem;
+}
+
+.sidebar-filter-panel .section-title {
+  font-size: 0.8125rem;
 }
 
 .sidebar-filter-panel .section-content {
-  padding: 8px;
+  padding: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
+/* Composants de recherche - Prennent toute la largeur disponible */
+.sidebar-filter-panel .multi-select-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+.sidebar-filter-panel .search-input {
+  width: 100%;
+  max-width: 100%;
+}
+
+.sidebar-filter-panel .tree-view-ui {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Actions de filtrage - Boutons adaptés */
 .sidebar-filter-panel .filter-actions {
   display: flex;
-  gap: 6px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #dee2e6;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--bs-border-color, #dee2e6);
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 .sidebar-filter-panel .filter-actions .btn {
   flex: 1;
-  padding: 6px 10px;
-  font-size: 12px;
+  min-width: calc(50% - 0.25rem);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
+/* Indicateur de profil */
 .filter-profile-indicator {
-  padding: 6px 8px;
-  background-color: #f8f9fa;
-  border-radius: 3px;
-  margin-bottom: 8px;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--bs-light, #f8f9fa);
+  border-radius: var(--bs-border-radius, 0.375rem);
+  margin-bottom: 0.75rem;
   text-align: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .filter-profile-indicator small {
-  font-size: 11px;
+  font-size: 0.8125rem;
+  color: var(--bs-secondary, #6c757d);
+}
+
+/* ========================================
+   ADAPTATION À LA LARGEUR DU SIDEBAR
+   ======================================== */
+
+/* Pour sidebar standard (250-299px) - Très compact */
+@container (max-width: 299px) {
+  .sidebar-filter-panel .filter-panel-header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .sidebar-filter-panel .filter-panel-header h4 {
+    font-size: 0.75rem;
+  }
+
+  .sidebar-filter-panel .filter-panel-content {
+    padding: 0.625rem;
+  }
+
+  .sidebar-filter-panel .filter-actions .btn {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.5rem;
+  }
+}
+
+/* Pour sidebar moyen (300-349px) - Compact */
+@container (min-width: 300px) and (max-width: 349px) {
+  .sidebar-filter-panel .filter-panel-header h4 {
+    font-size: 0.8125rem;
+  }
+
+  .sidebar-filter-panel .filter-actions .btn {
+    font-size: 0.8125rem;
+  }
+}
+
+/* Pour sidebar large (350-399px) - Confortable (défaut actuel) */
+@container (min-width: 350px) and (max-width: 399px) {
+  /* Styles par défaut déjà définis ci-dessus */
+}
+
+/* Pour sidebar très large (400px+) - Plus d'espace */
+@container (min-width: 400px) {
+  .sidebar-filter-panel .filter-panel-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .sidebar-filter-panel .filter-panel-header h4 {
+    font-size: 1rem;
+  }
+
+  .sidebar-filter-panel .filter-panel-content {
+    padding: 1.25rem;
+  }
+
+  .sidebar-filter-panel .section-content {
+    padding: 1rem;
+  }
+
+  .sidebar-filter-panel .filter-actions .btn {
+    font-size: 0.875rem;
+    padding: 0.625rem 1rem;
+  }
+
+  .sidebar-filter-panel .global-filters-container {
+    font-size: 0.9375rem;
+  }
+}
+
+/* ========================================
+   FALLBACK - Si @container n'est pas supporté
+   ======================================== */
+
+/* Fallback basé sur la variable CSS */
+@supports not (container-type: inline-size) {
+  /* Les styles par défaut s'appliqueront */
+  /* Petit sidebar */
+  :root:has(#wrapper[style*="padding-left: 250px"]) .sidebar-filter-panel .filter-panel-header h4 {
+    font-size: 0.75rem;
+  }
+
+  /* Grand sidebar */
+  :root:has(#wrapper[style*="padding-left: 400px"]) .sidebar-filter-panel .filter-panel-header h4 {
+    font-size: 1rem;
+  }
+}
+
+/* ========================================
+   RESPONSIVE - Mode mobile
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Sur mobile, le sidebar devient un menu déroulant */
+  .sidebar-filter-panel {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .filter-panel-content {
+    max-height: 60vh;
+  }
 }

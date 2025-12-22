@@ -348,7 +348,6 @@
 #sidebar-wrapper #react-filters-menu {
   position: relative;
   width: 100%;
-  max-width: 250px;
   box-sizing: border-box;
 }
 

@@ -3,11 +3,11 @@
 	<application
 		id="sinp_hdf"
 		title="SINP Hauts-de-France"
-		logo='apps/sinp_hdf/commons/img/logo/logo-obsbiodiv-hdf.png'
-		help="apps/sinp_hdf/commons/sinp_aide.html"
+		logo='apps/sinp_hdf/custom_theme/img/logo/logo-obsbiodiv-hdf.png'
+		help="apps/sinp_hdf/custom_theme/sinp_aide.html"
 		showhelp="false"
-		favicon='apps/sinp_hdf/commons/img/logo/logo-arb-vertpng.ico'
-		style='css/themes/sinp_hdf.css'
+		favicon='apps/sinp_hdf/custom_theme/img/logo/logo-arb-vertpng.ico'
+		style='apps/sinp_hdf/custom_theme/css/sinp_hdf.css'
 	/>
 	<extensions>
 		<extension type="component" id="reactInjector" path="apps/sinp_hdf/addons/"/>
