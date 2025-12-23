@@ -1,150 +1,82 @@
 [
   {
-    "uuid": "f7e6d9b6-0d72-5b8f-9d7b-2f2fbf0b4ae9",
-    "old_id": 1,
+    "uuid": "7f65fd5a-5b38-5374-adab-2906ee808ad6",
+    "code": "FAUNE",
     "vernacular_name": "Faune",
-    "scientific_name": "Fauna",
-    "filters": [
-      {
-        "type": "IN",
-        "field": "group2_inpn",
-        "values": ["Mammifères", "Oiseaux", "Poissons", "Reptiles", "Amphibiens"]
-      },
-      {
-        "type": "EQUALS",
-        "field": "group1_inpn",
-        "value": "Arthropodes"
-      },
-      {
-        "type": "EQUALS",
-        "field": "group1_inpn",
-        "value": "Mollusques"
-      }
-    ],
+    "scientific_name": "Faune",
     "level": 1,
     "parent_uuid": null,
+    "taxon_count": 0,
+    "ordre_affichage": 1,
+    "metadata": null,
     "children": [
       {
-        "uuid": "3d9f33fb-7de1-5ed6-a6cc-7b8c9a5a1f3d",
-        "old_id": 1,
+        "uuid": "9f84e449-8ac5-5d64-8df7-5f6c8d64adf1",
+        "code": "VERTEBRES",
         "vernacular_name": "Vertébrés",
         "scientific_name": "Vertebrata",
-        "filters": [
-          {
-            "type": "IN",
-            "field": "group2_inpn",
-            "values": ["Mammifères", "Oiseaux", "Poissons", "Reptiles", "Amphibiens"]
-          }
-        ],
         "level": 2,
-        "parent_uuid": "f7e6d9b6-0d72-5b8f-9d7b-2f2fbf0b4ae9",
+        "parent_uuid": "7f65fd5a-5b38-5374-adab-2906ee808ad6",
+        "taxon_count": 41030,
+        "ordre_affichage": 10,
+        "metadata": null,
         "children": [
           {
-            "uuid": "72a1f3d9-2aca-50b2-8b90-07b2f8d9a3ce",
-            "old_id": 100,
+            "uuid": "48a2c8a8-5011-5396-a444-cc1450b3f2a5",
+            "code": "MAMMIFERES",
             "vernacular_name": "Mammiferes",
             "scientific_name": "Mammalia",
-            "filters": [
-              {
-                "type": "EQUALS",
-                "field": "group2_inpn",
-                "value": "Mammifères"
-              }
-            ],
             "level": 3,
-            "parent_uuid": "3d9f33fb-7de1-5ed6-a6cc-7b8c9a5a1f3d",
+            "parent_uuid": "9f84e449-8ac5-5d64-8df7-5f6c8d64adf1",
+            "taxon_count": 3373,
+            "ordre_affichage": 100,
+            "metadata": null,
             "children": [
               {
-                "uuid": "5b9de2e1-9076-51d0-98f6-2f8b3a4c6f5a",
-                "old_id": 1000,
+                "uuid": "b3de6ee9-c357-5ab7-8800-0d03fb09a75b",
+                "code": "MAMMIFERES_MARINS",
                 "vernacular_name": "Mammifères marins",
                 "scientific_name": "Mammalia (marins)",
-                "filters": [
-                  {
-                    "type": "EQUALS",
-                    "field": "group2_inpn",
-                    "value": "Mammifères"
-                  },
-                  {
-                    "type": "IN",
-                    "field": "famille",
-                    "values": ["Delphinidae", "Balaenopteridae"]
-                  }
-                ],
                 "level": 4,
-                "parent_uuid": "72a1f3d9-2aca-50b2-8b90-07b2f8d9a3ce",
-                "children": []
+                "parent_uuid": "48a2c8a8-5011-5396-a444-cc1450b3f2a5",
+                "taxon_count": 641,
+                "ordre_affichage": 1000,
+                "metadata": null,
+                "children": null
               },
               {
-                "uuid": "d2c4b7a9-1f3e-5c8a-9b2f-4f6d7e8a9b0c",
-                "old_id": 1100,
+                "uuid": "5d9e331e-f94c-5754-af2e-d72cd6f03323",
+                "code": "MAMMIFERES_CONTINENTAUX",
                 "vernacular_name": "Mammifères continentaux",
                 "scientific_name": "Mammalia (continentaux)",
-                "filters": [
-                  {
-                    "type": "EQUALS",
-                    "field": "group2_inpn",
-                    "value": "Mammifères"
-                  },
-                  {
-                    "type": "NOT_IN",
-                    "field": "famille",
-                    "values": ["Delphinidae", "Balaenopteridae"]
-                  }
-                ],
                 "level": 4,
-                "parent_uuid": "72a1f3d9-2aca-50b2-8b90-07b2f8d9a3ce",
+                "parent_uuid": "48a2c8a8-5011-5396-a444-cc1450b3f2a5",
+                "taxon_count": 2680,
+                "ordre_affichage": 1100,
+                "metadata": null,
                 "children": [
                   {
-                    "uuid": "1e6b4a2f-8c3d-5f7a-9b6c-2a4d3e5f7b8c",
-                    "old_id": 12000,
+                    "uuid": "ab1fce67-7373-5bb5-a611-3529c00f5b10",
+                    "code": "CHIROPTERES",
                     "vernacular_name": "Chiroptères",
                     "scientific_name": "Chiroptera",
-                    "filters": [
-                      {
-                        "type": "EQUALS",
-                        "field": "group2_inpn",
-                        "value": "Mammifères"
-                      },
-                      {
-                        "type": "NOT_IN",
-                        "field": "famille",
-                        "values": ["Delphinidae", "Balaenopteridae"]
-                      },
-                      {
-                        "type": "EQUALS",
-                        "field": "ordre",
-                        "value": "Chiroptera"
-                      }
-                    ],
                     "level": 5,
-                    "parent_uuid": "d2c4b7a9-1f3e-5c8a-9b2f-4f6d7e8a9b0c",
+                    "parent_uuid": "5d9e331e-f94c-5754-af2e-d72cd6f03323",
+                    "taxon_count": 614,
+                    "ordre_affichage": 12000,
+                    "metadata": null,
                     "children": []
                   },
                   {
-                    "uuid": "a7c8d9e0-2b3f-5d6a-9c1b-3e4f5a6b7c8d",
-                    "old_id": 13000,
+                    "uuid": "3e107231-9d80-5853-a8b7-7cd9b054f9cd",
+                    "code": "MAMMIFERES_NON_VOLANTS",
                     "vernacular_name": "Mammifères (non volant)",
                     "scientific_name": "Mammalia (non Chiroptera)",
-                    "filters": [
-                      {
-                        "type": "EQUALS",
-                        "field": "group2_inpn",
-                        "value": "Mammifères"
-                      },
-                      {
-                        "type": "NOT_IN",
-                        "field": "famille",
-                        "values": ["Delphinidae", "Balaenopteridae"]
-                      },
-                      {
-                        "type": "NOT_EQUALS",
-                        "field": "ordre",
-                        "value": "Chiroptera"
-                      }
-                    ],
                     "level": 5,
-                    "parent_uuid": "d2c4b7a9-1f3e-5c8a-9b2f-4f6d7e8a9b0c",
+                    "parent_uuid": "5d9e331e-f94c-5754-af2e-d72cd6f03323",
+                    "taxon_count": 2066,
+                    "ordre_affichage": 13000,
+                    "metadata": null,
                     "children": []
                   }
                 ]
@@ -152,514 +84,337 @@
             ]
           },
           {
-            "uuid": "c3a9b6d8-4f2e-5a7c-9b1d-6f8e7a9b0c1d",
-            "old_id": 110,
+            "uuid": "b83367ac-40fd-5d1d-84bd-2a1bd040c365",
+            "code": "OISEAUX",
             "vernacular_name": "Oiseaux",
             "scientific_name": "Aves",
-            "filters": [
-              {
-                "type": "EQUALS",
-                "field": "group2_inpn",
-                "value": "Oiseaux"
-              }
-            ],
             "level": 3,
-            "parent_uuid": "3d9f33fb-7de1-5ed6-a6cc-7b8c9a5a1f3d",
-            "children": []
+            "parent_uuid": "9f84e449-8ac5-5d64-8df7-5f6c8d64adf1",
+            "taxon_count": 6451,
+            "ordre_affichage": 110,
+            "metadata": null,
+            "children": null
           },
           {
-            "uuid": "2a3b4c5d-6e7f-51a2-9b3c-4d5e6f7a8b9c",
-            "old_id": 120,
+            "uuid": "50a9e031-95a9-59f8-a8dd-5e1473de28a4",
+            "code": "AMPHIBIENS",
             "vernacular_name": "Amphibiens",
             "scientific_name": "Amphibia",
-            "filters": [
-              {
-                "type": "EQUALS",
-                "field": "group2_inpn",
-                "value": "Amphibiens"
-              }
-            ],
             "level": 3,
-            "parent_uuid": "3d9f33fb-7de1-5ed6-a6cc-7b8c9a5a1f3d",
-            "children": []
+            "parent_uuid": "9f84e449-8ac5-5d64-8df7-5f6c8d64adf1",
+            "taxon_count": 798,
+            "ordre_affichage": 120,
+            "metadata": null,
+            "children": null
           },
           {
-            "uuid": "b4c3d2e1-5f6a-5b7c-8d9e-0a1b2c3d4e5f",
-            "old_id": 130,
+            "uuid": "50b2ab6d-58f4-5420-af51-b372e6f594ba",
+            "code": "REPTILES",
             "vernacular_name": "Reptiles",
             "scientific_name": "Reptilia",
-            "filters": [
-              {
-                "type": "EQUALS",
-                "field": "group2_inpn",
-                "value": "Reptiles"
-              }
-            ],
             "level": 3,
-            "parent_uuid": "3d9f33fb-7de1-5ed6-a6cc-7b8c9a5a1f3d",
-            "children": []
+            "parent_uuid": "9f84e449-8ac5-5d64-8df7-5f6c8d64adf1",
+            "taxon_count": 2132,
+            "ordre_affichage": 130,
+            "metadata": null,
+            "children": null
           },
           {
-            "uuid": "e6f5d4c3-2b1a-5c6d-8e9f-0a1b2c3d4e6f",
-            "old_id": 140,
+            "uuid": "0d809795-67a9-50ad-98a3-3d7420340ccd",
+            "code": "POISSONS",
             "vernacular_name": "Poissons",
             "scientific_name": "Pisces",
-            "filters": [
-              {
-                "type": "EQUALS",
-                "field": "group2_inpn",
-                "value": "Poissons"
-              }
-            ],
             "level": 3,
-            "parent_uuid": "3d9f33fb-7de1-5ed6-a6cc-7b8c9a5a1f3d",
-            "children": []
+            "parent_uuid": "9f84e449-8ac5-5d64-8df7-5f6c8d64adf1",
+            "taxon_count": 28276,
+            "ordre_affichage": 140,
+            "metadata": null,
+            "children": null
           }
         ]
       },
       {
-        "uuid": "9d8c7b6a-5f4e-51a2-8b3c-2d4e5f6a7b8c",
-        "old_id": 2,
+        "uuid": "e20117fc-3680-5df4-aa54-b1b0afcbb73d",
+        "code": "ARTHROPODES",
         "vernacular_name": "Arthropodes",
         "scientific_name": "Arthropoda",
-        "filters": [
-          {
-            "type": "EQUALS",
-            "field": "group1_inpn",
-            "value": "Arthropodes"
-          }
-        ],
         "level": 2,
-        "parent_uuid": "f7e6d9b6-0d72-5b8f-9d7b-2f2fbf0b4ae9",
+        "parent_uuid": "7f65fd5a-5b38-5374-adab-2906ee808ad6",
+        "taxon_count": 261423,
+        "ordre_affichage": 20,
+        "metadata": null,
         "children": [
           {
-            "uuid": "0c1d2e3f-4a5b-50c6-9d7e-8f9a0b1c2d3e",
-            "old_id": 200,
+            "uuid": "41498d61-4447-52be-828c-ecd110498f4b",
+            "code": "INSECTES",
             "vernacular_name": "Insectes",
             "scientific_name": "Insecta",
-            "filters": [
-              {
-                "type": "EQUALS",
-                "field": "group2_inpn",
-                "value": "Insectes"
-              }
-            ],
             "level": 3,
-            "parent_uuid": "9d8c7b6a-5f4e-51a2-8b3c-2d4e5f6a7b8c",
+            "parent_uuid": "e20117fc-3680-5df4-aa54-b1b0afcbb73d",
+            "taxon_count": 211196,
+            "ordre_affichage": 200,
+            "metadata": null,
             "children": [
               {
-                "uuid": "1a2b3c4d-5e6f-50a7-9b8c-7d6e5f4a3b2c",
-                "old_id": 2000,
+                "uuid": "397ab537-1fc5-5af2-8f19-860372cb3656",
+                "code": "LEPIDOPTERES",
                 "vernacular_name": "Lepidoptères",
                 "scientific_name": "Lepidoptera",
-                "filters": [
-                  {
-                    "type": "EQUALS",
-                    "field": "group2_inpn",
-                    "value": "Insectes"
-                  },
-                  {
-                    "type": "EQUALS",
-                    "field": "group3_inpn",
-                    "value": "Lépidoptères"
-                  }
-                ],
                 "level": 4,
-                "parent_uuid": "0c1d2e3f-4a5b-50c6-9d7e-8f9a0b1c2d3e",
-                "children": []
+                "parent_uuid": "41498d61-4447-52be-828c-ecd110498f4b",
+                "taxon_count": 42941,
+                "ordre_affichage": 2000,
+                "metadata": null,
+                "children": null
               },
               {
-                "uuid": "2b3c4d5e-6f70-51a8-9c7d-6e5f4a3b2c1d",
-                "old_id": 2100,
+                "uuid": "7ac2f03a-b869-569a-b1ec-bbbfc7cc874b",
+                "code": "ODONATES",
                 "vernacular_name": "Odonates",
                 "scientific_name": "Odonata",
-                "filters": [
-                  {
-                    "type": "EQUALS",
-                    "field": "group2_inpn",
-                    "value": "Insectes"
-                  },
-                  {
-                    "type": "EQUALS",
-                    "field": "group3_inpn",
-                    "value": "Odonates"
-                  }
-                ],
                 "level": 4,
-                "parent_uuid": "0c1d2e3f-4a5b-50c6-9d7e-8f9a0b1c2d3e",
-                "children": []
+                "parent_uuid": "41498d61-4447-52be-828c-ecd110498f4b",
+                "taxon_count": 1353,
+                "ordre_affichage": 2100,
+                "metadata": null,
+                "children": null
               },
               {
-                "uuid": "3c4d5e6f-7081-51b9-8d6c-5e4f3a2b1c0d",
-                "old_id": 2200,
+                "uuid": "e90a3bc2-7fdc-51a2-927f-745614d6f4ab",
+                "code": "ORTHOPTERES",
                 "vernacular_name": "Orthoptères",
                 "scientific_name": "Orthoptera",
-                "filters": [
-                  {
-                    "type": "EQUALS",
-                    "field": "group2_inpn",
-                    "value": "Insectes"
-                  },
-                  {
-                    "type": "EQUALS",
-                    "field": "group3_inpn",
-                    "value": "Orthoptères"
-                  }
-                ],
                 "level": 4,
-                "parent_uuid": "0c1d2e3f-4a5b-50c6-9d7e-8f9a0b1c2d3e",
-                "children": []
+                "parent_uuid": "41498d61-4447-52be-828c-ecd110498f4b",
+                "taxon_count": 3092,
+                "ordre_affichage": 2200,
+                "metadata": null,
+                "children": null
               },
               {
-                "uuid": "4d5e6f70-8192-51c0-9e5d-4c3b2a1f0e9d",
-                "old_id": 2300,
+                "uuid": "c92fbb4b-dd96-57fe-9248-b45e039d5a6a",
+                "code": "HYMENOPTERES",
                 "vernacular_name": "Hyménoptères",
                 "scientific_name": "Hymenoptera",
-                "filters": [
-                  {
-                    "type": "EQUALS",
-                    "field": "group2_inpn",
-                    "value": "Insectes"
-                  },
-                  {
-                    "type": "EQUALS",
-                    "field": "group3_inpn",
-                    "value": "Hyménoptères"
-                  }
-                ],
                 "level": 4,
-                "parent_uuid": "0c1d2e3f-4a5b-50c6-9d7e-8f9a0b1c2d3e",
-                "children": []
+                "parent_uuid": "41498d61-4447-52be-828c-ecd110498f4b",
+                "taxon_count": 33796,
+                "ordre_affichage": 2300,
+                "metadata": null,
+                "children": null
               },
               {
-                "uuid": "5e6f7081-92a3-51d1-0f4e-3b2a1c0d9e8f",
-                "old_id": 2400,
+                "uuid": "f9c2a834-78b7-5586-95a2-fe27370dbdeb",
+                "code": "COLEOPTERES",
                 "vernacular_name": "Coléoptères",
                 "scientific_name": "Coleoptera",
-                "filters": [
-                  {
-                    "type": "EQUALS",
-                    "field": "group2_inpn",
-                    "value": "Insectes"
-                  },
-                  {
-                    "type": "EQUALS",
-                    "field": "group3_inpn",
-                    "value": "Coléoptères"
-                  }
-                ],
                 "level": 4,
-                "parent_uuid": "0c1d2e3f-4a5b-50c6-9d7e-8f9a0b1c2d3e",
-                "children": []
+                "parent_uuid": "41498d61-4447-52be-828c-ecd110498f4b",
+                "taxon_count": 68326,
+                "ordre_affichage": 2400,
+                "metadata": null,
+                "children": null
               },
               {
-                "uuid": "6f708192-a3b4-51e2-1f3d-2c1b0a9e8d7c",
-                "old_id": 2500,
+                "uuid": "e7734274-4c1b-5e3d-915c-c7beeeba7388",
+                "code": "DIPTERES",
                 "vernacular_name": "Diptères",
                 "scientific_name": "Diptera",
-                "filters": [
-                  {
-                    "type": "EQUALS",
-                    "field": "group2_inpn",
-                    "value": "Insectes"
-                  },
-                  {
-                    "type": "EQUALS",
-                    "field": "group3_inpn",
-                    "value": "Diptères"
-                  }
-                ],
                 "level": 4,
-                "parent_uuid": "0c1d2e3f-4a5b-50c6-9d7e-8f9a0b1c2d3e",
-                "children": []
+                "parent_uuid": "41498d61-4447-52be-828c-ecd110498f4b",
+                "taxon_count": 33685,
+                "ordre_affichage": 2500,
+                "metadata": null,
+                "children": null
               },
               {
-                "uuid": "7f8192a3-b4c5-51f3-2e4d-1c0b9a8e7d6f",
-                "old_id": 2600,
+                "uuid": "e9297de5-7ac1-5f1e-a89e-f7b70d3314c4",
+                "code": "AUTRES_INSECTES",
                 "vernacular_name": "Autres insectes",
                 "scientific_name": "Insecta (autres)",
-                "filters": [
-                  {
-                    "type": "EQUALS",
-                    "field": "group2_inpn",
-                    "value": "Insectes"
-                  },
-                  {
-                    "type": "NOT_IN",
-                    "field": "group3_inpn",
-                    "values": [
-                      "Diptères",
-                      "Coléoptères",
-                      "Orthoptères",
-                      "Odonates",
-                      "Lépidoptères"
-                    ]
-                  }
-                ],
                 "level": 4,
-                "parent_uuid": "0c1d2e3f-4a5b-50c6-9d7e-8f9a0b1c2d3e",
-                "children": []
+                "parent_uuid": "41498d61-4447-52be-828c-ecd110498f4b",
+                "taxon_count": 61799,
+                "ordre_affichage": 2600,
+                "metadata": null,
+                "children": null
               }
             ]
           },
           {
-            "uuid": "8a9b0c1d-2e3f-51a4-3b5c-6d7e8f9a0b1c",
-            "old_id": 210,
+            "uuid": "2dc8195a-f033-540e-98d0-a0c4431d1f74",
+            "code": "ARACHNIDES",
             "vernacular_name": "Arachnides",
             "scientific_name": "Arachnida",
-            "filters": [
-              {
-                "type": "EQUALS",
-                "field": "group2_inpn",
-                "value": "Arachnides"
-              }
-            ],
             "level": 3,
-            "parent_uuid": "9d8c7b6a-5f4e-51a2-8b3c-2d4e5f6a7b8c",
+            "parent_uuid": "e20117fc-3680-5df4-aa54-b1b0afcbb73d",
+            "taxon_count": 16717,
+            "ordre_affichage": 210,
+            "metadata": null,
             "children": [
               {
-                "uuid": "9b0c1d2e-3f4a-51b5-4c6d-7e8f9a0b1c2d",
-                "old_id": 2700,
+                "uuid": "76007952-c0ce-53d3-9513-5fb5ed1aa621",
+                "code": "ARAIGNEES",
                 "vernacular_name": "Araignées",
                 "scientific_name": "Araneae",
-                "filters": [
-                  {
-                    "type": "EQUALS",
-                    "field": "group2_inpn",
-                    "value": "Arachnides"
-                  },
-                  {
-                    "type": "EQUALS",
-                    "field": "group3_inpn",
-                    "value": "Araignées"
-                  }
-                ],
                 "level": 4,
-                "parent_uuid": "8a9b0c1d-2e3f-51a4-3b5c-6d7e8f9a0b1c",
-                "children": []
+                "parent_uuid": "2dc8195a-f033-540e-98d0-a0c4431d1f74",
+                "taxon_count": 7599,
+                "ordre_affichage": 2700,
+                "metadata": null,
+                "children": null
               }
             ]
           },
           {
-            "uuid": "0d1e2f30-4a5b-51c6-5d7e-8f9a0b1c2d3e",
-            "old_id": 220,
+            "uuid": "ce8e1b07-dc48-5ebe-a243-c7dc3990fb84",
+            "code": "MALACOSTRACES",
             "vernacular_name": "Malacostracés",
             "scientific_name": "Malacostraca",
-            "filters": [
-              {
-                "type": "EQUALS",
-                "field": "classe",
-                "value": "Malacostraca"
-              }
-            ],
             "level": 3,
-            "parent_uuid": "9d8c7b6a-5f4e-51a2-8b3c-2d4e5f6a7b8c",
+            "parent_uuid": "e20117fc-3680-5df4-aa54-b1b0afcbb73d",
+            "taxon_count": 19057,
+            "ordre_affichage": 220,
+            "metadata": null,
             "children": [
               {
-                "uuid": "1e2f3041-5a6b-51d7-6e8f-9a0b1c2d3e4f",
-                "old_id": 2800,
+                "uuid": "abbf4124-a775-5bb5-bc4d-be30808783f2",
+                "code": "DECAPODES",
                 "vernacular_name": "Décapodes",
                 "scientific_name": "Decapoda",
-                "filters": [
-                  {
-                    "type": "EQUALS",
-                    "field": "classe",
-                    "value": "Malacostraca"
-                  },
-                  {
-                    "type": "EQUALS",
-                    "field": "group3_inpn",
-                    "value": "Décapodes"
-                  }
-                ],
                 "level": 4,
-                "parent_uuid": "0d1e2f30-4a5b-51c6-5d7e-8f9a0b1c2d3e",
-                "children": []
+                "parent_uuid": "ce8e1b07-dc48-5ebe-a243-c7dc3990fb84",
+                "taxon_count": 11077,
+                "ordre_affichage": 2800,
+                "metadata": null,
+                "children": null
               }
             ]
           }
         ]
       },
       {
-        "uuid": "2f3e4d5c-6b7a-51e8-7c9d-0a1b2c3d4e5f",
-        "old_id": 3,
+        "uuid": "d5cd667b-a4a8-59a6-a107-6d5254a7642d",
+        "code": "MOLLUSQUES",
         "vernacular_name": "Mollusques",
         "scientific_name": "Mollusca",
-        "filters": [
-          {
-            "type": "EQUALS",
-            "field": "group1_inpn",
-            "value": "Mollusques"
-          }
-        ],
         "level": 2,
-        "parent_uuid": "f7e6d9b6-0d72-5b8f-9d7b-2f2fbf0b4ae9",
+        "parent_uuid": "7f65fd5a-5b38-5374-adab-2906ee808ad6",
+        "taxon_count": 45000,
+        "ordre_affichage": 30,
+        "metadata": null,
         "children": [
           {
-            "uuid": "3f4e5d6c-7b8a-51f9-8c0d-1a2b3c4d5e6f",
-            "old_id": 300,
+            "uuid": "5b50697c-d751-5c97-a1da-0319f244c9d7",
+            "code": "GASTEROPODES",
             "vernacular_name": "Gastéropodes",
             "scientific_name": "Gastropoda",
-            "filters": [
-              {
-                "type": "EQUALS",
-                "field": "group1_inpn",
-                "value": "Mollusques"
-              },
-              {
-                "type": "EQUALS",
-                "field": "group2_inpn",
-                "value": "Gastéropodes"
-              }
-            ],
             "level": 3,
-            "parent_uuid": "2f3e4d5c-6b7a-51e8-7c9d-0a1b2c3d4e5f",
-            "children": []
+            "parent_uuid": "d5cd667b-a4a8-59a6-a107-6d5254a7642d",
+            "taxon_count": 34987,
+            "ordre_affichage": 300,
+            "metadata": null,
+            "children": null
           },
           {
-            "uuid": "4f5e6d7c-8b9a-51f0-9d1e-2a3b4c5d6e7f",
-            "old_id": 310,
+            "uuid": "5d581006-c266-5fef-90b3-0191e74b6a83",
+            "code": "BIVALVES",
             "vernacular_name": "Bivalves",
             "scientific_name": "Bivalvia",
-            "filters": [
-              {
-                "type": "EQUALS",
-                "field": "group1_inpn",
-                "value": "Mollusques"
-              },
-              {
-                "type": "EQUALS",
-                "field": "group2_inpn",
-                "value": "Bivalves"
-              }
-            ],
             "level": 3,
-            "parent_uuid": "2f3e4d5c-6b7a-51e8-7c9d-0a1b2c3d4e5f",
-            "children": []
+            "parent_uuid": "d5cd667b-a4a8-59a6-a107-6d5254a7642d",
+            "taxon_count": 8486,
+            "ordre_affichage": 310,
+            "metadata": null,
+            "children": null
           }
         ]
       }
     ]
   },
   {
-    "uuid": "a1b2c3d4-5e6f-5170-8a9b-0c1d2e3f4a5b",
-    "old_id": 2,
+    "uuid": "a94c1615-276d-5307-8fa2-d4e7bd4bdc05",
+    "code": "FLORE",
     "vernacular_name": "Flore",
     "scientific_name": "Flora",
-    "filters": [
-      {
-        "type": "IN",
-        "field": "group1_inpn",
-        "values": ["Trachéophytes", "Bryophytes", "Algues"]
-      },
-      {
-        "type": "EQUALS",
-        "field": "group2_inpn",
-        "value": "Lichens"
-      },
-      {
-        "type": "EQUALS",
-        "field": "regne",
-        "value": "Plantae"
-      }
-    ],
+    "level": 1,
     "parent_uuid": null,
+    "taxon_count": 0,
+    "ordre_affichage": 2,
+    "metadata": null,
     "children": [
       {
-        "uuid": "b2c3d4e5-6f70-5181-9b0c-1d2e3f4a5b6c",
-        "old_id": 4,
+        "uuid": "0cd6d17d-d041-51a7-9f05-3a9c06eb755a",
+        "code": "TRACHEOPHYTES",
         "vernacular_name": "Plantes vasculaires(Trachéophytes)",
         "scientific_name": "Tracheophyta",
-        "filters": [
-          {
-            "type": "EQUALS",
-            "field": "group1_inpn",
-            "value": "Trachéophytes"
-          }
-        ],
         "level": 2,
-        "parent_uuid": "a1b2c3d4-5e6f-5170-8a9b-0c1d2e3f4a5b",
-        "children": []
+        "parent_uuid": "a94c1615-276d-5307-8fa2-d4e7bd4bdc05",
+        "taxon_count": 162077,
+        "ordre_affichage": 40,
+        "metadata": null,
+        "children": null
       },
       {
-        "uuid": "c3d4e5f6-7081-5192-0a1b-2c3d4e5f6a7b",
-        "old_id": 6,
+        "uuid": "c0c4948f-68e0-52d8-8b3d-185723872a6d",
+        "code": "BRYOPHYTES",
         "vernacular_name": "Bryophytes",
         "scientific_name": "Bryophyta",
-        "filters": [
-          {
-            "type": "EQUALS",
-            "field": "group1_inpn",
-            "value": "Bryophytes"
-          }
-        ],
         "level": 2,
-        "parent_uuid": "a1b2c3d4-5e6f-5170-8a9b-0c1d2e3f4a5b",
-        "children": []
+        "parent_uuid": "a94c1615-276d-5307-8fa2-d4e7bd4bdc05",
+        "taxon_count": 12281,
+        "ordre_affichage": 50,
+        "metadata": null,
+        "children": null
       },
       {
-        "uuid": "d4e5f607-8192-51a3-1b2c-3d4e5f6a7b8c",
-        "old_id": 7,
+        "uuid": "626b7c69-8a7f-521c-8bf9-0f22c2d0299c",
+        "code": "LICHENS",
         "vernacular_name": "Lichens",
         "scientific_name": "Lichenes",
-        "filters": [
-          {
-            "type": "EQUALS",
-            "field": "group2_inpn",
-            "value": "Lichens"
-          }
-        ],
         "level": 2,
-        "parent_uuid": "a1b2c3d4-5e6f-5170-8a9b-0c1d2e3f4a5b",
-        "children": []
+        "parent_uuid": "a94c1615-276d-5307-8fa2-d4e7bd4bdc05",
+        "taxon_count": 21377,
+        "ordre_affichage": 60,
+        "metadata": null,
+        "children": null
       },
       {
-        "uuid": "e5f60718-92a3-51b4-2c3d-4e5f6a7b8c9d",
-        "old_id": 8,
+        "uuid": "d59dfe5c-1fdd-5f51-949a-78de66b50342",
+        "code": "ALGUES",
         "vernacular_name": "Algues",
         "scientific_name": "Algae",
-        "filters": [
-          {
-            "type": "EQUALS",
-            "field": "group1_inpn",
-            "value": "Algues"
-          }
-        ],
         "level": 2,
-        "parent_uuid": "a1b2c3d4-5e6f-5170-8a9b-0c1d2e3f4a5b",
-        "children": []
+        "parent_uuid": "a94c1615-276d-5307-8fa2-d4e7bd4bdc05",
+        "taxon_count": 20027,
+        "ordre_affichage": 70,
+        "metadata": null,
+        "children": null
       }
     ]
   },
   {
-    "uuid": "f0e1d2c3-b4a5-5160-9f8e-7d6c5b4a3f2e",
-    "old_id": 3,
+    "uuid": "40a1febf-5e53-5942-a2a9-317b11c15356",
+    "code": "FONGE",
     "vernacular_name": "Fonge(Hors Lichens)",
     "scientific_name": "Fungi",
-    "filters": [
-      {
-        "type": "EQUALS",
-        "field": "regne",
-        "value": "Fungi"
-      },
-      {
-        "type": "EQUALS",
-        "field": "group2_inpn",
-        "value": "Autres"
-      }
-    ],
     "level": 1,
     "parent_uuid": null,
-    "children": []
+    "taxon_count": 0,
+    "ordre_affichage": 3,
+    "metadata": null,
+    "children": null
   },
   {
-    "uuid": "0f1e2d3c-4b5a-5150-8c7d-6e5f4a3b2c1d",
-    "old_id": 4,
+    "uuid": "1ee0a3f1-0732-5b34-bf23-7820e30c8a77",
+    "code": "AUTRES",
     "vernacular_name": "Autres",
     "scientific_name": "",
-    "filters": [],
     "level": 1,
     "parent_uuid": null,
-    "children": []
+    "taxon_count": 0,
+    "ordre_affichage": 4,
+    "metadata": null,
+    "children": null
   }
 ]

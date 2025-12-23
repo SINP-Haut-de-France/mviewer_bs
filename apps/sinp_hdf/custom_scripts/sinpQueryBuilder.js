@@ -34,6 +34,7 @@ window.sinpQueryBuilder = (function () {
       "nom_complet",
       "nom_vernaculaire",
       "date_obs",
+      "id_group",
     ];
 
     if (!allowedFields.includes(field)) {
@@ -290,6 +291,14 @@ window.sinpQueryBuilder = (function () {
     }
   };
 
+  // UUIDs des groupes de niveau 1 (par défaut si aucun groupe sélectionné)
+  const DEFAULT_LEVEL1_UUIDS = [
+    "7f65fd5a-5b38-5374-adab-2906ee808ad6", // FAUNE
+    "a94c1615-276d-5307-8fa2-d4e7bd4bdc05", // FLORE
+    "40a1febf-5e53-5942-a2a9-317b11c15356", // FONGE
+    "1ee0a3f1-0732-5b34-bf23-7820e30c8a77", // AUTRES
+  ];
+
   const _viewConfig = {
     v_synthese_commune: {
       cql_filters: {
@@ -303,60 +312,12 @@ window.sinpQueryBuilder = (function () {
           apply: (p) => CqlBuilder.in("code_dpt", p),
           condition: (params) => !!params.departements?.length,
         },
-        groupes: {
-          param: "groupes",
-          apply: (groupsFilters) => {
-            // groupsFilters est un tableau de tableaux d'objets de filtres
-            // Ex: [ [{type: "EQUALS", ...}], [{type: "EQUALS", ...}] ]
-
-            if (!Array.isArray(groupsFilters) || groupsFilters.length === 0) {
-              return null;
-            }
-
-            // Pour chaque groupe (tableau de filtres), combiner ses conditions
-            const groupConditions = groupsFilters
-              .map((filterGroup) => {
-                if (!Array.isArray(filterGroup) || filterGroup.length === 0) {
-                  return null;
-                }
-
-                // Filtrer les objets vides ou invalides (sans propriété 'type')
-                const validFilters = filterGroup.filter((f) => f && f.type);
-
-                if (validFilters.length === 0) {
-                  return null;
-                }
-
-                // Si un seul filtre dans le groupe, le retourner directement
-                if (validFilters.length === 1) {
-                  return validFilters[0];
-                }
-
-                // Combiner avec OR (au moins un filtre du groupe doit matcher)
-                // Car les filtres dans un même tableau représentent des alternatives
-                return CqlBuilder.or(...validFilters);
-              })
-              .filter(Boolean); // Retirer les nulls
-
-            if (groupConditions.length === 0) {
-              return null;
-            }
-
-            // Si un seul groupe, le retourner directement
-            if (groupConditions.length === 1) {
-              return groupConditions[0];
-            }
-
-            // Combiner les groupes avec OR (au moins un groupe doit matcher)
-            return CqlBuilder.or(...groupConditions);
-          },
-          condition: (params) => !!params.groupes?.length,
-        },
       },
       view_params: {
         DATE_DEB: "dateDeb",
         DATE_FIN: "dateFin",
         CD_REF: "taxons", // Tableau de cd_ref
+        GROUP_UUIDS: "groupes", // Tableau d'UUIDs de groupes taxonomiques
       },
     },
 
@@ -372,60 +333,12 @@ window.sinpQueryBuilder = (function () {
           condition: (params) => !!params.departements?.length,
           apply: (p) => CqlBuilder.in("code_dpt", p),
         },
-        groupesFilters: {
-          param: "groupes",
-          condition: (params) => !!params.groupes?.length,
-          apply: (groupsFilters) => {
-            // groupsFilters est un tableau de tableaux d'objets de filtres
-            // Ex: [ [{type: "EQUALS", ...}], [{type: "EQUALS", ...}] ]
-
-            if (!Array.isArray(groupsFilters) || groupsFilters.length === 0) {
-              return null;
-            }
-
-            // Pour chaque groupe (tableau de filtres), combiner ses conditions
-            const groupConditions = groupsFilters
-              .map((filterGroup) => {
-                if (!Array.isArray(filterGroup) || filterGroup.length === 0) {
-                  return null;
-                }
-
-                // Filtrer les objets vides ou invalides (sans propriété 'type')
-                const validFilters = filterGroup.filter((f) => f && f.type);
-
-                if (validFilters.length === 0) {
-                  return null;
-                }
-
-                // Si un seul filtre dans le groupe, le retourner directement
-                if (validFilters.length === 1) {
-                  return validFilters[0];
-                }
-
-                // Combiner avec OR (au moins un filtre du groupe doit matcher)
-                // Car les filtres dans un même tableau représentent des alternatives
-                return CqlBuilder.or(...validFilters);
-              })
-              .filter(Boolean); // Retirer les nulls
-
-            if (groupConditions.length === 0) {
-              return null;
-            }
-
-            // Si un seul groupe, le retourner directement
-            if (groupConditions.length === 1) {
-              return groupConditions[0];
-            }
-
-            // Combiner les groupes avec OR (au moins un groupe doit matcher)
-            return CqlBuilder.or(...groupConditions);
-          },
-        },
       },
       view_params: {
         DATE_DEB: "dateDeb",
         DATE_FIN: "dateFin",
         CD_REF: "taxons", // Tableau de cd_ref
+        GROUP_UUIDS: "groupes", // Tableau d'UUIDs de groupes taxonomiques
       },
     },
     vm_synthese_observations_maille_5x5_hdf: {
@@ -495,11 +408,30 @@ window.sinpQueryBuilder = (function () {
         .map(([paramKey, paramValue]) => {
           let value = params[paramValue];
 
+          // Gestion spécifique pour GROUP_UUIDS
+          if (paramKey === "GROUP_UUIDS") {
+            // Si aucun groupe sélectionné, ne pas envoyer ce paramètre
+            // L'utilisateur DOIT sélectionner au moins un groupe pour éviter le timeout
+            if (!value || (Array.isArray(value) && value.length === 0)) {
+              console.warn(
+                "⚠️ Aucun groupe sélectionné - GROUP_UUIDS ne sera pas envoyé. " +
+                  "L'utilisateur doit sélectionner au moins un groupe taxonomique."
+              );
+              return null;
+            }
+            // Convertir en string séparée par ;
+            if (Array.isArray(value)) {
+              value = value.join(";");
+            }
+            const encoded = encodeURIComponent(value);
+            return `${paramKey}:${encoded}`;
+          }
+
           // Si undefined ou null, envoyer chaîne vide
           if (value === undefined || value === null) {
             value = "";
           }
-          // Si c'est un tableau, le convertir en CSV
+          // Si c'est un tableau, le convertir en CSV (séparé par virgule)
           else if (Array.isArray(value)) {
             value = value.length > 0 ? value.join(",") : "";
           }

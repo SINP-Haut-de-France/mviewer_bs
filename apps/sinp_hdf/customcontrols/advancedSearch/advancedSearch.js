@@ -20,10 +20,10 @@ mviewer.customControls.advancedSearch = (function () {
           let _params = {
             communes: selectedFilters.filteredCommunes || [],
             departements: selectedFilters.filteredDepartments || [],
-            groupes: selectedFilters.filteredGroupesFilters || [],
-            taxons: selectedFilters.filteredTaxons || [],  // ← Tableau de cd_ref
+            groupes: selectedFilters.filteredGroupes || [], // ← Tableau d'UUIDs directement
+            taxons: selectedFilters.filteredTaxons || [], // ← Tableau de cd_ref
             dateDeb: selectedFilters.dateDeb || null,
-            dateFin: selectedFilters.dateFin || null
+            dateFin: selectedFilters.dateFin || null,
           };
 
           console.log("Paramètres transformés pour query builder:", _params);
@@ -36,9 +36,8 @@ mviewer.customControls.advancedSearch = (function () {
           filteredCommunes: [],
           filteredTaxons: [],
           filteredGroupes: [],
-          filteredGroupesFilters: [],
           dateDeb: null,
-          dateFin: null
+          dateFin: null,
         } // Valeurs initiales des filtres
       );
     } else {
@@ -64,6 +63,6 @@ mviewer.customControls.advancedSearch = (function () {
     openAdvancedSearchModal,
     destroy: function () {
       _initialized = false; // mandatory - code executed when layer panel is closed
-    }
+    },
   };
 })();
