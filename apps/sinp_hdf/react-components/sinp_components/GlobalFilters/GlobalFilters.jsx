@@ -34,6 +34,13 @@ const GlobalFiltersComponent = (
   },
   ref
 ) => {
+  console.log(
+    "🔍 [GlobalFilters] Render - onSubmit reçu:",
+    typeof onSubmit,
+    onSubmit !== undefined
+  );
+  console.log("🔍 [GlobalFilters] Props:", { showActions, activeLayerId });
+
   // Initialize WFS cache ONLY for taxons (WFS data)
   // Departments and communes are loaded from static JSON files, no need to cache
   const taxonsCache = useWFSCache("taxons_selected", "cd_ref");
@@ -230,6 +237,13 @@ const GlobalFiltersComponent = (
   }, []);
 
   const handleSubmit = useCallback(async () => {
+    console.log("🚀 [GlobalFilters] handleSubmit APPELÉ");
+    console.log(
+      "🚀 [GlobalFilters] onSubmit disponible:",
+      typeof onSubmit,
+      onSubmit !== undefined
+    );
+
     // Extract cd_ref from complete taxon objects for URL generation
     const taxonsForURL = filters.filteredTaxons.map((tx) =>
       typeof tx === "object" && tx.cd_ref ? tx.cd_ref : tx
@@ -267,15 +281,19 @@ const GlobalFiltersComponent = (
     console.log("=".repeat(40));
 
     if (onSubmit) {
+      console.log("✅ [GlobalFilters] Appel de onSubmit avec params:", params);
       setIsLoading(true);
       try {
         // Passer aussi l'état complet des filtres pour le rebinding
         await onSubmit(params, currentFilters);
+        console.log("✅ [GlobalFilters] onSubmit terminé avec succès");
       } catch (error) {
-        console.error("Erreur lors de la soumission:", error);
+        console.error("❌ [GlobalFilters] Erreur lors de la soumission:", error);
       } finally {
         setIsLoading(false);
       }
+    } else {
+      console.error("❌ [GlobalFilters] onSubmit est undefined !");
     }
   }, [filters, filterVisibility, onSubmit]);
 

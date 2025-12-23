@@ -1,56 +1,39 @@
-import React from 'react';
-import { useFilters } from '../../providers/FilterProvider';
-import GlobalFilters from '../GlobalFilters/GlobalFilters';
-import './SidebarFilterPanel.css';
+import React from "react";
+import GlobalFilters from "../GlobalFilters/GlobalFilters";
+import "./SidebarFilterPanel.css";
 
-const SidebarFilterPanel = ({ isExpanded: controlledIsExpanded, activeLayerId }) => {
-  const { sidebarState, toggleSidebar } = useFilters();
-
-  // Utiliser l'état contrôlé s'il est fourni, sinon utiliser le contexte
-  const isExpanded = controlledIsExpanded !== undefined
-    ? controlledIsExpanded
-    : sidebarState.isExpanded;
-
-  const layerId = activeLayerId || sidebarState.activeLayerId;
-
-  const handleSubmit = (params) => {
-    console.log('Filtres soumis depuis le sidebar:', params);
+const SidebarFilterPanel = ({ activeLayerId }) => {
+  const handleSubmit = (params, currentFilters) => {
+    console.log("🎯 [SIDEBAR] handleSubmit APPELÉ !");
+    console.log("🎯 [SIDEBAR] Filtres soumis depuis le sidebar:", params);
+    console.log("🎯 [SIDEBAR] État complet des filtres:", currentFilters);
 
     if (window.mviewer?.customLayers?.advancedSearch) {
+      console.log("🎯 [SIDEBAR] Appel de advancedSearch.get_datas");
       mviewer.customLayers.advancedSearch.get_datas(params);
+    } else {
+      console.error("❌ [SIDEBAR] mviewer.customLayers.advancedSearch non disponible");
     }
   };
 
   const handleReset = () => {
-    console.log('Filtres réinitialisés');
+    console.log("🔄 [SIDEBAR] Filtres réinitialisés");
   };
 
-  return (
-    <div className={`sidebar-filter-panel ${isExpanded ? 'expanded' : 'closed'}`}>
-      <div className="filter-panel-header" onClick={toggleSidebar}>
-        <h4>
-          <i className="fas fa-search"></i>
-          Recherche avancée
-        </h4>
-        <button className="toggle-button" aria-label={isExpanded ? 'Réduire' : 'Développer'}>
-          <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'}`}></i>
-        </button>
-      </div>
+  console.log("🔍 [SIDEBAR] Render - handleSubmit défini:", typeof handleSubmit);
 
-      {isExpanded && (
-        <div className="filter-panel-content">
-          <GlobalFilters
-            onSubmit={handleSubmit}
-            onReset={handleReset}
-            activeLayerId={layerId}
-            showActions={true}
-            actionLabels={{
-              submit: 'Appliquer',
-              reset: 'Réinitialiser'
-            }}
-          />
-        </div>
-      )}
+  return (
+    <div className="sidebar-filter-panel-wrapper">
+      <GlobalFilters
+        onSubmit={handleSubmit}
+        onReset={handleReset}
+        activeLayerId={activeLayerId}
+        showActions={true}
+        actionLabels={{
+          submit: "Appliquer",
+          reset: "Réinitialiser",
+        }}
+      />
     </div>
   );
 };

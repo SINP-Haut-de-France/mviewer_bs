@@ -6,7 +6,8 @@
   border: 1px solid var(--bs-border-color, #dee2e6);
   border-radius: var(--bs-border-radius, 0.375rem);
   background-color: white;
-  overflow: hidden;
+  /* overflow: hidden supprim\u00e9 pour permettre aux dropdowns d'\u00eatre visibles */
+  overflow: visible;
 }
 
 /* En-tête de section */

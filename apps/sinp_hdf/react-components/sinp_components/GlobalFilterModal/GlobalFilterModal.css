@@ -9,6 +9,8 @@
   min-height: 0;
   box-sizing: border-box;
   width: 100%;
+  /* Note: overflow-y auto nécessaire pour le scroll, mais les dropdowns 
+     utiliseront un z-index élevé pour apparaître au-dessus */
 }
 
 /* Alerts Bootstrap 5 */
@@ -53,6 +55,8 @@
 .modal-filters-wrapper .section-content {
   padding: 1rem;
   box-sizing: border-box;
+  /* Permettre aux dropdowns de déborder */
+  overflow: visible !important;
 }
 
 /* Actions de filtrage */

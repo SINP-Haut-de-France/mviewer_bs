@@ -61,9 +61,11 @@ var reactInjector = (function () {
         const reactContainer = document.createElement("div");
         reactContainer.id = "react-sidebar-filter-panel";
         reactContainer.className = "react-filter-container";
-        reactContainer.style.lineHeight = "10px";
-        reactContainer.style.textIndent = "10px";
-        reactContainer.style.maxWidth = "inherit";
+        reactContainer.style.width = "100%";
+        reactContainer.style.maxWidth = "100%";
+        reactContainer.style.boxSizing = "border-box";
+        reactContainer.style.overflow = "visible";
+        reactContainer.style.position = "relative";
 
         filtersContainer.appendChild(reactContainer);
 
