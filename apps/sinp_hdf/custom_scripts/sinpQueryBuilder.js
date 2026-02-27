@@ -404,27 +404,56 @@ window.sinpQueryBuilder = (function () {
 
     // formatter view params si présent
     if (cfg.view_params && Object.keys(cfg.view_params).length !== 0) {
+      /**
+       * Échappe les caractères spéciaux pour GeoServer SQL View
+       * Selon la doc GeoServer: les caractères spéciaux (virgules, points-virgules, deux-points) doivent être échappés avec \
+       * https://docs.geoserver.org/stable/en/user/data/database/sqlview.html
+       * @param {string} str - Chaîne à échapper
+       * @return {string} - Chaîne échappée
+       */
+      const _escapeGeoServerViewParams = function (str) {
+        if (!str) return str;
+        return String(str)
+          .replaceAll(":", "\\:") // Échapper les deux-points
+          .replaceAll(";", "\\;") // Échapper les points-virgules
+          .replaceAll(",", "\\,"); // Échapper les virgules
+      };
+
       const viewParamsArray = Object.entries(cfg.view_params)
         .map(([paramKey, paramValue]) => {
           let value = params[paramValue];
 
           // Gestion spécifique pour GROUP_UUIDS
           if (paramKey === "GROUP_UUIDS") {
-            // Si aucun groupe sélectionné, ne pas envoyer ce paramètre
-            // L'utilisateur DOIT sélectionner au moins un groupe pour éviter le timeout
+            // TOUJOURS envoyer GROUP_UUIDS (vide ou rempli) pour le bon nombre de params
             if (!value || (Array.isArray(value) && value.length === 0)) {
               console.warn(
-                "⚠️ Aucun groupe sélectionné - GROUP_UUIDS ne sera pas envoyé. " +
-                  "L'utilisateur doit sélectionner au moins un groupe taxonomique."
+                "⚠️ Aucun groupe sélectionné - GROUP_UUIDS sera vide"
               );
-              return null;
+              // Retourner clé\: (échappée) même si vide
+              return `${paramKey}\\:`;
             }
-            // Convertir en string séparée par ;
             if (Array.isArray(value)) {
-              value = value.join(";");
+              value = value.join(",");
             }
-            const encoded = encodeURIComponent(value);
-            return `${paramKey}:${encoded}`;
+            // Échapper les caractères spéciaux pour GeoServer
+            value = _escapeGeoServerViewParams(value);
+            // ⚠️ IMPORTANT: Échapper aussi le deux-points après la clé
+            return `${paramKey}\\:${value}`;
+          }
+
+          // Gestion spécifique pour CD_REF
+          if (paramKey === "CD_REF") {
+            // TOUJOURS envoyer CD_REF (vide ou rempli)
+            if (value === undefined || value === null) {
+              value = "";
+            } else if (Array.isArray(value)) {
+              value = value.length > 0 ? value.join(",") : "";
+            }
+            // Échapper les caractères spéciaux pour GeoServer
+            value = _escapeGeoServerViewParams(value);
+            // ⚠️ IMPORTANT: Échapper aussi le deux-points après la clé
+            return `${paramKey}\\:${value}`;
           }
 
           // Si undefined ou null, envoyer chaîne vide
@@ -436,12 +465,10 @@ window.sinpQueryBuilder = (function () {
             value = value.length > 0 ? value.join(",") : "";
           }
 
-          // Ne pas inclure le paramètre si la valeur est vide
-          if (value === "") return null;
-
-          // Encoder la valeur
-          const encoded = encodeURIComponent(value);
-          return `${paramKey}:${encoded}`;
+          // Échapper les caractères spéciaux pour GeoServer
+          value = _escapeGeoServerViewParams(value);
+          // ⚠️ IMPORTANT: Échapper aussi le deux-points après la clé
+          return `${paramKey}\\:${value}`;
         })
         .filter(Boolean); // Filtrer les entrées null/undefined
 
@@ -451,8 +478,9 @@ window.sinpQueryBuilder = (function () {
       };
 
       // Ajouter VIEWPARAMS seulement s'il y a des paramètres
+      // ⚠️ IMPORTANT: utiliser \; comme séparateur (échappé) au lieu de ;
       if (viewParamsArray.length > 0) {
-        result.VIEWPARAMS = viewParamsArray.join(";");
+        result.VIEWPARAMS = viewParamsArray.join("\\;");
       }
 
       return result;

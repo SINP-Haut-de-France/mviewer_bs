@@ -1,7 +1,7 @@
 {
   "CURRENT_ENV": "DEV",
   "DEV": {
-    "GEOSERVER_BASE_URL": "http://localhost:8080/geoserver/sinp"
+    "GEOSERVER_BASE_URL": "http://localhost:8090/geoserver/sinp"
   },
   "PREPROD": {
     "GEOSERVER_BASE_URL": "https://www.geo2france.fr/geoserver/sinp"

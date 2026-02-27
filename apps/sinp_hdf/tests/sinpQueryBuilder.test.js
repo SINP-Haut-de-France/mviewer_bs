@@ -182,3 +182,79 @@ describe('Cas d\'usage réels SINP', () => {
     expect(result.VIEWPARAMS).toContain('CD_REF:2440%2C2442%2C2444%2C2500%2C2600');
   });
 });
+
+// === TESTS POUR GROUP_UUIDS (CORRECTION DU BUG) ===
+
+describe('GROUP_UUIDS - Gestion correcte des séparateurs', () => {
+
+  test('GROUP_UUIDS avec un seul UUID → pas de séparateur', () => {
+    const params = {
+      communes: ['62225'],
+      departements: ['62'],
+      groupes: ['b83367ac-40fd-5d1d-84bd-2a1bd040c365'],
+      dateDeb: '2006-02-27',
+      dateFin: '2026-02-27'
+    };
+
+    const result = sinpQueryBuilder.buildRequestOptions(params, 'v_synthese_commune');
+
+    expect(result.VIEWPARAMS).toContain('GROUP_UUIDS:b83367ac-40fd-5d1d-84bd-2a1bd040c365');
+  });
+
+  test('GROUP_UUIDS avec plusieurs UUIDs → séparés par virgules (pas point-virgules)', () => {
+    const params = {
+      communes: ['62225'],
+      departements: ['62'],
+      groupes: [
+        'b83367ac-40fd-5d1d-84bd-2a1bd040c365',
+        'a94c1615-276d-5307-8fa2-d4e7bd4bdc05'
+      ],
+      dateDeb: '2006-02-27',
+      dateFin: '2026-02-27'
+    };
+
+    const result = sinpQueryBuilder.buildRequestOptions(params, 'v_synthese_commune');
+
+    // Vérifier que les UUIDs sont séparés par des virgules (encodées en %2C)
+    expect(result.VIEWPARAMS).toContain('GROUP_UUIDS:b83367ac-40fd-5d1d-84bd-2a1bd040c365%2Ca94c1615-276d-5307-8fa2-d4e7bd4bdc05');
+    // Vérifier qu'il n'y a PAS de point-virgule entre les UUIDs
+    expect(result.VIEWPARAMS).not.toContain('b83367ac-40fd-5d1d-84bd-2a1bd040c365%3Ba94c1615');
+  });
+
+  test('GROUP_UUIDS vide → paramètre non envoyé (évite timeout)', () => {
+    const params = {
+      communes: ['62225'],
+      departements: ['62'],
+      groupes: [],  // Aucun groupe sélectionné
+      dateDeb: '2006-02-27',
+      dateFin: '2026-02-27'
+    };
+
+    const result = sinpQueryBuilder.buildRequestOptions(params, 'v_synthese_commune');
+
+    // GROUP_UUIDS ne doit PAS apparaître dans VIEWPARAMS
+    expect(result.VIEWPARAMS).not.toContain('GROUP_UUIDS');
+  });
+
+  test('Cohérence CD_REF et GROUP_UUIDS : tous deux utilisent des virgules', () => {
+    const params = {
+      communes: ['62225'],
+      departements: ['62'],
+      taxons: [2440, 2442],  // 2 taxons
+      groupes: [
+        'b83367ac-40fd-5d1d-84bd-2a1bd040c365',
+        'a94c1615-276d-5307-8fa2-d4e7bd4bdc05'
+      ],  // 2 groupes
+      dateDeb: '2006-02-27',
+      dateFin: '2026-02-27'
+    };
+
+    const result = sinpQueryBuilder.buildRequestOptions(params, 'v_synthese_commune');
+
+    // CD_REF utilise des virgules
+    expect(result.VIEWPARAMS).toContain('CD_REF:2440%2C2442');
+    // GROUP_UUIDS utilise des virgules (même convention)
+    expect(result.VIEWPARAMS).toContain('GROUP_UUIDS:b83367ac-40fd-5d1d-84bd-2a1bd040c365%2Ca94c1615');
+  });
+});
+

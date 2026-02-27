@@ -19,18 +19,32 @@ window.sinpRepository = (function () {
     let url = finalParams.BASEURL + "?";
 
     Object.keys(finalParams).forEach((key) => {
-      if (key !== "BASEURL" && key !== "VIEW_PARAMS") {
+      if (key !== "BASEURL" && key !== "VIEWPARAMS") {
         url += `&${key}=${encodeURIComponent(finalParams[key])}`;
       }
     });
 
-    if (finalParams.VIEW_PARAMS) {
-      const viewParams = Object.entries(finalParams.VIEW_PARAMS)
-        .map(([paramKey, paramValue]) => `${paramKey}:${paramValue}`)
-        .join(";");
-      url += `&VIEWPARAMS=${encodeURIComponent(viewParams)}`;
+    if (finalParams.VIEWPARAMS) {
+      // ⚠️ CRITIQUE: GeoServer SQL View nécessite l'échappement avec backslash: \: \; \,
+      // Les backslashes doivent être URL-encodés en %5C dans l'URL finale
+      //
+      // Flux correct:
+      // 1. sinpQueryBuilder produit: "DATE_DEB\:2006-02-27\;DATE_FIN\:2026-02-27\;..."
+      // 2. On encode manuellement (pas encodeURIComponent qui ré-encoderait les %)
+      // 3. Résultat: "DATE_DEB%5C%3A2006-02-27%5C%3BDATE_FIN%5C%3A2026-02-27%5C%3B..."
+
+      // Encoder manuellement en remplaçant les caractères spéciaux
+      let encodedViewParams = finalParams.VIEWPARAMS
+        .replace(/\\/g, '%5C')   // Backslash → %5C
+        .replace(/:/g, '%3A')    // Deux-points → %3A
+        .replace(/;/g, '%3B')    // Point-virgule → %3B
+        .replace(/,/g, '%2C')    // Virgule → %2C
+        .replace(/ /g, '%20');   // Espace → %20
+
+      url += `&VIEWPARAMS=${encodedViewParams}`;
     }
 
+    console.log("🔗 URL générée:", url);
     return url;
   };
 
@@ -41,7 +55,14 @@ window.sinpRepository = (function () {
    * @return {Promise<Object>} - Résultat de la requête au format JSON
    */
   const _fetchGeoServerData = async function (options = {}, timeoutDuration = 60000) {
-    const url = _buildQueryURL(options);
+    let url = _buildQueryURL(options);
+
+    // Utiliser le proxy mviewer si configuré (pour contourner CORS)
+    const proxyUrl = mviewer.getProxy?.();
+    if (proxyUrl && proxyUrl !== "") {
+      console.log("🔧 Utilisation du proxy mviewer:", proxyUrl);
+      url = proxyUrl + encodeURIComponent(url);
+    }
 
     // Créer un AbortController pour gérer le timeout
     const controller = new AbortController();
