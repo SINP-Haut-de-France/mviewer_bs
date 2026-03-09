@@ -25,22 +25,9 @@ window.sinpRepository = (function () {
     });
 
     if (finalParams.VIEWPARAMS) {
-      // ⚠️ CRITIQUE: GeoServer SQL View nécessite l'échappement avec backslash: \: \; \,
-      // Les backslashes doivent être URL-encodés en %5C dans l'URL finale
-      //
-      // Flux correct:
-      // 1. sinpQueryBuilder produit: "DATE_DEB\:2006-02-27\;DATE_FIN\:2026-02-27\;..."
-      // 2. On encode manuellement (pas encodeURIComponent qui ré-encoderait les %)
-      // 3. Résultat: "DATE_DEB%5C%3A2006-02-27%5C%3BDATE_FIN%5C%3A2026-02-27%5C%3B..."
-
-      // Encoder manuellement en remplaçant les caractères spéciaux
-      let encodedViewParams = finalParams.VIEWPARAMS
-        .replace(/\\/g, '%5C')   // Backslash → %5C
-        .replace(/:/g, '%3A')    // Deux-points → %3A
-        .replace(/;/g, '%3B')    // Point-virgule → %3B
-        .replace(/,/g, '%2C')    // Virgule → %2C
-        .replace(/ /g, '%20');   // Espace → %20
-
+      // GeoServer EXIGE: uniquement le pipe (|) encodé en %7C
+      // Les deux-points (:) et points-virgules (;) doivent rester non-encodés!
+      const encodedViewParams = finalParams.VIEWPARAMS.replace(/\|/g, '%7C');
       url += `&VIEWPARAMS=${encodedViewParams}`;
     }
 

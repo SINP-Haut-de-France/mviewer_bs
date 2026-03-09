@@ -45,8 +45,8 @@ const GlobalFilterModal = ({
       if (Array.isArray(effectiveFilters.filteredDepartments)) {
         finalParams.departements = effectiveFilters.filteredDepartments;
       }
-      if (Array.isArray(effectiveFilters.filteredGroupesFilters)) {
-        finalParams.groupes = effectiveFilters.filteredGroupesFilters;
+      if (Array.isArray(effectiveFilters.filteredGroupes)) {
+        finalParams.groupes = effectiveFilters.filteredGroupes;
       }
       // dates
       if (effectiveFilters.dateDeb) finalParams.dateDeb = effectiveFilters.dateDeb;
@@ -119,10 +119,6 @@ const GlobalFilterModal = ({
     onClose();
   };
 
-  const handleMinimize = () => {
-    // Cette fonction est appelée quand on minimise depuis BaseModal
-    console.log("Modale minimisée après soumission");
-  };
 
   // Called when modal minimize state changes (receives newState boolean)
   const handleModalToggle = (newState) => {

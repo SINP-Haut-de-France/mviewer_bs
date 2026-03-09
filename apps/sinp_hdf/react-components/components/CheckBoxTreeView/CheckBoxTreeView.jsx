@@ -3,49 +3,61 @@ import CheckBoxTreeViewUI from "./CheckBoxTreeViewUI";
 
 const CheckBoxTreeView = ({
   datasource = [],
-  idKey = "uuid",
-  returnKey = null, // Clé de la valeur à retourner (si null, utilise idKey)
-  label = (node) => "",
+  idKey = "id",
+  returnKey = null, // Clé optionnelle acceptée en entrée via selectedValues
+  label = () => "",
   childrenKey = "children",
   title = "Tree view",
   onSelectionChange = () => {},
   selectedValues = [],
-  isLeafNode = (node) => true, // Fonction pour déterminer si un nœud est feuille
 }) => {
-  // Map pour associer returnKey à idKey
-  const [nodeMap, setNodeMap] = useState(new Map());
-  const [currentSelection, setCurrentSelection] = useState(new Set(selectedValues));
+  const [currentSelection, setCurrentSelection] = useState(new Set());
   const [expandedNodes, setExpandedNodes] = useState([]);
 
-  // Construire une map des nœuds et un index pour accès rapide
-  const { nodeMap: builtNodeMap, nodeIndex, ancestorMap } = useMemo(() => {
-    const map = new Map();
+  // Indexe les nœuds pour conversions id <-> returnKey et accès rapide
+  const { nodeIndex, ancestorMap, returnToId } = useMemo(() => {
     const index = new Map();
-    const ancestors = new Map(); // Associe chaque nœud à ses ancêtres
+    const ancestors = new Map();
+    const returnMap = new Map();
 
-    const traverse = (nodes, parentChain = []) => {
+    const traverse = (nodes = [], parentChain = []) => {
       nodes.forEach((node) => {
         const id = node[idKey];
-        const returnValue = returnKey ? node[returnKey] : id;
-        
-        map.set(returnValue, id);
-        map.set(id, returnValue);
         index.set(id, node);
         ancestors.set(id, parentChain);
 
-        if (node[childrenKey] && node[childrenKey].length > 0) {
-          traverse(node[childrenKey], [...parentChain, id]);
+        if (returnKey) {
+          returnMap.set(node[returnKey], id);
+        }
+
+        const children = Array.isArray(node[childrenKey]) ? node[childrenKey] : [];
+        if (children.length > 0) {
+          traverse(children, [...parentChain, id]);
         }
       });
     };
 
     traverse(datasource);
-    return { nodeMap: map, nodeIndex: index, ancestorMap: ancestors };
+    return { nodeIndex: index, ancestorMap: ancestors, returnToId: returnMap };
   }, [datasource, idKey, returnKey, childrenKey]);
 
-  useEffect(() => {
-    setNodeMap(builtNodeMap);
-  }, [builtNodeMap]);
+  const normalizeToNodeId = useCallback(
+    (value) => {
+      if (nodeIndex.has(value)) return value;
+      if (returnKey && returnToId.has(value)) return returnToId.get(value);
+
+      // Tolère des IDs fournis en string (ex: "12")
+      if (typeof value === "string" && value.trim() !== "") {
+        const numericValue = Number(value);
+        if (!Number.isNaN(numericValue) && nodeIndex.has(numericValue)) {
+          return numericValue;
+        }
+      }
+
+      return null;
+    },
+    [nodeIndex, returnKey, returnToId]
+  );
 
   // Fonction pour basculer l'état d'expansion d'un nœud
   const toggleNodeExpansion = useCallback((id) => {
@@ -58,82 +70,75 @@ const CheckBoxTreeView = ({
 
   // Gestion des changements de sélection d'un nœud
   const handleSelectionChange = useCallback(
-    (nodeId, returnValue) => {
+    (nodeId) => {
       const updatedSelection = new Set(currentSelection);
       const node = nodeIndex.get(nodeId);
 
       if (!node) return;
 
-      // Basculer la sélection du nœud cliqué
-      if (updatedSelection.has(returnValue)) {
-        updatedSelection.delete(returnValue);
+      if (updatedSelection.has(nodeId)) {
+        updatedSelection.delete(nodeId);
       } else {
-        updatedSelection.add(returnValue);
-        
-        // Si c'est un nœud enfant, ajouter les parents (sans les sélectionner complètement)
+        updatedSelection.add(nodeId);
+
         const ancestors = ancestorMap.get(nodeId) || [];
         ancestors.forEach((ancestorId) => {
-          updatedSelection.add(nodeMap.get(ancestorId));
+          updatedSelection.add(ancestorId);
         });
       }
 
       setCurrentSelection(updatedSelection);
 
-      // Récupérer les nœuds complets mais filtrer pour ne garder que les plus profonds
       const selectedNodes = Array.from(updatedSelection)
-        .map((val) => {
-          const id = nodeMap.get(val);
-          return nodeIndex.get(id);
-        })
+        .map((id) => nodeIndex.get(id))
         .filter(Boolean);
 
-      // Filtrer pour ne garder que les feuilles (nœuds sans enfants sélectionnés à un level plus profond)
-      const deepestNodes = filterDeepestNodes(selectedNodes, nodeIndex, childrenKey);
-
+      const deepestNodes = filterDeepestNodes(selectedNodes, childrenKey);
       onSelectionChange(deepestNodes);
     },
-    [currentSelection, nodeMap, nodeIndex, ancestorMap, childrenKey, onSelectionChange]
+    [currentSelection, nodeIndex, ancestorMap, childrenKey, onSelectionChange]
   );
 
   // Utilitaire pour garder uniquement les nœuds les plus profonds
-  const filterDeepestNodes = (nodes, index, childKey) => {
+  const filterDeepestNodes = (nodes, childKey) => {
     if (nodes.length === 0) return [];
 
     const nodeIds = new Set(nodes.map((n) => n[idKey]));
-    
-    // Retirer les ancêtres si un enfant est présent
+
     return nodes.filter((node) => {
-      const hasSelectedChild = isAnySelectedChildDeeper(node, nodeIds, index, childKey);
+      const hasSelectedChild = isAnySelectedChildDeeper(node, nodeIds, childKey);
       return !hasSelectedChild;
     });
   };
 
   // Vérifier si un nœud a un enfant sélectionné plus profond
-  const isAnySelectedChildDeeper = (node, selectedIds, index, childKey) => {
-    if (!node[childKey] || node[childKey].length === 0) return false;
+  const isAnySelectedChildDeeper = (node, selectedIds, childKey) => {
+    const children = Array.isArray(node[childKey]) ? node[childKey] : [];
+    if (children.length === 0) return false;
 
-    return node[childKey].some((child) => {
+    return children.some((child) => {
       const childId = child[idKey];
       if (selectedIds.has(childId)) return true;
-      return isAnySelectedChildDeeper(child, selectedIds, index, childKey);
+      return isAnySelectedChildDeeper(child, selectedIds, childKey);
     });
   };
 
   // Met à jour la sélection lorsque les valeurs sélectionnées changent
   useEffect(() => {
-    setCurrentSelection(new Set(selectedValues));
-  }, [selectedValues]);
+    const nextSelection = new Set(
+      (selectedValues || [])
+        .map((value) => normalizeToNodeId(value))
+        .filter((value) => value !== null)
+    );
+    setCurrentSelection(nextSelection);
+  }, [selectedValues, normalizeToNodeId]);
 
-  // Convertir les selectedValues (returnKey) en nodeIds (idKey) pour l'affichage
-  const selectedNodeIds = Array.from(currentSelection).map(
-    (value) => nodeMap.get(value) || value
-  );
+  const selectedNodeIds = Array.from(currentSelection);
 
   return (
     <CheckBoxTreeViewUI
       data={datasource}
       idKey={idKey}
-      returnKey={returnKey}
       label={label}
       childrenKey={childrenKey}
       selectedNodeIds={selectedNodeIds}

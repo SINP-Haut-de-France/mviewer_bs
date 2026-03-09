@@ -50,9 +50,9 @@ const GlobalFiltersUI = ({
                 <CheckBoxTreeView
                   datasource={groupes || []}
                   selectedValues={filters.filteredGroupes || []}
-                  idKey="uuid"
-                  returnKey="uuid"
-                  label={(node) => node.vernacular_name}
+                  idKey="id"
+                  returnKey="id"
+                  label={(node) => node.name}
                   childrenKey="children"
                   title=""
                   onSelectionChange={handleGrpChange}

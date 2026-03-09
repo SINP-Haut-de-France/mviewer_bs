@@ -19,16 +19,16 @@ mviewer.customLayers.especeSearch = (function () {
     let url = finalParams.BASEURL + "?";
 
     Object.keys(finalParams).forEach((key) => {
-      if (key !== "BASEURL" && key !== "VIEW_PARAMS") {
+      if (key !== "BASEURL" && key !== "VIEWPARAMS") {
         url += `&${key}=${encodeURIComponent(finalParams[key])}`;
       }
     });
 
-    if (finalParams.VIEW_PARAMS) {
-      const viewParams = Object.entries(finalParams.VIEW_PARAMS)
-        .map(([paramKey, paramValue]) => `${paramKey}:${paramValue}`)
-        .join(";");
-      url += `&VIEWPARAMS=${encodeURIComponent(viewParams)}`;
+    if (finalParams.VIEWPARAMS) {
+      // GeoServer EXIGE: uniquement le pipe (|) encodé en %7C
+      // Les deux-points (:) et points-virgules (;) doivent rester non-encodés!
+      const encodedViewParams = finalParams.VIEWPARAMS.replace(/\|/g, '%7C');
+      url += `&VIEWPARAMS=${encodedViewParams}`;
     }
 
     return url;

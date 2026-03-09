@@ -20,7 +20,7 @@ mviewer.customControls.advancedSearch = (function () {
           let _params = {
             communes: selectedFilters.filteredCommunes || [],
             departements: selectedFilters.filteredDepartments || [],
-            groupes: selectedFilters.filteredGroupes || [], // ← Tableau d'UUIDs directement
+            groupes: selectedFilters.filteredGroupes || [], // ← Tableau d'IDs directement
             taxons: selectedFilters.filteredTaxons || [], // ← Tableau de cd_ref
             dateDeb: selectedFilters.dateDeb || null,
             dateFin: selectedFilters.dateFin || null,

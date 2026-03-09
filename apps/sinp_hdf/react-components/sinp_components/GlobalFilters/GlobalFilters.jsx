@@ -53,7 +53,7 @@ const GlobalFiltersComponent = (
       filteredDepartments: [],
       filteredCommunes: [],
       filteredTaxons: [], // Now will store complete objects, not just IDs
-      filteredGroupes: [], // UUIDs des groupes taxonomiques sélectionnés
+      filteredGroupes: [], // IDs entiers des groupes taxonomiques sélectionnés
       dateDeb: format(
         new Date(today.setFullYear(today.getFullYear() - 20)),
         "yyyy-MM-dd"
@@ -224,15 +224,15 @@ const GlobalFiltersComponent = (
   const handleGrpChange = useCallback((selectedNodes) => {
     console.log("🌳 Nœuds sélectionnés (deepest only):", selectedNodes);
 
-    // Extraire les UUIDs des nœuds les plus profonds uniquement
+    // Extraire les id des nœuds les plus profonds uniquement
     // CheckBoxTreeView retourne maintenant seulement les feuilles/nœuds les plus profonds
-    const selectedUuids = selectedNodes.map((node) => node.uuid);
+    const selectedIds = selectedNodes.map((node) => node.id);
 
-    console.log("🆔 UUIDs sélectionnés:", selectedUuids);
+    console.log("🆔 id sélectionnés:", selectedIds);
 
     updateFilters((prev) => ({
       ...prev,
-      filteredGroupes: selectedUuids, // Stocker les UUIDs pour l'UI et la soumission
+      filteredGroupes: selectedIds, // Stocker les IDs pour l'UI et la soumission
     }));
   }, []);
 
@@ -269,7 +269,7 @@ const GlobalFiltersComponent = (
         }),
       ...(filterVisibility.showTaxonomicGroup &&
         filters.filteredGroupes.length > 0 && {
-          groupes: filters.filteredGroupes, // Envoyer directement les UUIDs
+          groupes: filters.filteredGroupes, // Envoyer directement les IDs sélectionnés
         }),
     };
 

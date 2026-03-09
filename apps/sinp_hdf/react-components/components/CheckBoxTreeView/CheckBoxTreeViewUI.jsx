@@ -4,7 +4,6 @@ import "./CheckBoxTreeView.css";
 const CheckBoxTreeViewUI = ({
   data,
   idKey,
-  returnKey,
   label,
   childrenKey,
   selectedNodeIds,
@@ -18,7 +17,6 @@ const CheckBoxTreeViewUI = ({
     return nodes.map((node) => {
       const hasChildren = node[childrenKey] && node[childrenKey].length > 0;
       const nodeId = node[idKey];
-      const returnValue = returnKey ? node[returnKey] : nodeId;
       const isSelected = selectedNodeIds.includes(nodeId); // Vérifie si le nœud est sélectionné
       const isExpanded = expandedNodes.includes(nodeId); // Vérifie si le nœud est expansé
 
@@ -40,7 +38,7 @@ const CheckBoxTreeViewUI = ({
               <input
                 type="checkbox"
                 checked={isSelected}
-                onChange={() => onSelectionChange(nodeId, returnValue)}
+                onChange={() => onSelectionChange(nodeId)}
               />
               {label(node)}
             </label>

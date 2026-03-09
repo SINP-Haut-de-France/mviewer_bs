@@ -51,8 +51,8 @@ describe('sinpQueryBuilder - Gestion des tableaux cd_ref', () => {
     
     expect(result.TYPENAME).toBe('sinp_diffusion:v_synthese_commune');
     expect(result.CQL_FILTER).toBe("code_insee IN ('62225') AND code_dpt IN ('62')");
-    // ✅ CD_REF contient les valeurs séparées par virgule
-    expect(result.VIEWPARAMS).toContain('CD_REF:2440%2C2442%2C2444');
+    // ✅ CD_REF contient les valeurs séparées par virgule (sans encoding - fait par encodeURIComponent plus tard)
+    expect(result.VIEWPARAMS).toContain('CD_REF:2440,2442,2444');
   });
 
   test('cd_ref undefined → traiter comme tableau vide', () => {
@@ -100,7 +100,8 @@ describe('sinpQueryBuilder - Gestion des tableaux cd_ref', () => {
     // Vérifications
     expect(result.TYPENAME).toBe('sinp_diffusion:v_synthese_commune');
     expect(result.CQL_FILTER).toBe("code_insee IN ('62225') AND code_dpt IN ('62')");
-    expect(result.VIEWPARAMS).toBe('DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;CD_REF:2440%2C2442');
+    // Format sans encodage - sera fait par encodeURIComponent dans customlayers
+    expect(result.VIEWPARAMS).toBe('DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;CD_REF:2440,2442');
   });
 
   test('SQL View reçoit correctement les paramètres', () => {
@@ -147,7 +148,7 @@ describe('Cas d\'usage réels SINP', () => {
     
     // Doit créer une requête sans filtre communal/départemental
     expect(result.CQL_FILTER).toBe('');  // Pas de CQL_FILTER
-    expect(result.VIEWPARAMS).toContain('CD_REF:2440%2C2442');
+    expect(result.VIEWPARAMS).toContain('CD_REF:2440,2442');
   });
 
   test('Recherche départementale sans espèce spécifique', () => {
@@ -179,49 +180,47 @@ describe('Cas d\'usage réels SINP', () => {
     const result = sinpQueryBuilder.buildRequestOptions(params, 'v_synthese_commune');
     
     expect(result.CQL_FILTER).toBe("code_insee IN ('62225') AND code_dpt IN ('62')");
-    expect(result.VIEWPARAMS).toContain('CD_REF:2440%2C2442%2C2444%2C2500%2C2600');
+    expect(result.VIEWPARAMS).toContain('CD_REF:2440,2442,2444,2500,2600');
   });
 });
 
-// === TESTS POUR GROUP_UUIDS (CORRECTION DU BUG) ===
+// === TESTS POUR GRP_IDS (CORRECTION DU BUG) ===
 
-describe('GROUP_UUIDS - Gestion correcte des séparateurs', () => {
+describe('GRP_IDS - Gestion correcte des séparateurs', () => {
 
-  test('GROUP_UUIDS avec un seul UUID → pas de séparateur', () => {
+  test('GRP_IDS avec un seul ID → pas de séparateur', () => {
     const params = {
       communes: ['62225'],
       departements: ['62'],
-      groupes: ['b83367ac-40fd-5d1d-84bd-2a1bd040c365'],
+      groupes: [12],
       dateDeb: '2006-02-27',
       dateFin: '2026-02-27'
     };
 
     const result = sinpQueryBuilder.buildRequestOptions(params, 'v_synthese_commune');
 
-    expect(result.VIEWPARAMS).toContain('GROUP_UUIDS:b83367ac-40fd-5d1d-84bd-2a1bd040c365');
+    expect(result.VIEWPARAMS).toContain('GRP_IDS:12');
   });
 
-  test('GROUP_UUIDS avec plusieurs UUIDs → séparés par virgules (pas point-virgules)', () => {
+  test('GRP_IDS avec plusieurs IDs → séparés par pipe (|)', () => {
     const params = {
       communes: ['62225'],
       departements: ['62'],
-      groupes: [
-        'b83367ac-40fd-5d1d-84bd-2a1bd040c365',
-        'a94c1615-276d-5307-8fa2-d4e7bd4bdc05'
-      ],
+      groupes: [13, 15],
       dateDeb: '2006-02-27',
       dateFin: '2026-02-27'
     };
 
     const result = sinpQueryBuilder.buildRequestOptions(params, 'v_synthese_commune');
 
-    // Vérifier que les UUIDs sont séparés par des virgules (encodées en %2C)
-    expect(result.VIEWPARAMS).toContain('GROUP_UUIDS:b83367ac-40fd-5d1d-84bd-2a1bd040c365%2Ca94c1615-276d-5307-8fa2-d4e7bd4bdc05');
-    // Vérifier qu'il n'y a PAS de point-virgule entre les UUIDs
-    expect(result.VIEWPARAMS).not.toContain('b83367ac-40fd-5d1d-84bd-2a1bd040c365%3Ba94c1615');
+    // Vérifier que les IDs sont séparés par des pipes (|) = %7C quand encodé
+    expect(result.VIEWPARAMS).toContain('GRP_IDS:13|15');
+    // Vérifier qu'il n'y a PAS de virgule ou de point-virgule entre les IDs
+    expect(result.VIEWPARAMS).not.toContain('13,15');
+    expect(result.VIEWPARAMS).not.toContain('13;15');
   });
 
-  test('GROUP_UUIDS vide → paramètre non envoyé (évite timeout)', () => {
+  test('GRP_IDS vide → paramètre non envoyé (évite timeout)', () => {
     const params = {
       communes: ['62225'],
       departements: ['62'],
@@ -232,19 +231,16 @@ describe('GROUP_UUIDS - Gestion correcte des séparateurs', () => {
 
     const result = sinpQueryBuilder.buildRequestOptions(params, 'v_synthese_commune');
 
-    // GROUP_UUIDS ne doit PAS apparaître dans VIEWPARAMS
-    expect(result.VIEWPARAMS).not.toContain('GROUP_UUIDS');
+    // GRP_IDS ne doit PAS apparaître dans VIEWPARAMS
+    expect(result.VIEWPARAMS).not.toContain('GRP_IDS');
   });
 
-  test('Cohérence CD_REF et GROUP_UUIDS : tous deux utilisent des virgules', () => {
+  test('Cohérence CD_REF (virgules) et GRP_IDS (pipes)', () => {
     const params = {
       communes: ['62225'],
       departements: ['62'],
-      taxons: [2440, 2442],  // 2 taxons
-      groupes: [
-        'b83367ac-40fd-5d1d-84bd-2a1bd040c365',
-        'a94c1615-276d-5307-8fa2-d4e7bd4bdc05'
-      ],  // 2 groupes
+      taxons: [2440, 2442],  // 2 taxons - séparés par virgules
+      groupes: [12, 23],  // 2 groupes - séparés par pipes
       dateDeb: '2006-02-27',
       dateFin: '2026-02-27'
     };
@@ -252,9 +248,9 @@ describe('GROUP_UUIDS - Gestion correcte des séparateurs', () => {
     const result = sinpQueryBuilder.buildRequestOptions(params, 'v_synthese_commune');
 
     // CD_REF utilise des virgules
-    expect(result.VIEWPARAMS).toContain('CD_REF:2440%2C2442');
-    // GROUP_UUIDS utilise des virgules (même convention)
-    expect(result.VIEWPARAMS).toContain('GROUP_UUIDS:b83367ac-40fd-5d1d-84bd-2a1bd040c365%2Ca94c1615');
+    expect(result.VIEWPARAMS).toContain('CD_REF:2440,2442');
+    // GRP_IDS utilise des pipes
+    expect(result.VIEWPARAMS).toContain('GRP_IDS:12|23');
   });
 });
 
