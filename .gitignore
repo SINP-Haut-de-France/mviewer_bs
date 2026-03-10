@@ -3,3 +3,13 @@ node*
 panels/*
 node*
 package-*
+/apps/sinp_hdf/node_modules/*
+/node_modules/*
+/demo/*
+/addons/*
+index.html
+/css/
+/docs/*
+/js/*
+/lib/*
+/pages/*
