@@ -73,7 +73,7 @@ describe('sinpQueryBuilder - Gestion des tableaux cd_ref', () => {
     expect(result.VIEWPARAMS).not.toContain('undefined');
   });
 
-  test('Flux complet: advancedSearch → sinpQueryBuilder → URL correcte', () => {
+  test('Flux complet: communeSearch → sinpQueryBuilder → URL correcte', () => {
     // Simuler ce que retourne GlobalFilters React
     const selectedFilters = {
       filteredCommunes: ['62225'],
@@ -84,7 +84,7 @@ describe('sinpQueryBuilder - Gestion des tableaux cd_ref', () => {
       dateFin: '2025-12-10'
     };
     
-    // advancedSearch.js transforme en
+    // communeSearch.js transforme en
     const _params = {
       communes: selectedFilters.filteredCommunes,
       departements: selectedFilters.filteredDepartments,
@@ -254,3 +254,120 @@ describe('GRP_IDS - Gestion correcte des séparateurs', () => {
   });
 });
 
+// === TESTS POUR NOUVEAU CONTRAT POSTGRESQL ===
+
+describe('sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS', () => {
+  test('fn_get_stats_communes retourne un TYPENAME de fonction sans CQL_FILTER', () => {
+    const params = {
+      communes: ['62225', '59350'],
+      departements: ['62', '59'],
+      taxons: [2440, 2442],
+      groupes: [13, 15],
+      dateDeb: '2005-12-10',
+      dateFin: '2025-12-10',
+    };
+
+    const result = sinpQueryBuilder.buildRequestOptions(params, 'fn_get_stats_communes');
+
+    expect(result.TYPENAME).toBe('sinp_diffusion:fn_get_stats_communes');
+    expect(result.CQL_FILTER).toBeUndefined();
+    expect(result.VIEWPARAMS).toBe(
+      'DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;DEPT_IDS:62|59;CODE_INSEES:62225|59350;CD_REF:2440,2442;GRP_IDS:13|15'
+    );
+  });
+
+  test('fn_get_obs_detaillee_by_entities conserve CD_REF vide et omet GRP_IDS vide', () => {
+    const params = {
+      communes: ['62225'],
+      departements: ['62'],
+      taxons: [],
+      groupes: [],
+      dateDeb: '2020-01-01',
+      dateFin: '2025-12-10',
+    };
+
+    const result = sinpQueryBuilder.buildRequestOptions(
+      params,
+      'fn_get_obs_detaillee_by_entities'
+    );
+
+    expect(result.TYPENAME).toBe('sinp_diffusion:fn_get_obs_detaillee_by_entities');
+    expect(result.CQL_FILTER).toBeUndefined();
+    expect(result.VIEWPARAMS).toContain('DEPT_IDS:62');
+    expect(result.VIEWPARAMS).toContain('CODE_INSEES:62225');
+    expect(result.VIEWPARAMS).toContain('CD_REF:');
+    expect(result.VIEWPARAMS).not.toContain('GRP_IDS:');
+  });
+
+  test('CD_REF utilise des virgules et GRP_IDS des pipes', () => {
+    const params = {
+      taxons: [2440, 2442, 2444],
+      groupes: [12, 23],
+      dateDeb: '2006-02-27',
+      dateFin: '2026-02-27',
+    };
+
+    const result = sinpQueryBuilder.buildRequestOptions(params, 'fn_get_stats_communes');
+
+    expect(result.VIEWPARAMS).toContain('CD_REF:2440,2442,2444');
+    expect(result.VIEWPARAMS).toContain('GRP_IDS:12|23');
+  });
+
+  test('communes et départements passent en VIEWPARAMS', () => {
+    const params = {
+      communes: ['62225'],
+      departements: ['62'],
+      dateDeb: '2020-01-01',
+      dateFin: '2025-12-10',
+    };
+
+    const result = sinpQueryBuilder.buildRequestOptions(params, 'fn_get_stats_communes');
+
+    expect(result.CQL_FILTER).toBeUndefined();
+    expect(result.VIEWPARAMS).toContain('DEPT_IDS:62');
+    expect(result.VIEWPARAMS).toContain('CODE_INSEES:62225');
+  });
+
+  test('le flux communeSearch garde un format GeoServer simple', () => {
+    const selectedFilters = {
+      filteredCommunes: ['62225'],
+      filteredDepartments: ['62'],
+      filteredTaxons: [2440, 2442],
+      filteredGroupes: [13],
+      dateDeb: '2005-12-10',
+      dateFin: '2025-12-10',
+    };
+
+    const params = {
+      communes: selectedFilters.filteredCommunes,
+      departements: selectedFilters.filteredDepartments,
+      taxons: selectedFilters.filteredTaxons,
+      groupes: selectedFilters.filteredGroupes,
+      dateDeb: selectedFilters.dateDeb,
+      dateFin: selectedFilters.dateFin,
+    };
+
+    const result = sinpQueryBuilder.buildRequestOptions(params, 'fn_get_stats_communes');
+
+    expect(result.TYPENAME).toBe('sinp_diffusion:fn_get_stats_communes');
+    expect(result.VIEWPARAMS).toBe(
+      'DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;DEPT_IDS:62;CODE_INSEES:62225;CD_REF:2440,2442;GRP_IDS:13'
+    );
+  });
+
+  test('les vues legacy gardent leur CQL_FILTER pour compatibilité', () => {
+    const params = {
+      communes: ['62225'],
+      departements: ['62'],
+      taxons: [2440],
+      dateDeb: '2020-01-01',
+      dateFin: '2025-12-10',
+    };
+
+    const result = sinpQueryBuilder.buildRequestOptions(params, 'v_synthese_commune');
+
+    expect(result.TYPENAME).toBe('sinp_diffusion:v_synthese_commune');
+    expect(result.CQL_FILTER).toBe("code_insee IN ('62225') AND code_dpt IN ('62')");
+    expect(result.VIEWPARAMS).toContain('CD_REF:2440');
+  });
+});

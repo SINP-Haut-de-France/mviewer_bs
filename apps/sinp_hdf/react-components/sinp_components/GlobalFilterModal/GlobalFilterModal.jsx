@@ -53,18 +53,18 @@ const GlobalFilterModal = ({
       if (effectiveFilters.dateFin) finalParams.dateFin = effectiveFilters.dateFin;
     }
 
-    console.log("Paramètres finaux envoyés à advancedSearch:", finalParams);
+    console.log("Paramètres finaux envoyés à communeSearch:", finalParams);
     console.log("=".repeat(45));
 
     setError(null); // Réinitialiser l'erreur
 
     try {
-      // 1. Appel au code legacy mviewer (comportement par défaut)
-      if (window.mviewer?.customLayers?.advancedSearch) {
-        await mviewer.customLayers.advancedSearch.get_datas(finalParams);
+      // 1. Appel au code mviewer
+      if (window.mviewer?.customLayers?.communeSearch) {
+        await mviewer.customLayers.communeSearch.get_datas(finalParams);
 
         // Vérifier si des données ont été retournées
-        const layer = mviewer.customLayers.advancedSearch.layer;
+        const layer = mviewer.customLayers.communeSearch.layer;
         const features = layer.getSource().getFeatures();
 
         if (features.length === 0) {
@@ -83,7 +83,7 @@ const GlobalFilterModal = ({
         }
       } else {
         setError("Service de recherche non disponible.");
-        console.warn("mviewer.customLayers.advancedSearch n'est pas disponible");
+        console.warn("mviewer.customLayers.communeSearch n'est pas disponible");
       }
 
       // 2. Callback optionnel pour comportements additionnels (UI, analytics, etc.)

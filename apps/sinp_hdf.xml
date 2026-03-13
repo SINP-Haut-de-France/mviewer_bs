@@ -10,6 +10,8 @@
 		style='apps/sinp_hdf/custom_theme/css/sinp_hdf.css'
 	/>
 	<extensions>
+		<extension type="javascript" src="apps/sinp_hdf/customlayers/SinpBaseLayer.js" />
+		<extension type="javascript" src="apps/sinp_hdf/customcontrols/SinpBaseCustom.js" />
 		<extension type="component" id="reactInjector" path="apps/sinp_hdf/addons/"/>
 		<extension type="component" id="sinpOverriding" path="apps/sinp_hdf/addons/"/>
 	</extensions>
@@ -29,32 +31,8 @@
 			id="searchTheme" 
 			icon="fa fa-search-minus">
 			<layer 
-				id="advancedSearch"
-				name="Rechercher avancée"
-				visible="true"
-				queryable="true"
-				exclusive="true"
-				type="customlayer" 
-				url="apps/sinp_hdf/customlayers/advancedSearch.js"
-				customcontrol="true"
-				customcontrolpath="apps/sinp_hdf/customcontrols/advancedSearch/"
-				expanded="true"
-				fields=""
-				tooltip="true"
-				tooltipenabled="true"
-				tooltipcontent="{{libelle_commune}} ({{code_insee}}) : {{nb_observations}} obs."
-				attribution="Source: SINP Hauts-de-France. Synthèse des observations naturalistes par commune."
-				nohighlight="false"
-				jsonfields="details"
-				infopanel="bottom-panel"
-				metadata=""
-				metadata-csw=""
-				>
-				<template url="apps/sinp_hdf/customlayers/advancedSearch.mst"/>
-			</layer>
-			<layer 
 				id="communeSearch"
-				name="Rechercher sur commune"
+				name="Communes"
 				visible="true"
 				queryable="true"
 				exclusive="true"
@@ -62,10 +40,11 @@
 				url="apps/sinp_hdf/customlayers/communeSearch.js"
 				customcontrol="true"
 				customcontrolpath="apps/sinp_hdf/customcontrols/communeSearch/"
+				expanded="true"
 				fields=""
 				tooltip="true"
 				tooltipenabled="true"
-				tooltipcontent="{{libelle_commune}} ({{code_insee}}) : {{nb_observations}} obs."
+				tooltipcontent="{{code_insee}} : {{nb_observations}} obs."
 				attribution="Source: SINP Hauts-de-France. Synthèse des observations naturalistes par commune."
 				nohighlight="false"
 				jsonfields="details"
@@ -76,16 +55,39 @@
 				<template url="apps/sinp_hdf/customlayers/communeSearch.mst"/>
 			</layer>
 			<layer 
-				id="especeSearch"
-				name="Rechercher d'espèce"
+				id="gridSearch5x5"
+				name="Grille 5x5"
 				visible="true"
 				queryable="true"
 				exclusive="true"
 				type="customlayer" 
-				url="apps/sinp_hdf/customlayers/especeSearch.js"
+				url="apps/sinp_hdf/customlayers/grid5x5search.js"
+				customcontrol="true"
+				customcontrolpath="apps/sinp_hdf/customcontrols/grid5x5search/"
+				fields=""
+				tooltip="true"
+				tooltipenabled="true"
+				tooltipcontent="{{code_insee}} : {{nb_observations}} obs."
+				attribution="Source: SINP Hauts-de-France. Synthèse des observations naturalistes par commune."
+				nohighlight="false"
+				jsonfields="details"
+				infopanel="bottom-panel"
+				metadata=""
+				metadata-csw=""
+				>
+				<template url="apps/sinp_hdf/customlayers/grid5x5search.mst"/>
+			</layer>
+			<layer 
+				id="grid10x10search"
+				name="Grille 10x10"
+				visible="true"
+				queryable="true"
+				exclusive="true"
+				type="customlayer" 
+				url="apps/sinp_hdf/customlayers/gridSearch10x10.js"
 				expanded="true"
 				customcontrol="true"
-				customcontrolpath="apps/sinp_hdf/customcontrols/especeSearch/"
+				customcontrolpath="apps/sinp_hdf/customcontrols/grid10x10search/"
 				fields=""
 				nohighlight="false"
 				jsonfields="details"
@@ -93,7 +95,7 @@
 				metadata=""
 				metadata-csw=""
 				>
-				<template url="apps/sinp_hdf/customlayers/especeSearch.mst"/>
+				<template url="apps/sinp_hdf/customlayers/gridSearch10x10.mst"/>
 			</layer>
 		</theme>
   </themes>

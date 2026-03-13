@@ -299,7 +299,41 @@ window.sinpQueryBuilder = (function () {
     "1ee0a3f1-0732-5b34-bf23-7820e30c8a77", // AUTRES
   ];
 
+  const _serializeViewParam = function (paramKey, value) {
+    const pipeSeparatedParams = ["GRP_IDS", "DEPT_IDS", "CODE_INSEES"];
+
+    if (paramKey === "GRP_IDS") {
+      if (!value || (Array.isArray(value) && value.length === 0)) {
+        return null;
+      }
+      return Array.isArray(value) ? value.join("|") : String(value);
+    }
+
+    if (paramKey === "CD_REF") {
+      if (value === undefined || value === null) {
+        return "";
+      }
+      return Array.isArray(value) ? value.join(",") : String(value);
+    }
+
+    if (pipeSeparatedParams.includes(paramKey)) {
+      if (value === undefined || value === null) {
+        return "";
+      }
+      return Array.isArray(value) ? value.join("|") : String(value);
+    }
+
+    if (value === undefined || value === null) {
+      return "";
+    }
+
+    return Array.isArray(value) ? value.join(",") : String(value);
+  };
+
   const _viewConfig = {
+    // ========================================================================
+    // Anciennes vues SQL (compatibilité, déprécié)
+    // ========================================================================
     v_synthese_commune: {
       cql_filters: {
         communes: {
@@ -316,8 +350,8 @@ window.sinpQueryBuilder = (function () {
       view_params: {
         DATE_DEB: "dateDeb",
         DATE_FIN: "dateFin",
-        CD_REF: "taxons", // Tableau de cd_ref
-        GRP_IDS: "groupes", // Tableau d'IDs de groupes taxonomiques
+        CD_REF: "taxons",
+        GRP_IDS: "groupes",
       },
     },
 
@@ -337,10 +371,11 @@ window.sinpQueryBuilder = (function () {
       view_params: {
         DATE_DEB: "dateDeb",
         DATE_FIN: "dateFin",
-        CD_REF: "taxons", // Tableau de cd_ref
-        GRP_IDS: "groupes", // Tableau d'IDs de groupes taxonomiques
+        CD_REF: "taxons",
+        GRP_IDS: "groupes",
       },
     },
+
     vm_synthese_observations_maille_5x5_hdf: {
       cql_filters: {
         taxons: {
@@ -350,117 +385,157 @@ window.sinpQueryBuilder = (function () {
         },
       },
     },
+
+    // ========================================================================
+    // NOUVELLES FONCTIONS POSTGRESQL (VIEWPARAMS uniquement)
+    // ========================================================================
+
+    /**
+     * Fonction 1: Statistiques communes
+     * Utilise UNIQUEMENT VIEWPARAMS (pas de CQL_FILTER pour filtres métier)
+     * Les filtres communes/depts sont ignorés (c'est une agrégation globale)
+     */
+    fn_get_stats_communes: {
+      cql_filters: {},
+      view_params: {
+        DATE_DEB: "dateDeb",
+        DATE_FIN: "dateFin",
+        DEPT_IDS: "departements",
+        CODE_INSEES: "communes",
+        CD_REF: "taxons",
+        GRP_IDS: "groupes",
+      },
+    },
+
+    /**
+     * Fonction 2: Détails par entité (commune + taxon)
+     * Même signature que fn_get_stats_communes
+     */
+    fn_get_obs_detaillee_by_entities: {
+      cql_filters: {},
+      view_params: {
+        DATE_DEB: "dateDeb",
+        DATE_FIN: "dateFin",
+        DEPT_IDS: "departements",
+        CODE_INSEES: "communes",
+        CD_REF: "taxons",
+        GRP_IDS: "groupes",
+      },
+    },
+
+    /**
+     * Fonction 3: Statistiques grille 5x5
+     * Agrégation au niveau maille 5x5 (future)
+     */
+    fn_get_stats_grille_5x5: {
+      cql_filters: {},
+      view_params: {
+        DATE_DEB: "dateDeb",
+        DATE_FIN: "dateFin",
+        DEPT_IDS: "departements",
+        CODE_INSEES: "communes",
+        CD_REF: "taxons",
+        GRP_IDS: "groupes",
+      },
+    },
+
+    /**
+     * Fonction 4: Statistiques grille 10x10
+     * Agrégation au niveau maille 10x10 (future)
+     */
+    fn_get_stats_grille_10x10: {
+      cql_filters: {},
+      view_params: {
+        DATE_DEB: "dateDeb",
+        DATE_FIN: "dateFin",
+        DEPT_IDS: "departements",
+        CODE_INSEES: "communes",
+        CD_REF: "taxons",
+        GRP_IDS: "groupes",
+      },
+    },
+
+    /**
+     * Fonction 5: Détails pour grilles (5x5 et 10x10)
+     * Agrégation au niveau maille + taxon
+     */
+    fn_get_obs_detaillee_grille: {
+      cql_filters: {},
+      view_params: {
+        DATE_DEB: "dateDeb",
+        DATE_FIN: "dateFin",
+        DEPT_IDS: "departements",
+        CODE_INSEES: "communes",
+        CD_REF: "taxons",
+        GRP_IDS: "groupes",
+      },
+    },
   };
 
   /**
-   * Construit les filtres CQL de manière sécurisée à partir des paramètres
-   * @param {string} typename - Nom du type de vue (v_synthese_commune, v_obs_detaillee)
+   * Construit les options de requête GeoServer à partir des paramètres.
    * @param {Object} params - Paramètres de filtrage
-   * @return {string} - Filtre CQL complet
+   * @param {string} view - Nom de la vue ou fonction GeoServer
+   * @return {Object} - Objet options avec TYPENAME, VIEWPARAMS et éventuellement CQL_FILTER
    */
-  const _buildRequestOptions = function (params, view) {
+  const _buildRequestOptions = function (params = {}, view) {
     if (!view) throw new Error(`Unknown view and schema : ${view}`);
-    var conditions = [];
+
+    const conditions = [];
     const typename = `sinp_diffusion:${view}`;
     const cfg = _viewConfig[view];
+
     if (!cfg) throw new Error(`Unknown view: ${typename}`);
 
-    let options = {
-      TYPENAME: typename,
-      CQL_FILTER: "",
-    };
-    for (const [key, rule] of Object.entries(cfg.cql_filters)) {
-      // cas où la règle attend plusieurs paramètres nommés (ex: dateDeb, dateFin)
+    for (const [, rule] of Object.entries(cfg.cql_filters || {})) {
       if (Array.isArray(rule.params)) {
         const values = rule.params.map((p) => params[p]);
-        // condition coté règle (ex: dateDeb && dateFin)
         if (rule.condition && !rule.condition(params)) continue;
-        // si toutes les valeurs attendues sont absentes, on skip
         if (values.every((v) => v === undefined || v === null)) continue;
         const cond = rule.apply(...values);
         if (cond) conditions.push(cond);
         continue;
       }
 
-      // cas standard avec un seul param nommé (rule.param)
       const value = params[rule.param];
-
       if (value === undefined || value === null) continue;
       if (Array.isArray(value) && value.length === 0) continue;
       if (rule.condition && !rule.condition(params)) continue;
+
       const cond = rule.apply(value);
       if (cond) conditions.push(cond);
     }
 
-    if (conditions.length === 0) return "";
+    const result = {
+      TYPENAME: typename,
+    };
 
-    // compiler les conditions en une string CQL
     const cqlString = conditions
       .map((c) => _compileCqlCondition(c))
       .filter(Boolean)
       .join(" AND ");
 
-    if (!cqlString) return "";
+    if (cqlString) {
+      result.CQL_FILTER = cqlString;
+    }
 
-    // formatter view params si présent
     if (cfg.view_params && Object.keys(cfg.view_params).length !== 0) {
       const viewParamsArray = Object.entries(cfg.view_params)
         .map(([paramKey, paramValue]) => {
-          let value = params[paramValue];
-
-          // Gestion spécifique pour GRP_IDS
-          if (paramKey === "GRP_IDS") {
-            // Si aucun groupe sélectionné, ne pas envoyer GRP_IDS
-            if (!value || (Array.isArray(value) && value.length === 0)) {
-              return null;
-            }
-            if (Array.isArray(value)) {
-              value = value.join("|");  // Séparateur: pipe (|)
-            }
-            return `${paramKey}:${value}`;
+          const serializedValue = _serializeViewParam(paramKey, params[paramValue]);
+          if (serializedValue === null) {
+            return null;
           }
-
-          // Gestion spécifique pour CD_REF
-          if (paramKey === "CD_REF") {
-            // TOUJOURS envoyer CD_REF (vide ou rempli)
-            if (value === undefined || value === null) {
-              value = "";
-            } else if (Array.isArray(value)) {
-              value = value.length > 0 ? value.join(",") : "";
-            }
-            return `${paramKey}:${value}`;
-          }
-
-          // Si undefined ou null, envoyer chaîne vide
-          if (value === undefined || value === null) {
-            value = "";
-          }
-          // Si c'est un tableau, le convertir en CSV (séparé par virgule)
-          else if (Array.isArray(value)) {
-            value = value.length > 0 ? value.join(",") : "";
-          }
-
-          return `${paramKey}:${value}`;
+          return `${paramKey}:${serializedValue}`;
         })
-        .filter(Boolean); // Filtrer les entrées null/undefined
+        .filter(Boolean);
 
-      const result = {
-        TYPENAME: typename,
-        CQL_FILTER: cqlString,
-      };
-
-      // Ajouter VIEWPARAMS seulement s'il y a des paramètres
       if (viewParamsArray.length > 0) {
         result.VIEWPARAMS = viewParamsArray.join(";");
       }
-
-      return result;
     }
 
-    return {
-      TYPENAME: typename,
-      CQL_FILTER: cqlString,
-    };
+    return result;
   };
 
   return {

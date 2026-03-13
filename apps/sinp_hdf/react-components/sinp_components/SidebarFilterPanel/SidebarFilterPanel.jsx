@@ -8,11 +8,11 @@ const SidebarFilterPanel = ({ activeLayerId }) => {
     console.log("🎯 [SIDEBAR] Filtres soumis depuis le sidebar:", params);
     console.log("🎯 [SIDEBAR] État complet des filtres:", currentFilters);
 
-    if (window.mviewer?.customLayers?.advancedSearch) {
-      console.log("🎯 [SIDEBAR] Appel de advancedSearch.get_datas");
-      mviewer.customLayers.advancedSearch.get_datas(params);
+    if (window.mviewer?.customLayers?.communeSearch) {
+      console.log("🎯 [SIDEBAR] Appel de communeSearch.get_datas");
+      mviewer.customLayers.communeSearch.get_datas(params);
     } else {
-      console.error("❌ [SIDEBAR] mviewer.customLayers.advancedSearch non disponible");
+      console.error("❌ [SIDEBAR] mviewer.customLayers.communeSearch non disponible");
     }
   };
 

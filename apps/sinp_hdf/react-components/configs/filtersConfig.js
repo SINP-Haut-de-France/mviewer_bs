@@ -121,6 +121,7 @@ export const FILTER_CONFIGS = {
  * Mapping des couches mviewer vers les profils de filtres
  */
 export const LAYER_FILTER_PROFILES = {
+  'communeSearch': FILTER_PROFILES.FULL,
   'advancedSearch': FILTER_PROFILES.FULL,
   'obs_detaillees': FILTER_PROFILES.DETAILED_OBSERVATIONS,
   'repartition_temporelle': FILTER_PROFILES.TEMPORAL,
