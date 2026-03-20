@@ -12,59 +12,181 @@ import React, {
  */
 const FilterContext = createContext(null);
 
+const DEFAULT_FILTER_UI_CONFIG = {
+  closeButton: {
+    visible: false,
+    enabled: false,
+  },
+  density: "legacy-compact",
+};
+
+const TOAST_DURATION_MS = 5000;
+
 /**
  * Provider global pour la gestion des filtres SINP
  * Permet de contrôler les filtres depuis n'importe quel composant
  */
 export const FilterProvider = ({ children }) => {
-  const [modalState, setModalState] = useState({
-    isOpen: false,
+  const [filterState, setFilterState] = useState({
+    displayMode: "sidebar",
+    isModalOpen: false,
     onSubmit: null,
     activeLayerId: null,
+    filterProfile: null,
+    currentFilters: null,
+    uiConfig: DEFAULT_FILTER_UI_CONFIG,
   });
+  const [toasts, setToasts] = useState([]);
 
-  const [sidebarState, setSidebarState] = useState({
-    isExpanded: false,
-    activeLayerId: null,
-  });
+  const dismissToast = useCallback((toastId) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== toastId));
+  }, []);
+
+  const pushToast = useCallback((message, options = {}) => {
+    if (!message) {
+      return null;
+    }
+
+    const id = options.id || `toast-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const duration = options.duration ?? TOAST_DURATION_MS;
+    const toast = {
+      id,
+      message,
+      type: options.type || "error",
+      title: options.title || "Erreur",
+      createdAt: Date.now(),
+    };
+
+    setToasts((prev) => [...prev, toast]);
+
+    if (duration > 0) {
+      window.setTimeout(() => {
+        dismissToast(id);
+      }, duration);
+    }
+
+    return id;
+  }, [dismissToast]);
+
+  const pushFilterError = useCallback((message, options = {}) => {
+    return pushToast(message, {
+      type: "error",
+      title: options.title || "Recherche avancée",
+      duration: options.duration,
+      id: options.id,
+    });
+  }, [pushToast]);
+
+  const mergeUIConfig = useCallback((prevUIConfig, config = {}) => {
+    const requestedUIConfig = config.uiConfig || {};
+    const requestedCloseButton = config.closeButton || requestedUIConfig.closeButton;
+
+    return {
+      ...prevUIConfig,
+      ...requestedUIConfig,
+      closeButton: {
+        ...prevUIConfig.closeButton,
+        ...requestedUIConfig.closeButton,
+        ...requestedCloseButton,
+      },
+      density: config.density ?? requestedUIConfig.density ?? prevUIConfig.density,
+    };
+  }, []);
+
+  const mergeConfig = useCallback(
+    (prevState, config = {}) => ({
+      ...prevState,
+      onSubmit: config.onSubmit ?? prevState.onSubmit,
+      activeLayerId: config.activeLayerId ?? prevState.activeLayerId,
+      filterProfile: config.filterProfile ?? prevState.filterProfile,
+      uiConfig: mergeUIConfig(prevState.uiConfig, config),
+    }),
+    [mergeUIConfig]
+  );
 
   // === MODAL CONTROLS ===
 
   const openModal = useCallback((config = {}) => {
     console.log("📂 Ouverture de la modal avec config:", config);
-    setModalState({
-      isOpen: true,
-      onSubmit: config.onSubmit || null,
-      activeLayerId: config.activeLayerId || null,
-      filterProfile: config.filterProfile || null,
-    });
-  }, []);
+    setFilterState((prev) => ({
+      ...mergeConfig(prev, config),
+      displayMode: "modal",
+      isModalOpen: true,
+    }));
+  }, [mergeConfig]);
 
   const closeModal = useCallback(() => {
     console.log("📕 Fermeture de la modal");
-    setModalState((prev) => ({
+    setFilterState((prev) => ({
       ...prev,
-      isOpen: false,
+      isModalOpen: false,
     }));
   }, []);
 
   // === SIDEBAR CONTROLS ===
 
-  const toggleSidebar = useCallback(() => {
-    console.log("🔄 Toggle sidebar");
-    setSidebarState((prev) => ({
-      ...prev,
-      isExpanded: !prev.isExpanded,
+  const showSidebar = useCallback((config = {}) => {
+    console.log("📌 Affichage des filtres dans le sidebar", config);
+    setFilterState((prev) => ({
+      ...mergeConfig(prev, config),
+      displayMode: "sidebar",
+      isModalOpen: false,
     }));
-  }, []);
+  }, [mergeConfig]);
+
+  const switchToModal = useCallback((config = {}) => {
+    console.log("🪟 Bascule des filtres en mode fenêtré", config);
+    openModal(config);
+  }, [openModal]);
+
+  const toggleSidebar = useCallback((config = {}) => {
+    console.log("🔄 Toggle sidebar");
+    showSidebar(config);
+  }, [showSidebar]);
 
   const setSidebarLayer = useCallback((layerId) => {
     console.log("🗺️ Changement de couche active:", layerId);
-    setSidebarState((prev) => ({
+    setFilterState((prev) => ({
       ...prev,
       activeLayerId: layerId,
     }));
   }, []);
+
+  const setCurrentFilters = useCallback((filters) => {
+    setFilterState((prev) => ({
+      ...prev,
+      currentFilters: filters,
+    }));
+  }, []);
+
+  const clearCurrentFilters = useCallback(() => {
+    setFilterState((prev) => ({
+      ...prev,
+      currentFilters: null,
+    }));
+  }, []);
+
+  const modalState = useMemo(
+    () => ({
+      isOpen: filterState.displayMode === "modal" && filterState.isModalOpen,
+      onSubmit: filterState.onSubmit,
+      activeLayerId: filterState.activeLayerId,
+      filterProfile: filterState.filterProfile,
+      uiConfig: filterState.uiConfig,
+    }),
+    [filterState]
+  );
+
+  const sidebarState = useMemo(
+    () => ({
+      isVisible: filterState.displayMode === "sidebar",
+      activeLayerId: filterState.activeLayerId,
+      filterProfile: filterState.filterProfile,
+      onSubmit: filterState.onSubmit,
+      uiConfig: filterState.uiConfig,
+    }),
+    [filterState]
+  );
 
   // === VALUE ===
 
@@ -72,16 +194,47 @@ export const FilterProvider = ({ children }) => {
   const value = useMemo(
     () => ({
       // Modal
+      displayMode: filterState.displayMode,
       modalState,
       openModal,
       closeModal,
 
       // Sidebar
       sidebarState,
+      showSidebar,
+      switchToModal,
       toggleSidebar,
       setSidebarLayer,
+
+      // Shared session state
+      currentFilters: filterState.currentFilters,
+      setCurrentFilters,
+      clearCurrentFilters,
+
+      // Notifications globales
+      toasts,
+      dismissToast,
+      pushToast,
+      pushFilterError,
     }),
-    [modalState, sidebarState, openModal, closeModal, toggleSidebar, setSidebarLayer]
+    [
+      filterState.displayMode,
+      filterState.currentFilters,
+      modalState,
+      openModal,
+      closeModal,
+      sidebarState,
+      showSidebar,
+      switchToModal,
+      toggleSidebar,
+      setSidebarLayer,
+      setCurrentFilters,
+      clearCurrentFilters,
+      toasts,
+      dismissToast,
+      pushToast,
+      pushFilterError,
+    ]
   );
 
   // ⚠️ IMPORTANT: Exposer l'API au code legacy dès que le Provider est monté
@@ -108,6 +261,20 @@ export const FilterProvider = ({ children }) => {
 
     return () => clearTimeout(timer);
   }, [value]);
+
+  useEffect(() => {
+    window.sinpToast = {
+      error: (message, options = {}) => pushFilterError(message, options),
+      notify: (message, options = {}) => pushToast(message, options),
+      dismiss: dismissToast,
+    };
+
+    return () => {
+      if (window.sinpToast) {
+        delete window.sinpToast;
+      }
+    };
+  }, [pushFilterError, pushToast, dismissToast]);
 
   return <FilterContext.Provider value={value}>{children}</FilterContext.Provider>;
 };

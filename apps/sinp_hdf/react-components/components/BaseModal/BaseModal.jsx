@@ -9,7 +9,20 @@ import React, {
 } from "react";
 import BaseModalUI from "./BaseModalUI";
 
-const BaseModal = forwardRef(({ isOpen, onClose, title, children, onMinimize }, ref) => {
+const BaseModal = forwardRef(
+  (
+    {
+      isOpen,
+      onClose,
+      title,
+      children,
+      onMinimize,
+      headerActions = [],
+      closeButton = { visible: true, enabled: true },
+      contentClassName = "",
+    },
+    ref
+  ) => {
   const [position, setPosition] = useState(null);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -58,7 +71,6 @@ const BaseModal = forwardRef(({ isOpen, onClose, title, children, onMinimize }, 
       // Récupérer les dimensions de la modale
       const modal = document.querySelector('.base-modal-content');
       const modalWidth = modal ? modal.offsetWidth : 600;
-      const modalHeight = modal ? modal.offsetHeight : 400;
 
       // Limiter le déplacement dans les limites du navigateur
       // Avec transform: translate(-50%, -50%), le top/left est au centre
@@ -124,19 +136,23 @@ const BaseModal = forwardRef(({ isOpen, onClose, title, children, onMinimize }, 
     [handleToggleMinimize]
   );
 
-  return (
-    <BaseModalUI
-      isOpen={isOpen}
-      onClose={onClose}
-      title={title}
-      position={position}
-      onMouseDown={handleMouseDown}
-      isDragging={isDragging}
-      isMinimized={isMinimized}
-      onToggleMinimize={handleToggleMinimize}>
-      {children}
-    </BaseModalUI>
-  );
-});
+    return (
+      <BaseModalUI
+        isOpen={isOpen}
+        onClose={onClose}
+        title={title}
+        position={position}
+        onMouseDown={handleMouseDown}
+        isDragging={isDragging}
+        isMinimized={isMinimized}
+        onToggleMinimize={handleToggleMinimize}
+        headerActions={headerActions}
+        contentClassName={contentClassName}
+        closeButton={closeButton}>
+        {children}
+      </BaseModalUI>
+    );
+  }
+);
 
 export default BaseModal;

@@ -45,9 +45,22 @@ var reactInjector = (function () {
         const header = document.createElement("a");
         header.href = "#";
         header.innerHTML = `
-          <span class="fa-stack">
-            <i class="fa fa-filter fa-stack-1x"></i>
-          </span><span>Filtres avancés</span>
+          <div class="menu-theme-layers-name">
+            <span class="fa-stack">
+              <i class="fa fa-filter fa-stack-1x"></i>
+            </span>
+            <span>Filtres avancés</span>
+          </div>
+          <div class="toggle-theme-layers react-filters-header-actions">
+            <span
+              class="fa-stack react-filters-toggle-button"
+              role="button"
+              tabindex="0"
+              title="Ouvrir les filtres dans une fenêtre"
+              aria-label="Ouvrir les filtres dans une fenêtre">
+              <i class="fa fa-window-restore fa-stack-1x"></i>
+            </span>
+          </div>
         `;
 
         // Créer le conteneur des filtres (initialement caché)
@@ -69,12 +82,30 @@ var reactInjector = (function () {
 
         filtersContainer.appendChild(reactContainer);
 
+        const modalToggleButton = header.querySelector(".react-filters-toggle-button");
+
+        const openFiltersInModal = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.dispatchEvent(new CustomEvent("reactSidebarFilters:openModal"));
+        };
+
+        if (modalToggleButton) {
+          modalToggleButton.addEventListener("click", openFiltersInModal);
+          modalToggleButton.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") {
+              openFiltersInModal(e);
+            }
+          });
+        }
+
         // Ajouter le comportement de toggle au clic sur le header
         header.addEventListener("click", function (e) {
           e.preventDefault();
           const isHidden = filtersContainer.style.display === "none";
           filtersContainer.style.display = isHidden ? "block" : "none";
           filterTheme.classList.toggle("active", isHidden);
+          filterTheme.classList.toggle("opened", isHidden);
         });
 
         // Assembler la structure

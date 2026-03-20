@@ -63,6 +63,9 @@ export const openFilterModal = (config = {}) => {
     }),
     activeLayerId: config.activeLayerId || null,
     filterProfile: config.filterProfile || null,
+    closeButton: config.closeButton,
+    density: config.density,
+    uiConfig: config.uiConfig,
   });
 };
 
@@ -85,6 +88,34 @@ export const toggleFilterSidebar = () => {
     console.error('❌ Filter API non initialisée');
     return;
   }
+  if (typeof filterContextAPI.showSidebar === 'function') {
+    filterContextAPI.showSidebar();
+    return;
+  }
+  filterContextAPI.toggleSidebar();
+};
+
+/**
+ * Ouvre explicitement les filtres dans le sidebar
+ */
+export const openFilterSidebar = (config = {}) => {
+  if (!filterContextAPI) {
+    console.error('❌ Filter API non initialisée');
+    return;
+  }
+
+  if (typeof filterContextAPI.showSidebar === 'function') {
+    filterContextAPI.showSidebar({
+      onSubmit: config.onSubmit || null,
+      activeLayerId: config.activeLayerId || null,
+      filterProfile: config.filterProfile || null,
+      closeButton: config.closeButton,
+      density: config.density,
+      uiConfig: config.uiConfig,
+    });
+    return;
+  }
+
   filterContextAPI.toggleSidebar();
 };
 
@@ -134,6 +165,7 @@ if (typeof window !== 'undefined') {
   window.reactComponentManager = {
     openFilterModal,
     closeFilterModal,
+    openFilterSidebar,
     toggleFilterSidebar,
     setFilterLayer,
     mountComponent,

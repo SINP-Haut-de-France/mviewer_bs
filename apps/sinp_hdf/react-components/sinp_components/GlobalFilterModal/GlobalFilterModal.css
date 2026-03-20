@@ -2,7 +2,7 @@
 
 /* Wrapper principal avec variables Bootstrap */
 .modal-filters-wrapper {
-  padding: 1rem;
+  padding: 0.625rem;
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1;
@@ -15,8 +15,8 @@
 
 /* Alerts Bootstrap 5 */
 .modal-filters-wrapper .alert {
-  padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.625rem;
   border: 1px solid transparent;
   border-radius: var(--bs-border-radius, 0.375rem);
   display: flex;
@@ -38,7 +38,7 @@
 
 /* Conteneur des filtres globaux */
 .modal-filters-wrapper .global-filters-container {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -46,14 +46,14 @@
 
 /* Sections de filtres */
 .modal-filters-wrapper .collapsible-filter-section {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
   flex-shrink: 0;
   border: 1px solid var(--bs-border-color, #dee2e6);
   border-radius: var(--bs-border-radius, 0.375rem);
 }
 
 .modal-filters-wrapper .section-content {
-  padding: 1rem;
+  padding: 0.625rem;
   box-sizing: border-box;
   /* Permettre aux dropdowns de déborder */
   overflow: visible !important;
@@ -63,8 +63,8 @@
 .modal-filters-wrapper .filter-actions {
   display: flex;
   gap: 0.625rem;
-  margin-top: 1.25rem;
-  padding-top: 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.625rem;
   border-top: 1px solid var(--bs-border-color, #dee2e6);
   flex-shrink: 0;
 }
@@ -72,10 +72,10 @@
 /* Boutons avec classes Bootstrap 5 */
 .modal-filters-wrapper .btn {
   flex: 1;
-  padding: 0.625rem 1rem;
+  padding: 0.375rem 0.625rem;
   border: 1px solid transparent;
   border-radius: var(--bs-border-radius, 0.375rem);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   line-height: 1.5;
   cursor: pointer;
@@ -145,29 +145,29 @@
 /* Responsive - Tablettes */
 @media (max-width: 768px) {
   .modal-filters-wrapper {
-    padding: 0.875rem;
+    padding: 0.625rem;
   }
 
   .modal-filters-wrapper .btn {
-    padding: 0.5rem 0.875rem;
-    font-size: 0.8125rem;
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
   }
 
   .modal-filters-wrapper .filter-actions {
     gap: 0.5rem;
-    margin-top: 1rem;
-    padding-top: 0.875rem;
+    margin-top: 0.625rem;
+    padding-top: 0.5rem;
   }
 }
 
 /* Responsive - Smartphones */
 @media (max-width: 480px) {
   .modal-filters-wrapper {
-    padding: 0.75rem;
+    padding: 0.5rem;
   }
 
   .modal-filters-wrapper .btn {
-    padding: 0.5rem 0.75rem;
+    padding: 0.3125rem 0.5rem;
     font-size: 0.75rem;
   }
 

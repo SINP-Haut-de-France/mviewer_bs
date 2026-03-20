@@ -1,7 +1,9 @@
 import React, { useRef, useState } from "react";
 import BaseModal from "../../components/BaseModal/BaseModal";
 import GlobalFilters from "../GlobalFilters/GlobalFilters";
+import { useFilters } from "../../providers/FilterProvider";
 import "./GlobalFilterModal.css";
+import ErrorButton from "../../components/ErrorButton.jsx";
 
 const GlobalFilterModal = ({
   isOpen,
@@ -9,12 +11,43 @@ const GlobalFilterModal = ({
   onSubmit,
   activeLayerId,
   filterProfile,
+  closeButton,
+  density,
+  initialFilters,
+  onFiltersChange,
+  onAnchorToSidebar,
 }) => {
+  const { pushFilterError } = useFilters();
   const modalRef = useRef(null);
   const globalFiltersRef = useRef(null);
-  const [appliedFilters, setAppliedFilters] = useState(null);
-  const [error, setError] = useState(null);
-  const filtersStateRef = useRef(null); // Pour sauvegarder l'état complet des filtres
+  const [appliedFilters, setAppliedFilters] = useState(() => initialFilters || null);
+  const filtersStateRef = useRef(initialFilters || null); // Pour sauvegarder l'état complet des filtres
+
+  const executeSearch = async (params) => {
+    if (typeof onSubmit === "function") {
+      await onSubmit(params);
+      return;
+    }
+
+    const targetLayer =
+      (activeLayerId && window.mviewer?.customLayers?.[activeLayerId]) ||
+      window.mviewer?.customLayers?.communeSearch;
+
+    if (targetLayer?.get_datas) {
+      await targetLayer.get_datas(params);
+      return;
+    }
+
+    throw new Error("Service de recherche non disponible.");
+  };
+
+  const getActiveLayerFeatures = () => {
+    const targetLayer =
+      (activeLayerId && window.mviewer?.customLayers?.[activeLayerId]) ||
+      window.mviewer?.customLayers?.communeSearch;
+
+    return targetLayer?.layer?.getSource?.().getFeatures?.() || null;
+  };
 
   const handleSubmit = async (params, filtersState) => {
     console.log("===== 🎯 HANDLESUBMIT DANS LA MODALE =====");
@@ -56,43 +89,32 @@ const GlobalFilterModal = ({
     console.log("Paramètres finaux envoyés à communeSearch:", finalParams);
     console.log("=".repeat(45));
 
-    setError(null); // Réinitialiser l'erreur
-
     try {
-      // 1. Appel au code mviewer
-      if (window.mviewer?.customLayers?.communeSearch) {
-        await mviewer.customLayers.communeSearch.get_datas(finalParams);
+      // 1. Appel au code mviewer / callback configuré
+      await executeSearch(finalParams);
 
-        // Vérifier si des données ont été retournées
-        const layer = mviewer.customLayers.communeSearch.layer;
-        const features = layer.getSource().getFeatures();
+      // Vérifier si des données ont été retournées quand la couche expose bien sa source
+      const features = getActiveLayerFeatures();
 
-        if (features.length === 0) {
-          setError("Aucune donnée trouvée avec les filtres appliqués.");
-          return; // Ne pas minimiser la modal
-        }
+      if (Array.isArray(features) && features.length === 0) {
+        pushFilterError("Aucune donnée trouvée avec les filtres appliqués.");
+        return; // Ne pas minimiser la modal
+      }
 
-        // Sauvegarder l'état complet des filtres pour le rebinding
-        // Use effectiveFilters (the most recent known state)
-        filtersStateRef.current = effectiveFilters;
-        setAppliedFilters(effectiveFilters);
+      // Sauvegarder l'état complet des filtres pour le rebinding
+      // Use effectiveFilters (the most recent known state)
+      filtersStateRef.current = effectiveFilters;
+      setAppliedFilters(effectiveFilters);
 
-        // Minimiser la modal après succès
-        if (modalRef.current?.handleToggleMinimize) {
-          modalRef.current.handleToggleMinimize();
-        }
-      } else {
-        setError("Service de recherche non disponible.");
-        console.warn("mviewer.customLayers.communeSearch n'est pas disponible");
+      // Minimiser la modal après succès
+      if (modalRef.current?.handleToggleMinimize) {
+        modalRef.current.handleToggleMinimize();
       }
 
       // 2. Callback optionnel pour comportements additionnels (UI, analytics, etc.)
-      if (onSubmit) {
-        onSubmit(params);
-      }
     } catch (err) {
       console.error("Erreur lors de la recherche:", err);
-      setError(`Erreur lors de la recherche: ${err.message || "Erreur inconnue"}`);
+      pushFilterError(err?.userMessage || err?.message || "Erreur lors de la recherche.");
     }
   };
 
@@ -102,21 +124,29 @@ const GlobalFilterModal = ({
     console.log("📥 Filtres actualisés dans le composant enfant:", currentFilters);
     // Mettre à jour le cache de la modale
     filtersStateRef.current = currentFilters;
+    if (onFiltersChange) {
+      onFiltersChange(currentFilters);
+    }
   };
 
   const handleReset = () => {
     console.log("🔄 Réinitialisation des filtres dans la modale");
     setAppliedFilters(null);
     filtersStateRef.current = null;
-    setError(null);
+    if (onFiltersChange) {
+      onFiltersChange(null);
+    }
   };
 
   const handleClose = () => {
-    console.log("Fermeture de la modal - réinitialisation des filtres");
-    setAppliedFilters(null);
-    filtersStateRef.current = null;
-    setError(null);
+    console.log("Fermeture de la modal");
     onClose();
+  };
+
+  const handleAnchorToSidebar = () => {
+    if (typeof onAnchorToSidebar === "function") {
+      onAnchorToSidebar(filtersStateRef.current || appliedFilters || null);
+    }
   };
 
 
@@ -143,13 +173,19 @@ const GlobalFilterModal = ({
       onClose={handleClose}
       title="Filtres avancés"
       onMinimize={handleModalToggle}
+      closeButton={closeButton}
+      contentClassName={density || ""}
+      headerActions={[
+        {
+          key: "anchor-to-sidebar",
+          title: "Ancrer les filtres dans le sidebar",
+          icon: "fas fa-thumbtack",
+          onClick: handleAnchorToSidebar,
+        },
+      ]}
       ref={modalRef}>
-      <div className="modal-filters-wrapper">
-        {error && (
-          <div className="alert alert-danger" role="alert">
-            <i className="fas fa-exclamation-triangle"></i> {error}
-          </div>
-        )}
+      <ErrorButton />
+      <div className={`modal-filters-wrapper ${density || ""}`.trim()}>
         <GlobalFilters
           ref={globalFiltersRef}
           onSubmit={handleSubmit}
@@ -162,6 +198,13 @@ const GlobalFilterModal = ({
           actionLabels={{
             submit: "Appliquer les filtres",
             reset: "Réinitialiser",
+          }}
+          onSubmitError={(error) => {
+            pushFilterError(
+              error?.userMessage ||
+                error?.message ||
+                "Erreur lors de l'application des filtres."
+            );
           }}
         />
       </div>

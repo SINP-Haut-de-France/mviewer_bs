@@ -24,6 +24,7 @@
   display: block !important;
 }
 
+
 /* S'assurer que GlobalFilters ne déborde pas */
 .sidebar-filter-panel-wrapper .global-filters-container {
   width: 100% !important;

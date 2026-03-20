@@ -31,6 +31,7 @@ const GlobalFiltersComponent = (
     filterProfile = null,
     activeLayerId = null,
     onFiltersChange = null, // NEW: callback quand les filtres changent localement
+    onSubmitError = null,
   },
   ref
 ) => {
@@ -289,13 +290,16 @@ const GlobalFiltersComponent = (
         console.log("✅ [GlobalFilters] onSubmit terminé avec succès");
       } catch (error) {
         console.error("❌ [GlobalFilters] Erreur lors de la soumission:", error);
+        if (typeof onSubmitError === "function") {
+          onSubmitError(error);
+        }
       } finally {
         setIsLoading(false);
       }
     } else {
       console.error("❌ [GlobalFilters] onSubmit est undefined !");
     }
-  }, [filters, filterVisibility, onSubmit]);
+  }, [filters, filterVisibility, onSubmit, onSubmitError]);
 
   const handleReset = useCallback(() => {
     console.log("🔄 Réinitialisation des filtres");

@@ -66,8 +66,13 @@ window.sinpRepository = (function () {
     } catch (error) {
       if (error.name === "AbortError") {
         console.log("Requête annulée en raison du timeout");
+        error.userMessage = "Le serveur met trop de temps à répondre. Merci de réessayer.";
       } else {
         console.error(`Erreur GeoServerAPI : ${error.message}`);
+        if (!error.userMessage) {
+          error.userMessage =
+            "Impossible de récupérer les données de recherche. Vérifiez votre connexion ou réessayez.";
+        }
       }
       throw error; // Relancer l'erreur pour la gestion en aval
     } finally {

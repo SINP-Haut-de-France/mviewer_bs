@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { FilterProvider } from "./providers/FilterProvider";
 import GlobalFilterManager from "./sinp_components/GlobalFilterManager/GlobalFilterManager";
+import * as Sentry from "@sentry/react";
 
 // Initialiser window.roots avant tout
 window.roots = window.roots || {};
@@ -11,6 +12,26 @@ console.log("🚀 Chargement de main.jsx...");
 // === MONTAGE DU ROOT GLOBAL ===
 
 const initGlobalRoot = () => {
+
+  Sentry.init({
+    dsn: "https://446e4a33a7547f744b8b1ed4626a342d@o4511070687526912.ingest.de.sentry.io/4511070688772176",
+    sendDefaultPii: true,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration()
+    ],
+    // Tracing
+    tracesSampleRate: 1.0,
+    tracePropagationTargets: ["http://localhost:5051/?config=apps/sinp_hdf.xml", /^https:\/\/agence-regionale-biodiversite\.sentry\.io\/api/],
+    // Session Replay
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+    // Enable logs to be sent to Sentry
+    enableLogs: true
+  });
+
+
+
   const globalRootElement = document.getElementById("react-global-root");
 
   if (!globalRootElement) {
@@ -54,6 +75,7 @@ import MultiCheckBox from "./components/MultiCheckBox/MultiCheckBox";
 import DateFilter from "./components/DateFilter/DateFilter";
 import Datasource from "./components/Datasource/Datasource";
 import EspeceSearchFilter from "./sinp_components/EspeceSearchFilter/EspeceSearchFilter";
+import ErrorButton from "@react/components/ErrorButton";
 
 const initStandaloneComponents = () => {
   const reactElements = document.querySelectorAll("[data-react-component]");
@@ -84,6 +106,9 @@ const initStandaloneComponents = () => {
         break;
       case "EspeceSearchFilter":
         Component = EspeceSearchFilter;
+        break;
+      case "ErrorButton":
+        Component = ErrorButton;
         break;
       default:
         console.warn(`⚠️ Composant "${ComponentName}" non reconnu`);
