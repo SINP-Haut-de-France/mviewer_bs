@@ -9,32 +9,13 @@ mviewer.customControls.grid10x10search = (function () {
     }
 
     _normalizeInputParams(params = {}) {
-      const taxons = Array.isArray(params.filteredTaxons)
-        ? params.filteredTaxons.map((taxon) =>
-            typeof taxon === "object" && taxon?.cd_ref ? taxon.cd_ref : taxon
-          )
-        : params.taxons || [];
-
-      return {
-        communes: params.filteredCommunes || params.communes || [],
-        departements: params.filteredDepartments || params.departements || [],
-        groupes: params.filteredGroupes || params.groupes || [],
-        taxons,
-        dateDeb: params.dateDeb || null,
-        dateFin: params.dateFin || null,
-      };
+      return this._normalizeStandardFilters(params);
     }
 
     async _enrichMainFeatures(mainFeatures, params) {
-      if (!this.detailsTypeName || mainFeatures.length === 0) {
-        return mainFeatures;
-      }
-
-      const detailsOptions = this.buildRequestOptions(params, this.detailsTypeName);
-      const detailsData = await this.fetchGeoServerData(detailsOptions);
-      const detailsList = detailsData?.features?.map((f) => f.properties) || [];
-      mainFeatures.forEach((feature) => feature.set("details", detailsList));
-      return mainFeatures;
+      return this._attachDetailsToFeatures(mainFeatures, params, {
+        mode: "all",
+      });
     }
   }
 
@@ -43,13 +24,10 @@ mviewer.customControls.grid10x10search = (function () {
   return {
     init: async function () {},
     submit: (filters) => controller.submit(filters),
+    normalizeFilters: (selectedFilters) =>
+      controller._normalizeInputParams(selectedFilters),
     openFilterModal: function () {
-      if (window.reactComponentManager?.openFilterModal) {
-        window.reactComponentManager.openFilterModal({
-          activeLayerId: "grid10x10search",
-          onSubmit: (params) => controller.submit(params),
-        });
-      }
+      controller.openReactFilterModal();
     },
     destroy: function () {},
   };

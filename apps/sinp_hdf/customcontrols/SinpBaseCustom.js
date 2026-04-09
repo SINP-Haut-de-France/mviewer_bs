@@ -62,6 +62,112 @@ class SinpBaseCustom {
     return params;
   }
 
+  _normalizeStandardFilters(params = {}) {
+    const taxons = Array.isArray(params.filteredTaxons)
+      ? params.filteredTaxons.map((taxon) =>
+          typeof taxon === "object" && taxon?.cd_ref ? taxon.cd_ref : taxon
+        )
+      : params.taxons || [];
+
+    return {
+      communes: params.filteredCommunes || params.communes || [],
+      departements: params.filteredDepartments || params.departements || [],
+      groupes: params.filteredGroupes || params.groupes || [],
+      taxons,
+      dateDeb: params.dateDeb || null,
+      dateFin: params.dateFin || null,
+    };
+  }
+
+  async _loadDetailProperties(params, typeName = this.detailsTypeName) {
+    if (!typeName) {
+      return [];
+    }
+
+    const detailsOptions = this.buildRequestOptions(params, typeName);
+    const detailsData = await this.fetchGeoServerData(detailsOptions);
+
+    return detailsData?.features?.map((feature) => feature.properties || {}) || [];
+  }
+
+  async _attachDetailsToFeatures(mainFeatures, params, config = {}) {
+    const {
+      typeName = this.detailsTypeName,
+      mode = "all",
+      featureKey = null,
+      detailKey = null,
+      targetProperty = "details",
+    } = config;
+
+    if (!typeName || mainFeatures.length === 0) {
+      return mainFeatures;
+    }
+
+    const detailProperties = await this._loadDetailProperties(params, typeName);
+
+    if (!detailProperties.length) {
+      return mainFeatures;
+    }
+
+    if (mode === "match" && featureKey && detailKey) {
+      const getCandidateValue = (source, candidates, accessor) => {
+        const candidateList = Array.isArray(candidates) ? candidates : [candidates];
+
+        for (const candidate of candidateList) {
+          const value = accessor(source, candidate);
+          if (value !== undefined && value !== null && String(value) !== "") {
+            return String(value);
+          }
+        }
+
+        return "";
+      };
+
+      const detailsByEntityId = detailProperties.reduce((accumulator, properties) => {
+        const key = getCandidateValue(properties, detailKey, (item, candidate) => {
+          return item?.[candidate];
+        });
+
+        if (!key) {
+          return accumulator;
+        }
+
+        if (!accumulator[key]) {
+          accumulator[key] = [];
+        }
+
+        accumulator[key].push(properties);
+        return accumulator;
+      }, {});
+
+      mainFeatures.forEach((feature) => {
+        const key = getCandidateValue(feature, featureKey, (item, candidate) => {
+          return item?.get(candidate);
+        });
+
+        feature.set(targetProperty, detailsByEntityId[key] || []);
+      });
+
+      return mainFeatures;
+    }
+
+    mainFeatures.forEach((feature) => feature.set(targetProperty, detailProperties));
+    return mainFeatures;
+  }
+
+  openReactFilterModal(options = {}) {
+    if (!window.reactComponentManager?.openFilterModal) {
+      console.error("openFilterModal n'est pas disponible.");
+      return;
+    }
+
+    window.reactComponentManager.openFilterModal({
+      activeLayerId: this.layerId,
+      onSubmit: (params) => this.submit(params),
+      ...options,
+    });
+  }
+
   async _enrichMainFeatures(mainFeatures, params) {
     return mainFeatures;
   }
@@ -88,7 +194,10 @@ class SinpBaseCustom {
         return mainData;
       }
 
-      const enrichedFeatures = await this._enrichMainFeatures(mainFeatures, normalizedParams);
+      const enrichedFeatures = await this._enrichMainFeatures(
+        mainFeatures,
+        normalizedParams
+      );
       layerInstance.renderFeatures(enrichedFeatures);
 
       return mainData;
@@ -98,5 +207,4 @@ class SinpBaseCustom {
       throw error;
     }
   }
-
 }
