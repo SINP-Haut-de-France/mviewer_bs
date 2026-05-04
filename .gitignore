@@ -1,7 +1,6 @@
 dist/*
 node*
 panels/*
-node*
 package-*
 /apps/sinp_hdf/node_modules/*
 /node_modules/*

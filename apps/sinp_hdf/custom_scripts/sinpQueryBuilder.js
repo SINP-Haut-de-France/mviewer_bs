@@ -299,28 +299,70 @@ window.sinpQueryBuilder = (function () {
     "1ee0a3f1-0732-5b34-bf23-7820e30c8a77", // AUTRES
   ];
 
-  const _serializeViewParam = function (paramKey, value) {
+  const PIPE_SEPARATED_LIST_PATTERN = /^[^|]+(\|[^|]+)*$/;
+
+  const _normalizeViewParamListValues = function (value) {
+    if (value === undefined || value === null) {
+      return [];
+    }
+
+    const rawValues = Array.isArray(value) ? value : [value];
+
+    return rawValues
+      .map((item) => (item === undefined || item === null ? "" : String(item).trim()))
+      .filter((item) => item !== "");
+  };
+
+  const _serializeListViewParam = function (paramKey, value, options = {}) {
+    const { separator = ",", omitEmpty = false, validationPattern = null } = options;
+    const normalizedValues = _normalizeViewParamListValues(value);
+
+    if (normalizedValues.length === 0) {
+      return omitEmpty ? null : "";
+    }
+
+    if (separator === "|" && normalizedValues.some((item) => item.includes("|"))) {
+      throw new Error(`Invalid ${paramKey} value: pipe is reserved as separator`);
+    }
+
+    const serializedValue = normalizedValues.join(separator);
+
+    if (validationPattern && !validationPattern.test(serializedValue)) {
+      throw new Error(`Invalid ${paramKey} value: ${serializedValue}`);
+    }
+
+    return serializedValue;
+  };
+
+  const _serializeViewParam = function (paramKey, value, config = {}) {
     const pipeSeparatedParams = ["GRP_IDS", "DEPT_IDS", "CODE_INSEES"];
+    const { separator = null, omitEmpty = false, validationPattern = null } = config;
+
+    if (separator) {
+      return _serializeListViewParam(paramKey, value, {
+        separator,
+        omitEmpty,
+        validationPattern,
+      });
+    }
 
     if (paramKey === "GRP_IDS") {
-      if (!value || (Array.isArray(value) && value.length === 0)) {
-        return null;
-      }
-      return Array.isArray(value) ? value.join("|") : String(value);
+      return _serializeListViewParam(paramKey, value, {
+        separator: "|",
+        omitEmpty: true,
+      });
     }
 
     if (paramKey === "CD_REF") {
-      if (value === undefined || value === null) {
-        return "";
-      }
-      return Array.isArray(value) ? value.join(",") : String(value);
+      return _serializeListViewParam(paramKey, value, {
+        separator: ",",
+      });
     }
 
     if (pipeSeparatedParams.includes(paramKey)) {
-      if (value === undefined || value === null) {
-        return "";
-      }
-      return Array.isArray(value) ? value.join("|") : String(value);
+      return _serializeListViewParam(paramKey, value, {
+        separator: "|",
+      });
     }
 
     if (value === undefined || value === null) {
@@ -328,6 +370,57 @@ window.sinpQueryBuilder = (function () {
     }
 
     return Array.isArray(value) ? value.join(",") : String(value);
+  };
+
+  const _buildSharedSearchViewParams = function ({
+    targetLocCodeSource = null,
+    includeEpciIds = true,
+  } = {}) {
+    const sharedViewParams = {
+      DATE_DEB: "dateDeb",
+      DATE_FIN: "dateFin",
+      DEPT_IDS: {
+        source: "departements",
+        separator: "|",
+        omitEmpty: true,
+        validationPattern: PIPE_SEPARATED_LIST_PATTERN,
+      },
+      CODE_INSEES: {
+        source: "communes",
+        separator: "|",
+        omitEmpty: true,
+        validationPattern: PIPE_SEPARATED_LIST_PATTERN,
+      },
+      CD_REF: {
+        source: "taxons",
+        separator: "|",
+        omitEmpty: true,
+        validationPattern: PIPE_SEPARATED_LIST_PATTERN,
+      },
+      GRP_IDS: {
+        source: "groupes",
+        separator: "|",
+        omitEmpty: true,
+        validationPattern: PIPE_SEPARATED_LIST_PATTERN,
+      },
+    };
+
+    if (includeEpciIds) {
+      sharedViewParams.EPCI_IDS = {
+        source: "epcis",
+        separator: "|",
+        omitEmpty: true,
+        validationPattern: PIPE_SEPARATED_LIST_PATTERN,
+      };
+    }
+
+    if (targetLocCodeSource) {
+      sharedViewParams.TARGET_LOC_CODE = {
+        source: targetLocCodeSource,
+      };
+    }
+
+    return sharedViewParams;
   };
 
   const _viewConfig = {
@@ -390,85 +483,25 @@ window.sinpQueryBuilder = (function () {
     // NOUVELLES FONCTIONS POSTGRESQL (VIEWPARAMS uniquement)
     // ========================================================================
 
-    /**
-     * Fonction 1: Statistiques communes
-     * Utilise UNIQUEMENT VIEWPARAMS (pas de CQL_FILTER pour filtres métier)
-     * Les filtres communes/depts sont ignorés (c'est une agrégation globale)
-     */
-    fn_get_stats_communes: {
+    fn_get_stats: {
       cql_filters: {},
-      view_params: {
-        DATE_DEB: "dateDeb",
-        DATE_FIN: "dateFin",
-        DEPT_IDS: "departements",
-        CODE_INSEES: "communes",
-        CD_REF: "taxons",
-        GRP_IDS: "groupes",
-      },
+      view_params: _buildSharedSearchViewParams({
+        targetLocCodeSource: "targetLocCode",
+      }),
     },
 
-    /**
-     * Fonction 2: Détails par entité (commune + taxon)
-     * Même signature que fn_get_stats_communes
-     */
-    fn_get_obs_detaillee_by_entities: {
+    fn_get_obs_detaillee: {
       cql_filters: {},
-      view_params: {
-        DATE_DEB: "dateDeb",
-        DATE_FIN: "dateFin",
-        DEPT_IDS: "departements",
-        CODE_INSEES: "communes",
-        CD_REF: "taxons",
-        GRP_IDS: "groupes",
-      },
+      view_params: _buildSharedSearchViewParams({
+        targetLocCodeSource: "targetLocCode",
+      }),
     },
 
-    /**
-     * Fonction 3: Statistiques grille 5x5
-     * Agrégation au niveau maille 5x5 (future)
-     */
-    fn_get_stats_grille_5x5: {
+    fn_get_metadatas: {
       cql_filters: {},
-      view_params: {
-        DATE_DEB: "dateDeb",
-        DATE_FIN: "dateFin",
-        DEPT_IDS: "departements",
-        CODE_INSEES: "communes",
-        CD_REF: "taxons",
-        GRP_IDS: "groupes",
-      },
-    },
-
-    /**
-     * Fonction 4: Statistiques grille 10x10
-     * Agrégation au niveau maille 10x10 (future)
-     */
-    fn_get_stats_grille_10x10: {
-      cql_filters: {},
-      view_params: {
-        DATE_DEB: "dateDeb",
-        DATE_FIN: "dateFin",
-        DEPT_IDS: "departements",
-        CODE_INSEES: "communes",
-        CD_REF: "taxons",
-        GRP_IDS: "groupes",
-      },
-    },
-
-    /**
-     * Fonction 5: Détails pour grilles (5x5 et 10x10)
-     * Agrégation au niveau maille + taxon
-     */
-    fn_get_obs_detaillee_grille: {
-      cql_filters: {},
-      view_params: {
-        DATE_DEB: "dateDeb",
-        DATE_FIN: "dateFin",
-        DEPT_IDS: "departements",
-        CODE_INSEES: "communes",
-        CD_REF: "taxons",
-        GRP_IDS: "groupes",
-      },
+      view_params: _buildSharedSearchViewParams({
+        targetLocCodeSource: "targetLocCode",
+      }),
     },
   };
 
@@ -522,7 +555,13 @@ window.sinpQueryBuilder = (function () {
     if (cfg.view_params && Object.keys(cfg.view_params).length !== 0) {
       const viewParamsArray = Object.entries(cfg.view_params)
         .map(([paramKey, paramValue]) => {
-          const serializedValue = _serializeViewParam(paramKey, params[paramValue]);
+          const viewParamConfig =
+            typeof paramValue === "string" ? { source: paramValue } : paramValue;
+          const serializedValue = _serializeViewParam(
+            paramKey,
+            params[viewParamConfig.source],
+            viewParamConfig
+          );
           if (serializedValue === null) {
             return null;
           }

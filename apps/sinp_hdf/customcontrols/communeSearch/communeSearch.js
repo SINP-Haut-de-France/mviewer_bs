@@ -3,21 +3,23 @@ mviewer.customControls.communeSearch = (function () {
     constructor() {
       super({
         layerId: "communeSearch",
-        mainTypeName: "fn_get_stats_communes",
-        detailsTypeName: "fn_get_obs_detaillee_by_entities",
+        mainTypeName: "fn_get_stats",
+        detailsTypeName: "fn_get_obs_detaillee",
+        metadataTypeName: "fn_get_metadatas",
+        targetLocCode: "2",
+        entityCodeKeys: [
+          "code_insee",
+          "code",
+          "adm_id",
+          "commune_id",
+          "communeId",
+          "ref_dep",
+        ],
       });
     }
 
     _normalizeInputParams(params = {}) {
       return this._normalizeStandardFilters(params);
-    }
-
-    async _enrichMainFeatures(mainFeatures, params) {
-      return this._attachDetailsToFeatures(mainFeatures, params, {
-        mode: "match",
-        featureKey: ["commune_id", "communeId", "code_insee"],
-        detailKey: ["commune_id", "communeId", "code_insee"],
-      });
     }
   }
 
@@ -30,6 +32,8 @@ mviewer.customControls.communeSearch = (function () {
   return {
     init: async function () {},
     submit: (filters) => controller.submit(filters),
+    handle: (features) => controller.handle(features),
+    ensureMetadataForFeatures: (features) => controller.ensureMetadataForFeatures(features),
     openFilterModal,
     normalizeFilters: (selectedFilters) =>
       controller._normalizeInputParams(selectedFilters),

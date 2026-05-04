@@ -123,11 +123,22 @@ export const FILTER_CONFIGS = {
 export const LAYER_FILTER_PROFILES = {
   'communeSearch': FILTER_PROFILES.FULL,
   'advancedSearch': FILTER_PROFILES.FULL,
+  'gridSearch5x5': FILTER_PROFILES.FULL,
+  'grid10x10search': FILTER_PROFILES.FULL,
+  'gridSearch10x10': FILTER_PROFILES.FULL,
   'obs_detaillees': FILTER_PROFILES.DETAILED_OBSERVATIONS,
   'repartition_temporelle': FILTER_PROFILES.TEMPORAL,
   'mailles': FILTER_PROFILES.GEOGRAPHIC,
   // Ajouter d'autres mappings selon vos couches
 };
+
+const SEARCH_LAYER_PRIORITY = [
+  'gridSearch5x5',
+  'grid10x10search',
+  'gridSearch10x10',
+  'communeSearch',
+  'advancedSearch',
+];
 
 /**
  * Obtient le profil de filtres pour une couche donnée
@@ -136,6 +147,35 @@ export const LAYER_FILTER_PROFILES = {
  */
 export const getFilterProfileForLayer = (layerId) => {
   return LAYER_FILTER_PROFILES[layerId] || FILTER_PROFILES.FULL;
+};
+
+export const resolveSearchLayerId = (preferredLayerId = null) => {
+  const customLayers = window.mviewer?.customLayers || {};
+  const configuredLayers = window.mviewer?.getLayers?.() || {};
+
+  if (preferredLayerId && customLayers[preferredLayerId]) {
+    return preferredLayerId;
+  }
+
+  const visibleLayerId = SEARCH_LAYER_PRIORITY.find((layerId) => {
+    return customLayers[layerId] && configuredLayers[layerId]?.layer?.getVisible?.();
+  });
+
+  if (visibleLayerId) {
+    return visibleLayerId;
+  }
+
+  return SEARCH_LAYER_PRIORITY.find((layerId) => customLayers[layerId]) || null;
+};
+
+export const getSearchLayer = (preferredLayerId = null) => {
+  const resolvedLayerId = resolveSearchLayerId(preferredLayerId);
+
+  if (!resolvedLayerId) {
+    return null;
+  }
+
+  return window.mviewer?.customLayers?.[resolvedLayerId] || null;
 };
 
 /**

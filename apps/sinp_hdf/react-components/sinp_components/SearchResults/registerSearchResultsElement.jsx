@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import CommuneSearchResults from "./CommuneSearchResults";
+import SearchResultsComponent from "./SearchResultsComponent";
 
 const ELEMENT_NAMES = [
   "mv-feature-search-results",
@@ -11,13 +11,18 @@ const ELEMENT_NAMES = [
 const renderElement = (element) => {
   const layerId = element.getAttribute("data-layer-id") || "communeSearch";
   const featureUid = element.getAttribute("data-feature-uid") || "";
+  const promptOnly = element.getAttribute("data-selection-prompt") === "true";
 
   if (!element.__reactRoot) {
     element.__reactRoot = ReactDOM.createRoot(element);
   }
 
   element.__reactRoot.render(
-    <CommuneSearchResults layerId={layerId} featureUid={featureUid} />
+    <SearchResultsComponent
+      layerId={layerId}
+      featureUid={featureUid}
+      promptOnly={promptOnly}
+    />
   );
 };
 
@@ -28,9 +33,9 @@ const defineElement = () => {
 
   ELEMENT_NAMES.forEach((elementName) => {
     if (!window.customElements.get(elementName)) {
-      class CommuneSearchResultsElement extends HTMLElement {
+      class SearchResultsElement extends HTMLElement {
         static get observedAttributes() {
-          return ["data-layer-id", "data-feature-uid"];
+          return ["data-layer-id", "data-feature-uid", "data-selection-prompt"];
         }
 
         connectedCallback() {
@@ -51,7 +56,7 @@ const defineElement = () => {
         }
       }
 
-      window.customElements.define(elementName, CommuneSearchResultsElement);
+      window.customElements.define(elementName, SearchResultsElement);
     }
   });
 };

@@ -1,6 +1,7 @@
 import React from "react";
 import GlobalFilters from "../GlobalFilters/GlobalFilters";
 import { useFilters } from "../../providers/FilterProvider";
+import { getSearchLayer, resolveSearchLayerId } from "../../configs/filtersConfig";
 import "./SidebarFilterPanel.css";
 
 const SidebarFilterPanel = ({
@@ -19,12 +20,11 @@ const SidebarFilterPanel = ({
       return;
     }
 
-    const targetLayer =
-      (activeLayerId && window.mviewer?.customLayers?.[activeLayerId]) ||
-      window.mviewer?.customLayers?.communeSearch;
+    const resolvedLayerId = resolveSearchLayerId(activeLayerId);
+    const targetLayer = getSearchLayer(activeLayerId);
 
     if (targetLayer?.get_datas) {
-      console.log("🎯 [SIDEBAR] Appel de get_datas sur la couche:", activeLayerId);
+      console.log("🎯 [SIDEBAR] Appel de get_datas sur la couche:", resolvedLayerId);
       await targetLayer.get_datas(params);
       return;
     }
@@ -61,7 +61,7 @@ const SidebarFilterPanel = ({
         onReset={handleReset}
         onFiltersChange={onFiltersChange}
         initialFilters={initialFilters}
-        activeLayerId={activeLayerId}
+        activeLayerId={resolveSearchLayerId(activeLayerId)}
         filterProfile={filterProfile}
         showActions={true}
         actionLabels={{

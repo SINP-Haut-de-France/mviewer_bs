@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import BaseModal from "../../components/BaseModal/BaseModal";
 import GlobalFilters from "../GlobalFilters/GlobalFilters";
 import { useFilters } from "../../providers/FilterProvider";
+import { getSearchLayer, resolveSearchLayerId } from "../../configs/filtersConfig";
 import "./GlobalFilterModal.css";
 import ErrorButton from "../../components/ErrorButton.jsx";
 
@@ -29,9 +30,7 @@ const GlobalFilterModal = ({
       return;
     }
 
-    const targetLayer =
-      (activeLayerId && window.mviewer?.customLayers?.[activeLayerId]) ||
-      window.mviewer?.customLayers?.communeSearch;
+    const targetLayer = getSearchLayer(activeLayerId);
 
     if (targetLayer?.get_datas) {
       await targetLayer.get_datas(params);
@@ -42,9 +41,7 @@ const GlobalFilterModal = ({
   };
 
   const getActiveLayerFeatures = () => {
-    const targetLayer =
-      (activeLayerId && window.mviewer?.customLayers?.[activeLayerId]) ||
-      window.mviewer?.customLayers?.communeSearch;
+    const targetLayer = getSearchLayer(activeLayerId);
 
     return targetLayer?.layer?.getSource?.().getFeatures?.() || null;
   };
@@ -192,7 +189,7 @@ const GlobalFilterModal = ({
           onReset={handleReset}
           onFiltersChange={handleFiltersChange}
           initialFilters={appliedFilters}
-          activeLayerId={activeLayerId}
+          activeLayerId={resolveSearchLayerId(activeLayerId)}
           filterProfile={filterProfile}
           showActions={true}
           actionLabels={{

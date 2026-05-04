@@ -1,98 +1,179 @@
-<ul class="nav nav-tabs" role="tablist">
-  <li role="presentation" class="active">
-    <a href="#h_kartenn" aria-controls="profile" role="tab" data-toggle="tab">Mviewer</a>
-  </li>
-  <li role="presentation">
-    <a
-      href="#h_aide"
-      aria-controls="messages"
-      role="tab"
-      data-toggle="tab"
-      i18n="help.modal.help"
-      >Aide</a
-    >
-  </li>
-  <li role="presentation">
-    <a
-      href="#h_definition"
-      aria-controls="profile"
-      role="tab"
-      data-toggle="tab"
-      i18n="help.modal.lexicon"
-      >Lexique</a
-    >
-  </li>
-  <li role="presentation">
-    <a
-      href="#h_credits"
-      aria-controls="settings"
-      role="tab"
-      data-toggle="tab"
-      i18n="help.modal.credits"
-      >Crédits</a
-    >
-  </li>
-</ul>
+<div class="sinp-help">
+  <ul class="nav nav-tabs sinp-help-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <a
+        class="nav-link active"
+        id="sinp-informations-tab"
+        href="#sinp-informations"
+        aria-controls="sinp-informations"
+        aria-selected="true"
+        role="tab"
+        data-bs-toggle="tab"
+        >Informations</a
+      >
+    </li>
+    <li class="nav-item" role="presentation">
+      <a
+        class="nav-link"
+        id="sinp-aides-tab"
+        href="#sinp-aides"
+        aria-controls="sinp-aides"
+        aria-selected="false"
+        role="tab"
+        data-bs-toggle="tab"
+        >Aides</a
+      >
+    </li>
+    <li class="nav-item" role="presentation">
+      <a
+        class="nav-link"
+        id="sinp-credits-tab"
+        href="#sinp-credits"
+        aria-controls="sinp-credits"
+        aria-selected="false"
+        role="tab"
+        data-bs-toggle="tab"
+        >Crédits</a
+      >
+    </li>
+    <li class="nav-item" role="presentation">
+      <a
+        class="nav-link"
+        id="sinp-mentions-tab"
+        href="#sinp-mentions"
+        aria-controls="sinp-mentions"
+        aria-selected="false"
+        role="tab"
+        data-bs-toggle="tab"
+        >Mentions légales</a
+      >
+    </li>
+  </ul>
 
-<!-- Tab panes -->
-<div class="tab-content">
-  <div role="tabpanel" class="tab-pane active" id="h_kartenn">
-    <h4 i18n="help.modal.about">Présentation du SINP Hauts-de-France</h4>
-  </div>
-  <div role="tabpanel" class="tab-pane" id="h_aide">
-    <h4 i18n="help.modal.help">Aide</h4>
-    <a
-      href="http://mviewerdoc.readthedocs.io/fr/latest/"
-      target="_blank"
-      i18n="help.modal.doc"
-      >Lien vers la documentation</a
-    >
-  </div>
-  <div role="tabpanel" class="tab-pane" id="h_definition">
-    <h4 i18n="help.modal.lexicon">Lexique</h4>
-  </div>
-  <div role="tabpanel" class="tab-pane" id="h_credits">
-    <h4 i18n="help.modal.credits">Crédits</h4>
-    <p>Copyright © 2025 DREAL-HDF, . Tous droits réservés.</p>
+  <div class="tab-content p-3">
+    <div
+      class="tab-pane fade show active"
+      id="sinp-informations"
+      aria-labelledby="sinp-informations-tab"
+      role="tabpanel">
+      <h4>Utilisation des données</h4>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer luctus, mauris in
+        gravida placerat, lectus nibh vulputate massa, sit amet vestibulum tortor nibh sit
+        amet lectus. Suspendisse potenti. Nam et mauris in libero finibus tristique sit
+        amet quis neque.
+      </p>
+      <p>
+        Praesent ultrices, enim eu fermentum placerat, lorem lectus faucibus augue, quis
+        vulputate dui augue vel enim. Sed porttitor, nisl a fringilla vulputate, magna leo
+        consequat augue, ac tincidunt lectus lectus sit amet lorem. Pellentesque habitant
+        morbi tristique senectus et netus et malesuada fames ac turpis egestas.
+      </p>
+    </div>
 
-    <p>
-      Le SINP Hauts-de-France est un outil de visualisation et d’exploration des données
-      naturalistes du Système d’Information sur la Nature et les Paysages (SINP) en région
-      Hauts-de-France. Il a été développé par l'ARB et la DREAL Hauts-de-France avec le
-      soutien financier de la DREAL. Il est hébergé par Géo2france et maintenu par la
-      DREAL Hauts-de-France.
-    </p>
+    <div
+      class="tab-pane fade"
+      id="sinp-aides"
+      aria-labelledby="sinp-aides-tab"
+      role="tabpanel">
+      <h4>Aides et ressources</h4>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris non congue lacus.
+        Duis finibus, mi in tincidunt facilisis, risus lorem faucibus nibh, sit amet
+        interdum justo nibh quis justo.
+      </p>
+      <ul class="sinp-help-links">
+        <li>
+          <a
+            href="https://www.youtube.com/results?search_query=SINP+Hauts+de+France+prise+en+main"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Videos de prise en main</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://www.youtube.com/results?search_query=SINP+Hauts+de+France+recherche+donnees"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Videos de recherche et consultation des donnees</a
+          >
+        </li>
+        <li>
+          <a href="https://www.geo2france.fr/" target="_blank" rel="noopener noreferrer"
+            >Plateforme collaborative SINP Hauts de France - Geo2France</a
+          >
+        </li>
+      </ul>
+    </div>
 
-    <p>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent vel commodo ante,
-      quis semper ipsum. Nunc consequat fringilla enim. Donec viverra sapien ante, quis
-      tempor justo congue eu. Morbi pretium pellentesque ligula ac tempor. Maecenas in
-      nulla eros. Ut venenatis ipsum nec nulla feugiat feugiat. Etiam facilisis fermentum
-      ex nec lacinia. Aliquam erat volutpat. Vivamus in justo accumsan, tincidunt nibh in,
-      semper lorem. Donec ornare varius metus. Vivamus eleifend convallis leo, nec mattis
-      turpis tincidunt vel. Praesent in lobortis tortor. Curabitur in tortor vel felis
-      rutrum porttitor. Sed erat lorem, placerat ac pretium a, volutpat et magna. Morbi
-      aliquam leo in efficitur tincidunt. Donec eros nisi, placerat nec metus nec, varius
-      porttitor augue. Etiam nec ante in ipsum tempus scelerisque et eu metus. Quisque
-      pharetra eleifend purus nec vulputate. Nullam pretium aliquam feugiat. Morbi laoreet
-      neque dolor. Donec sem sapien, mollis ut ex et, lacinia tincidunt metus. Sed mollis
-      turpis ac felis tempor, quis varius orci maximus. Nam id dignissim enim. Aliquam in
-      nibh lorem. In hac habitasse platea dictumst. Phasellus interdum vehicula rutrum. Ut
-      sodales nulla vitae neque dictum, vel egestas leo sagittis. Phasellus quis tempus
-      ipsum. Praesent quis est sed nunc iaculis consectetur. Phasellus porttitor mauris
-      metus, ac suscipit purus venenatis gravida. Donec sem ante, porta at imperdiet
-      vitae, faucibus nec felis. Maecenas sodales erat et rhoncus consectetur. Nam
-      convallis, augue ut euismod elementum, lectus felis eleifend risus, vestibulum
-      molestie orci nisl eu lacus. Nullam tincidunt pretium lectus, et lobortis libero
-      finibus vel. Nullam sed sem egestas, faucibus enim vel, venenatis dui. Sed
-      consectetur velit id purus volutpat venenatis. Suspendisse nec mi risus. In id
-      interdum est. Nam aliquet, enim nec imperdiet pellentesque, sem augue viverra
-      sapien, in mattis enim mi in lorem. Nunc tempor nisi metus, in fermentum magna
-      varius id. Quisque eu pretium magna, a euismod eros. In hendrerit bibendum tellus.
-      Nunc quam tortor, sagittis vitae lectus non, interdum rhoncus tellus. Sed ut semper
-      velit. Suspendisse auctor velit ut augue placerat, eu feugiat augue varius. Nulla
-      consectetur magna feugiat placerat semper. Fusce turpis nulla, scelerisque nec
-      gravida eu, consequat id nibh.
-    </p>
+    <div
+      class="tab-pane fade"
+      id="sinp-credits"
+      aria-labelledby="sinp-credits-tab"
+      role="tabpanel">
+      <h4>Crédits</h4>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. Etiam
+        mattis velit nec est gravida, a hendrerit velit facilisis. Sed pharetra tortor ac
+        neque rhoncus, vitae tempor metus condimentum.
+      </p>
+      <div class="sinp-help-credits-grid">
+        <div class="sinp-help-credit-card">
+          <img
+            src="apps/sinp_hdf/custom_theme/img/logo/logo-arb-vertpng.png"
+            alt="Logo de l'Agence regionale de la biodiversite Hauts-de-France" />
+          <span>Agence regionale de la biodiversite Hauts-de-France</span>
+        </div>
+        <div class="sinp-help-credit-card">
+          <img
+            src="apps/sinp_hdf/custom_theme/img/logo/logo-observatoire-biodiversite-hauts-de-france.svg"
+            alt="Logo de l'Observatoire de la biodiversite des Hauts-de-France" />
+          <span>Observatoire de la biodiversite des Hauts-de-France</span>
+        </div>
+        <div class="sinp-help-credit-card">
+          <img
+            src="apps/sinp_hdf/custom_theme/img/logo/logo-irpn.png"
+            alt="Logo de l'IRPN" />
+          <span>IRPN</span>
+        </div>
+        <div class="sinp-help-credit-card">
+          <img
+            src="apps/sinp_hdf/custom_theme/img/logo/logo-obsbiodiv-hdf.png"
+            alt="Logo du SINP Hauts-de-France" />
+          <span>SINP Hauts-de-France</span>
+        </div>
+        <div class="sinp-help-credit-card sinp-help-credit-card--placeholder">
+          <span>DREAL Hauts-de-France<br />Logo a integrer</span>
+        </div>
+        <div class="sinp-help-credit-card sinp-help-credit-card--placeholder">
+          <span>Geo2France<br />Logo a integrer</span>
+        </div>
+        <div class="sinp-help-credit-card sinp-help-credit-card--placeholder">
+          <span>Partenaire 7<br />Logo a integrer</span>
+        </div>
+        <div class="sinp-help-credit-card sinp-help-credit-card--placeholder">
+          <span>Partenaire 8<br />Logo a integrer</span>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="tab-pane fade"
+      id="sinp-mentions"
+      aria-labelledby="sinp-mentions-tab"
+      role="tabpanel">
+      <h4>Mentions légales</h4>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus varius enim nec
+        libero interdum, et eleifend risus feugiat. Suspendisse euismod est a dui aliquet,
+        nec fermentum dui vehicula.
+      </p>
+      <p>
+        Curabitur eget nunc in mauris semper blandit. Donec egestas, velit sed viverra
+        vulputate, ligula mauris eleifend ipsum, eu ullamcorper tortor odio vitae lectus.
+        Cras sit amet ligula et sapien interdum interdum.
+      </p>
+    </div>
   </div>
 </div>

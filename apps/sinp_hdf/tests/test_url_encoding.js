@@ -4,7 +4,8 @@
  */
 
 // Simulation du VIEWPARAMS produit par sinpQueryBuilder
-const viewparams = "DATE_DEB:2006-03-09;DATE_FIN:2026-03-09;CD_REF:;GRP_IDS:13|15";
+const viewparams =
+  "DATE_DEB:2006-03-09;DATE_FIN:2026-03-09;CD_REF:2440|2442;GRP_IDS:13|15";
 console.log("VIEWPARAMS brut:", viewparams);
 
 // Encodage avec encodeURIComponent (comme dans les customlayers)
@@ -42,4 +43,3 @@ if (fullUrl.includes("GRP_IDS%3A13%7C15")) {
 } else {
   console.log("❓ UNKNOWN - Format GRP_IDS non trouvé");
 }
-

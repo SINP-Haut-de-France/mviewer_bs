@@ -5,7 +5,8 @@
 		title="SINP Hauts-de-France"
 		logo='apps/sinp_hdf/custom_theme/img/logo/logo-obsbiodiv-hdf.png'
 		help="apps/sinp_hdf/custom_theme/sinp_aide.html"
-		showhelp="false"
+		showhelp="true"
+		titlehelp="SINP Hauts de France"
 		favicon='apps/sinp_hdf/custom_theme/img/logo/logo-arb-vertpng.ico'
 		style='apps/sinp_hdf/custom_theme/css/sinp_hdf.css'
 	/>
@@ -44,11 +45,11 @@
 				fields=""
 				tooltip="true"
 				tooltipenabled="true"
-				tooltipcontent="{{code_insee}} : {{nb_observations}} obs."
+				tooltipcontent="{{libelle}} : {{nb_observations}} obs."
 				attribution="Source: SINP Hauts-de-France. Synthèse des observations naturalistes par commune."
 				nohighlight="false"
 				jsonfields="details"
-				infopanel="bottom-panel"
+				infopanel="right-panel"
 				metadata=""
 				metadata-csw=""
 				>
@@ -67,11 +68,11 @@
 				fields=""
 				tooltip="true"
 				tooltipenabled="true"
-				tooltipcontent="{{code_insee}} : {{nb_observations}} obs."
+				tooltipcontent="{{libelle}} : {{nb_observations}} obs."
 				attribution="Source: SINP Hauts-de-France. Synthèse des observations naturalistes par commune."
 				nohighlight="false"
 				jsonfields="details"
-				infopanel="bottom-panel"
+				infopanel="right-panel"
 				metadata=""
 				metadata-csw=""
 				>
@@ -89,9 +90,12 @@
 				customcontrol="true"
 				customcontrolpath="apps/sinp_hdf/customcontrols/grid10x10search/"
 				fields=""
+				tooltip="true"
+				tooltipenabled="true"
+				tooltipcontent="{{libelle}} : {{nb_observations}} obs."
 				nohighlight="false"
 				jsonfields="details"
-				infopanel="bottom-panel"
+				infopanel="right-panel"
 				metadata=""
 				metadata-csw=""
 				>

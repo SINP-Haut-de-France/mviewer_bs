@@ -3,19 +3,16 @@ mviewer.customControls.grid10x10search = (function () {
     constructor() {
       super({
         layerId: "grid10x10search",
-        mainTypeName: "fn_get_stats_grille_10x10",
-        detailsTypeName: "fn_get_obs_detaillee_grille",
+        mainTypeName: "fn_get_stats",
+        detailsTypeName: "fn_get_obs_detaillee",
+        metadataTypeName: "fn_get_metadatas",
+        targetLocCode: "6",
+        entityCodeKeys: ["code_maille", "id_maille", "maille", "code"],
       });
     }
 
     _normalizeInputParams(params = {}) {
       return this._normalizeStandardFilters(params);
-    }
-
-    async _enrichMainFeatures(mainFeatures, params) {
-      return this._attachDetailsToFeatures(mainFeatures, params, {
-        mode: "all",
-      });
     }
   }
 
@@ -24,6 +21,8 @@ mviewer.customControls.grid10x10search = (function () {
   return {
     init: async function () {},
     submit: (filters) => controller.submit(filters),
+    handle: (features) => controller.handle(features),
+    ensureMetadataForFeatures: (features) => controller.ensureMetadataForFeatures(features),
     normalizeFilters: (selectedFilters) =>
       controller._normalizeInputParams(selectedFilters),
     openFilterModal: function () {

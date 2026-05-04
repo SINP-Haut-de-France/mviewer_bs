@@ -5,8 +5,8 @@
  * Hérite de SinpBaseLayer (classe abstraite)
  *
  * Configuration GeoServer:
- * - Fonction PostgreSQL: fn_get_stats_grille_10x10 (à créer en BDD)
- * - Détails: fn_get_obs_detaillee_grille (à créer en BDD)
+ * - Fonction PostgreSQL: fn_get_stats
+ * - Détails: fn_get_obs_detaillee
  */
 
 mviewer.customLayers.grid10x10search = (function () {
@@ -15,15 +15,18 @@ mviewer.customLayers.grid10x10search = (function () {
    */
   class GridSearch10x10Layer extends mviewer.customLayers.SinpBaseLayer {
     constructor() {
-      super("grid10x10search", "fn_get_stats_grille_10x10", {
+      super("grid10x10search", "fn_get_stats", {
         maxZoom: 10, // Zoom moins agressif pour grilles larges
+        serverStyle: {
+          enabled: true,
+        },
         style: new ol.style.Style({
           stroke: new ol.style.Stroke({
-            color: "rgba(52, 152, 219, 255)", // Bleu pour différencier
-            width: 2,
+            color: "rgba(0, 0, 0, 0.001)",
+            width: 1,
           }),
           fill: new ol.style.Fill({
-            color: "rgba(52, 152, 219, 0.1)",
+            color: "rgba(0, 0, 0, 0.001)",
           }),
         }),
       });

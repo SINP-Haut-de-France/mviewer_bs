@@ -12,7 +12,7 @@
   --sinp-border-radius: var(--mvcustom-border-radius, 4px);
   
   /* Dimensions des panneaux */
-  --sinp-rightpanel-width: 400px;
+  --sinp-rightpanel-width: 30vw;
   --sinp-sidebar-width: 350px; /* 👈 Largeur du menu de gauche (par défaut mviewer: 250px) */
   
   /* Couleurs spécifiques SINP */
@@ -81,11 +81,21 @@
 
 /* Panneau droit élargi pour SINP */
 #right-panel.active {
-  width: var(--sinp-rightpanel-width);
+  width: var(--sinp-rightpanel-width) !important;
+  max-width: var(--sinp-rightpanel-width) !important;
+}
+
+#right-panel .popup-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 #right-panel .carousel-inner {
-  width: calc(var(--sinp-rightpanel-width) - 20px);
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
 }
 
 /* Réduction de la taille de la police dans les sélecteurs */
@@ -124,7 +134,7 @@
 
 /* Titre aligné */
 .mv-title {
-  margin-top: 0.875rem;
+  /*margin-top: 0.875rem;*/
 }
 
 /* ========================================
@@ -368,11 +378,13 @@
   }
 
   #right-panel.active {
-    width: var(--sinp-rightpanel-width);
+    width: var(--sinp-rightpanel-width) !important;
+    max-width: var(--sinp-rightpanel-width) !important;
   }
 
   #right-panel .carousel-inner {
-    width: calc(var(--sinp-rightpanel-width) - 20px);
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }
 
@@ -403,11 +415,13 @@
   }
 
   #right-panel.active {
-    width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   #right-panel .carousel-inner {
-    width: calc(100% - 20px);
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   /* Force le comportement toggled-2 sur mobile */
@@ -683,6 +697,69 @@
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
+.sinp-help .tab-content {
+  min-height: 24rem;
+}
 
+.sinp-help-tabs {
+  gap: 0.25rem;
+}
 
+.sinp-help-links {
+  padding-left: 1.25rem;
+}
 
+.sinp-help-links li + li {
+  margin-top: 0.5rem;
+}
+
+.sinp-help-credits-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.sinp-help-credit-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 11rem;
+  padding: 1rem;
+  text-align: center;
+  border: 1px solid var(--sinp-border-color);
+  border-radius: var(--sinp-border-radius);
+  background-color: #fff;
+}
+
+.sinp-help-credit-card img {
+  max-width: 100%;
+  max-height: 4.5rem;
+  object-fit: contain;
+  margin-bottom: 0.75rem;
+}
+
+.sinp-help-credit-card span {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.sinp-help-credit-card--placeholder {
+  border-style: dashed;
+  color: var(--sinp-text-muted);
+  background-color: var(--sinp-bg-light);
+}
+
+@media (max-width: 991px) {
+  .sinp-help-credits-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 576px) {
+  .sinp-help-credits-grid {
+    grid-template-columns: 1fr;
+  }
+}

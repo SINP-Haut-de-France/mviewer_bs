@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { FilterProvider } from "./providers/FilterProvider";
 import GlobalFilterManager from "./sinp_components/GlobalFilterManager/GlobalFilterManager";
 import * as Sentry from "@sentry/react";
-import "./sinp_components/CommuneSearchResults/registerCommuneSearchResultsElement";
+import "./sinp_components/SearchResults/registerSearchResultsElement";
 
 // Initialiser window.roots avant tout
 window.roots = window.roots || {};
