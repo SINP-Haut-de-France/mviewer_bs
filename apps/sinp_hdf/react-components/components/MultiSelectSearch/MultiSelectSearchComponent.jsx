@@ -255,14 +255,13 @@ const MultiSelectSearchComponent = ({
     }
 
     const returnValues = newSelected.map((item) => item[returnValueKey]);
-    const valueToPass = multiselect ? returnValues : returnValues[0];
     console.log(
       `🎯 MultiSelectSearchComponent.handleSelect - Passing to onChange:`,
-      valueToPass,
+      returnValues,
       "Current selected internal state:",
       newSelected.map((item) => item[returnValueKey])
     );
-    onChange(valueToPass);
+    onChange(returnValues);
 
     // Use shorter timeout to protect selection without blocking prop updates
     setTimeout(() => {
@@ -278,7 +277,7 @@ const MultiSelectSearchComponent = ({
     setSelected(newSelected);
 
     const returnValues = newSelected.map((item) => item[returnValueKey]);
-    onChange(multiselect ? returnValues : returnValues.length ? returnValues[0] : null);
+    onChange(returnValues);
 
     // Use shorter timeout to protect selection without blocking prop updates
     setTimeout(() => {

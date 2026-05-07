@@ -99,7 +99,7 @@ const GlobalFiltersUI = ({
                 )}
                 minCharacters={3}
                 maxResults={15}
-                multiselect={false}
+                multiselect={true}
                 onChange={handleTaxChange}
                 onSearch={setQuery}
                 loading={loading}
@@ -156,7 +156,7 @@ const GlobalFiltersUI = ({
                       label={(item) => `${item.code_dpt} - ${item.libelle}`}
                       minCharacters={1}
                       maxResults={10}
-                      multiselect={false}
+                      multiselect={true}
                       onChange={handleDptChange}
                     />
                   )}
@@ -189,7 +189,7 @@ const GlobalFiltersUI = ({
                             label={(item) =>
                               `${item.code_insee} - ${item.libelle_commune}`
                             }
-                            multiselect={false}
+                            multiselect={true}
                             onChange={handleComChange}
                           />
                         );

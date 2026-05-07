@@ -301,6 +301,15 @@ window.sinpQueryBuilder = (function () {
 
   const PIPE_SEPARATED_LIST_PATTERN = /^[^|]+(\|[^|]+)*$/;
 
+  const _buildPipeSeparatedViewParamConfig = function (source, options = {}) {
+    return {
+      source,
+      separator: "|",
+      validationPattern: PIPE_SEPARATED_LIST_PATTERN,
+      ...options,
+    };
+  };
+
   const _normalizeViewParamListValues = function (value) {
     if (value === undefined || value === null) {
       return [];
@@ -355,7 +364,7 @@ window.sinpQueryBuilder = (function () {
 
     if (paramKey === "CD_REF") {
       return _serializeListViewParam(paramKey, value, {
-        separator: ",",
+        separator: "|",
       });
     }
 
@@ -379,39 +388,24 @@ window.sinpQueryBuilder = (function () {
     const sharedViewParams = {
       DATE_DEB: "dateDeb",
       DATE_FIN: "dateFin",
-      DEPT_IDS: {
-        source: "departements",
-        separator: "|",
+      DEPT_IDS: _buildPipeSeparatedViewParamConfig("departements", {
         omitEmpty: true,
-        validationPattern: PIPE_SEPARATED_LIST_PATTERN,
-      },
-      CODE_INSEES: {
-        source: "communes",
-        separator: "|",
+      }),
+      CODE_INSEES: _buildPipeSeparatedViewParamConfig("communes", {
         omitEmpty: true,
-        validationPattern: PIPE_SEPARATED_LIST_PATTERN,
-      },
-      CD_REF: {
-        source: "taxons",
-        separator: "|",
+      }),
+      CD_REF: _buildPipeSeparatedViewParamConfig("taxons", {
         omitEmpty: true,
-        validationPattern: PIPE_SEPARATED_LIST_PATTERN,
-      },
-      GRP_IDS: {
-        source: "groupes",
-        separator: "|",
+      }),
+      GRP_IDS: _buildPipeSeparatedViewParamConfig("groupes", {
         omitEmpty: true,
-        validationPattern: PIPE_SEPARATED_LIST_PATTERN,
-      },
+      }),
     };
 
     if (includeEpciIds) {
-      sharedViewParams.EPCI_IDS = {
-        source: "epcis",
-        separator: "|",
+      sharedViewParams.EPCI_IDS = _buildPipeSeparatedViewParamConfig("epcis", {
         omitEmpty: true,
-        validationPattern: PIPE_SEPARATED_LIST_PATTERN,
-      };
+      });
     }
 
     if (targetLocCodeSource) {
@@ -443,8 +437,10 @@ window.sinpQueryBuilder = (function () {
       view_params: {
         DATE_DEB: "dateDeb",
         DATE_FIN: "dateFin",
-        CD_REF: "taxons",
-        GRP_IDS: "groupes",
+        CD_REF: _buildPipeSeparatedViewParamConfig("taxons"),
+        GRP_IDS: _buildPipeSeparatedViewParamConfig("groupes", {
+          omitEmpty: true,
+        }),
       },
     },
 
@@ -464,8 +460,10 @@ window.sinpQueryBuilder = (function () {
       view_params: {
         DATE_DEB: "dateDeb",
         DATE_FIN: "dateFin",
-        CD_REF: "taxons",
-        GRP_IDS: "groupes",
+        CD_REF: _buildPipeSeparatedViewParamConfig("taxons"),
+        GRP_IDS: _buildPipeSeparatedViewParamConfig("groupes", {
+          omitEmpty: true,
+        }),
       },
     },
 

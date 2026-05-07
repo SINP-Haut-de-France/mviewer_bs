@@ -20,7 +20,7 @@ describe("sinpQueryBuilder - Gestion des tableaux cd_ref", () => {
     expect(result.VIEWPARAMS).not.toContain("undefined");
   });
 
-  test("Tableau cd_ref avec une valeur → CSV correct", () => {
+  test("Tableau cd_ref avec une valeur → format pipe correct", () => {
     const params = {
       communes: ["62225"],
       departements: ["62"],
@@ -37,7 +37,7 @@ describe("sinpQueryBuilder - Gestion des tableaux cd_ref", () => {
     expect(result.VIEWPARAMS).toContain("CD_REF:2440");
   });
 
-  test("Tableau cd_ref avec plusieurs valeurs → CSV correct", () => {
+  test("Tableau cd_ref avec plusieurs valeurs → format pipe correct", () => {
     const params = {
       communes: ["62225"],
       departements: ["62"],
@@ -50,8 +50,8 @@ describe("sinpQueryBuilder - Gestion des tableaux cd_ref", () => {
 
     expect(result.TYPENAME).toBe("sinp_diffusion:v_synthese_commune");
     expect(result.CQL_FILTER).toBe("code_insee IN ('62225') AND code_dpt IN ('62')");
-    // ✅ CD_REF contient les valeurs séparées par virgule (sans encoding - fait par encodeURIComponent plus tard)
-    expect(result.VIEWPARAMS).toContain("CD_REF:2440,2442,2444");
+    // ✅ CD_REF contient les valeurs séparées par des pipes
+    expect(result.VIEWPARAMS).toContain("CD_REF:2440|2442|2444");
   });
 
   test("cd_ref undefined → traiter comme tableau vide", () => {
@@ -99,31 +99,31 @@ describe("sinpQueryBuilder - Gestion des tableaux cd_ref", () => {
     // Vérifications
     expect(result.TYPENAME).toBe("sinp_diffusion:v_synthese_commune");
     expect(result.CQL_FILTER).toBe("code_insee IN ('62225') AND code_dpt IN ('62')");
-    // Format sans encodage - sera fait par encodeURIComponent dans customlayers
+    // Format sans encodage - seuls les pipes seront encodés plus tard dans l'URL
     expect(result.VIEWPARAMS).toBe(
-      "DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;CD_REF:2440,2442"
+      "DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;CD_REF:2440|2442"
     );
   });
 
   test("SQL View reçoit correctement les paramètres", () => {
     // URL que mviewer envoie à GeoServer:
-    // VIEWPARAMS=DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;CD_REF:2440%2C2442
+    // VIEWPARAMS=DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;CD_REF:2440%7C2442
 
     // GeoServer decode et remplace:
     // '%DATE_DEB%' → '2005-12-10'
     // '%DATE_FIN%' → '2025-12-10'
-    // '%CD_REF%'   → '2440,2442'
+    // '%CD_REF%'   → '2440|2442'
 
     // SQL View exécute:
     // and (
-    //   '2440,2442' = ''  -- FALSE
+    //   '2440|2442' = ''  -- FALSE
     //   or cd_ref IN (
     //     SELECT CAST(TRIM(value) AS INTEGER)
-    //     FROM unnest(string_to_array('2440,2442', ',')) AS t(value)
+    //     FROM unnest(string_to_array('2440|2442', '|')) AS t(value)
     //   )
     // )
 
-    // string_to_array('2440,2442', ',') → ['2440', '2442']
+    // string_to_array('2440|2442', '|') → ['2440', '2442']
     // CAST(TRIM('2440') AS INTEGER) → 2440
     // CAST(TRIM('2442') AS INTEGER) → 2442
     // cd_ref IN (2440, 2442) → Filtre correctement appliqué
@@ -148,7 +148,7 @@ describe("Cas d'usage réels SINP", () => {
 
     // Doit créer une requête sans filtre communal/départemental
     expect(result.CQL_FILTER).toBe(""); // Pas de CQL_FILTER
-    expect(result.VIEWPARAMS).toContain("CD_REF:2440,2442");
+    expect(result.VIEWPARAMS).toContain("CD_REF:2440|2442");
   });
 
   test("Recherche départementale sans espèce spécifique", () => {
@@ -180,7 +180,7 @@ describe("Cas d'usage réels SINP", () => {
     const result = sinpQueryBuilder.buildRequestOptions(params, "v_synthese_commune");
 
     expect(result.CQL_FILTER).toBe("code_insee IN ('62225') AND code_dpt IN ('62')");
-    expect(result.VIEWPARAMS).toContain("CD_REF:2440,2442,2444,2500,2600");
+    expect(result.VIEWPARAMS).toContain("CD_REF:2440|2442|2444|2500|2600");
   });
 });
 
@@ -234,11 +234,11 @@ describe("GRP_IDS - Gestion correcte des séparateurs", () => {
     expect(result.VIEWPARAMS).not.toContain("GRP_IDS");
   });
 
-  test("Cohérence CD_REF (virgules) et GRP_IDS (pipes)", () => {
+  test("Cohérence CD_REF et GRP_IDS avec pipes", () => {
     const params = {
       communes: ["62225"],
       departements: ["62"],
-      taxons: [2440, 2442], // 2 taxons - séparés par virgules
+      taxons: [2440, 2442], // 2 taxons - séparés par pipes
       groupes: [12, 23], // 2 groupes - séparés par pipes
       dateDeb: "2006-02-27",
       dateFin: "2026-02-27",
@@ -246,8 +246,8 @@ describe("GRP_IDS - Gestion correcte des séparateurs", () => {
 
     const result = sinpQueryBuilder.buildRequestOptions(params, "v_synthese_commune");
 
-    // CD_REF utilise des virgules
-    expect(result.VIEWPARAMS).toContain("CD_REF:2440,2442");
+    // CD_REF utilise des pipes
+    expect(result.VIEWPARAMS).toContain("CD_REF:2440|2442");
     // GRP_IDS utilise des pipes
     expect(result.VIEWPARAMS).toContain("GRP_IDS:12|23");
   });
