@@ -101,6 +101,107 @@ describe("SinpBaseLayer - Classe abstraite", () => {
 });
 
 describe("SinpBaseCustom - Scopage des détails", () => {
+  test("retombe sur le type du layer quand mainTypeName est vide", () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      mainTypeName: "   ",
+    });
+
+    expect(control._resolveRequestTypeName(control.mainTypeName, "fn_get_stats")).toBe(
+      "fn_get_stats"
+    );
+  });
+
+  test("Construit des paramètres détaillés ciblés pour les communes cliquées", () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      targetLocCode: "2",
+    });
+    const params = {
+      departements: ["62"],
+      dateDeb: "2020-01-01",
+      dateFin: "2025-12-10",
+      targetLocCode: "2",
+    };
+    const features = [
+      {
+        get(key) {
+          return { code_insee: "62225" }[key];
+        },
+      },
+      {
+        get(key) {
+          return { code_insee: "59350" }[key];
+        },
+      },
+    ];
+
+    expect(control._buildDetailRequestParams(features, params)).toEqual({
+      ...params,
+      communes: ["62225", "59350"],
+    });
+  });
+
+  test("Ignore les UUID quand il construit CODE_INSEES", () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      targetLocCode: "2",
+    });
+    const params = {
+      departements: ["62"],
+      dateDeb: "2020-01-01",
+      dateFin: "2025-12-10",
+      targetLocCode: "2",
+    };
+    const feature = {
+      get(key) {
+        return {
+          code_insee: "62165",
+          code: "62165",
+          adm_id: "02fd4b0f-54ee-5657-b494-9889486c5a21",
+          commune_id: "02fd4b0f-54ee-5657-b494-9889486c5a21",
+        }[key];
+      },
+    };
+
+    expect(control._buildDetailRequestParams([feature], params)).toEqual({
+      ...params,
+      communes: ["62165"],
+    });
+  });
+
+  test("Construit des paramètres détaillés ciblés pour les mailles cliquées", () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      targetLocCode: "6",
+    });
+    const params = {
+      departements: ["62"],
+      dateDeb: "2020-01-01",
+      dateFin: "2025-12-10",
+      targetLocCode: "6",
+    };
+    const features = [
+      {
+        get(key) {
+          return { code: "E069N692" }[key];
+        },
+      },
+      {
+        get(key) {
+          return { codeLocali: "10kmL93E070N693" }[key];
+        },
+      },
+    ];
+
+    expect(control._buildDetailRequestParams(features, params)).toEqual({
+      ...params,
+      departements: [],
+      communes: [],
+      mailles: ["E069N692", "E070N693"],
+    });
+  });
+
   test("Cible communale: le rattachement se fait sur les codes INSEE", () => {
     const control = new SinpBaseCustom({
       layerId: "testControl",
@@ -137,6 +238,19 @@ describe("SinpBaseCustom - Scopage des détails", () => {
 
     expect(result.featureKey).toContain("code_maille");
     expect(result.detailKey).toContain("code_maille");
+    expect(result.featureKey).toContain("codeLocali");
+    expect(result.detailKey).toContain("cd_sig");
+  });
+
+  test("Les variantes de clés de maille reconnaissent le suffixe cd_sig", () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      targetLocCode: "6",
+    });
+
+    expect(control._expandEntityKeyVariants("10kmL93E069N692", { targetLocCode: "6" })).toEqual(
+      expect.arrayContaining(["10kmL93E069N692", "E069N692"])
+    );
   });
 });
 
@@ -308,17 +422,13 @@ describe("sinpQueryBuilder - Configurations nouvelles", () => {
   test("Configuration fn_get_metadatas existe", () => {
     const options = sinpQueryBuilder.buildRequestOptions(
       {
-        dateDeb: "2020-01-01",
-        dateFin: "2026-03-10",
-        taxons: [2440],
-        targetLocCode: "2",
+        jddIds: ["123", "456"],
       },
       "fn_get_metadatas"
     );
 
     expect(options.TYPENAME).toBe("sinp_diffusion:fn_get_metadatas");
-    expect(options.VIEWPARAMS).toContain("CD_REF:2440");
-    expect(options.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
+    expect(options.VIEWPARAMS).toBe("ID_JDDS:123|456");
   });
 });
 
@@ -417,5 +527,45 @@ describe("Intégration - Flux complet", () => {
     expect(advSearch.typeName).toBe("fn_get_stats");
     expect(grid5x5.typeName).toBe("fn_get_stats");
     expect(grid10x10.typeName).toBe("fn_get_stats");
+  });
+
+  test("ensureMetadataForFeatures charge les métadonnées à partir de jdd_ids", async () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      metadataTypeName: "fn_get_metadatas",
+    });
+    const feature = {
+      properties: {
+        jdd_ids: "11|22|11",
+      },
+      get(key) {
+        return this.properties[key];
+      },
+      set(key, value) {
+        this.properties[key] = value;
+      },
+    };
+
+    const loadMetadataSpy = jest
+      .spyOn(control, "_loadMetadataProperties")
+      .mockResolvedValue([
+        { idJdd: 11, libelJdd: "Jeu 11" },
+        { idJdd: 22, libelJdd: "Jeu 22" },
+        { idJdd: 99, libelJdd: "Jeu 99" },
+      ]);
+
+    await control.ensureMetadataForFeatures([feature]);
+
+    expect(loadMetadataSpy).toHaveBeenCalledWith(
+      { jddIds: ["11", "22"] },
+      "fn_get_metadatas"
+    );
+    expect(feature.properties.jdd_details).toEqual([
+      { idJdd: 11, libelJdd: "Jeu 11" },
+      { idJdd: 22, libelJdd: "Jeu 22" },
+    ]);
+    expect(feature.properties.jdd_data_loaded).toBe(true);
+    expect(feature.properties.jdd_data_loading).toBe(false);
+    expect(feature.properties.jdd_data_error).toBeNull();
   });
 });

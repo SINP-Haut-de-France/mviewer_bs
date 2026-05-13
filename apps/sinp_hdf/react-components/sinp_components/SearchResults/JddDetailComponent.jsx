@@ -62,7 +62,7 @@ const JddDetailComponent = ({
         pageSizeOptions={PAGE_SIZE_OPTIONS}
         onPageChange={setPage}
         onPageSizeChange={setPageSize}
-        itemLabel="cadres"
+        itemLabel="Jeu(x) de données"
       />
 
       <div className="table-responsive mv-sr-table-wrapper" style={tableWrapperStyle}>

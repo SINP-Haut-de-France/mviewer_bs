@@ -5,6 +5,7 @@ import {
   getFeatureByUid,
   getFeatureProperties,
   getLayerConfig,
+  getSelectedEntitySummary,
   SELECTION_PROMPT_MESSAGE,
   TAB_IDS,
 } from "./searchResults.utils";
@@ -42,6 +43,7 @@ const SearchResultsComponent = ({ layerId, featureUid, promptOnly = false }) => 
   const properties = feature ? getFeatureProperties(feature) : {};
   const details = Array.isArray(properties.details) ? properties.details : [];
   const jddDetails = Array.isArray(properties.jdd_details) ? properties.jdd_details : [];
+  const selectionSummary = getSelectedEntitySummary(layerId, properties, layerConfig);
   const loadingState = properties.entity_data_loading === true;
   const errorMessage =
     typeof properties.entity_data_error === "string" ? properties.entity_data_error : "";
@@ -103,6 +105,7 @@ const SearchResultsComponent = ({ layerId, featureUid, promptOnly = false }) => 
         properties={properties}
         details={details}
         jddDetails={jddDetails}
+        selectionSummary={selectionSummary}
         panelLabel={layerConfig.panelLabel}
         selectionPrompt={selectionPrompt}
         selectionPromptMessage={SELECTION_PROMPT_MESSAGE}

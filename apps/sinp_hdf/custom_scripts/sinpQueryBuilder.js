@@ -300,6 +300,28 @@ window.sinpQueryBuilder = (function () {
   ];
 
   const PIPE_SEPARATED_LIST_PATTERN = /^[^|]+(\|[^|]+)*$/;
+  const QUALIFIED_TYPENAME_PATTERN = /^[^:\s]+:[^:\s]+$/;
+
+  const _normalizeViewName = function (view) {
+    if (typeof view !== "string") {
+      throw new Error(`Unknown view and schema : ${view}`);
+    }
+
+    const trimmedView = view.trim();
+    if (!trimmedView) {
+      throw new Error(`Unknown view and schema : ${view}`);
+    }
+
+    const normalizedView = trimmedView.includes(":")
+      ? trimmedView.split(":").pop().trim()
+      : trimmedView;
+
+    if (!normalizedView) {
+      throw new Error(`Unknown view and schema : ${view}`);
+    }
+
+    return normalizedView;
+  };
 
   const _buildPipeSeparatedViewParamConfig = function (source, options = {}) {
     return {
@@ -343,8 +365,41 @@ window.sinpQueryBuilder = (function () {
     return serializedValue;
   };
 
+  const _serializeScalarViewParam = function (value) {
+    if (value === undefined || value === null) {
+      return null;
+    }
+
+    const normalizedValue = String(value).trim();
+    return normalizedValue === "" ? null : normalizedValue;
+  };
+
+  const _sanitizeViewParamsString = function (viewParams = "") {
+    return String(viewParams)
+      .split(";")
+      .map((entry) => entry.trim())
+      .filter((entry) => entry !== "" && !entry.endsWith(":"))
+      .join(";");
+  };
+
+  const _normalizeParamsForView = function (params = {}, view) {
+    if (
+      view === "fn_get_obs_detaillee" &&
+      Array.isArray(params.mailles) &&
+      params.mailles.length > 0
+    ) {
+      return {
+        ...params,
+        departements: [],
+        communes: [],
+      };
+    }
+
+    return params;
+  };
+
   const _serializeViewParam = function (paramKey, value, config = {}) {
-    const pipeSeparatedParams = ["GRP_IDS", "DEPT_IDS", "CODE_INSEES"];
+    const pipeSeparatedParams = ["GRP_IDS", "DEPT_IDS", "CODE_INSEES", "CODE_MAILLES"];
     const { separator = null, omitEmpty = false, validationPattern = null } = config;
 
     if (separator) {
@@ -374,11 +429,11 @@ window.sinpQueryBuilder = (function () {
       });
     }
 
-    if (value === undefined || value === null) {
-      return "";
+    if (Array.isArray(value)) {
+      return value.length ? value.join(",") : null;
     }
 
-    return Array.isArray(value) ? value.join(",") : String(value);
+    return _serializeScalarViewParam(value);
   };
 
   const _buildSharedSearchViewParams = function ({
@@ -392,6 +447,9 @@ window.sinpQueryBuilder = (function () {
         omitEmpty: true,
       }),
       CODE_INSEES: _buildPipeSeparatedViewParamConfig("communes", {
+        omitEmpty: true,
+      }),
+      CODE_MAILLES: _buildPipeSeparatedViewParamConfig("mailles", {
         omitEmpty: true,
       }),
       CD_REF: _buildPipeSeparatedViewParamConfig("taxons", {
@@ -497,9 +555,11 @@ window.sinpQueryBuilder = (function () {
 
     fn_get_metadatas: {
       cql_filters: {},
-      view_params: _buildSharedSearchViewParams({
-        targetLocCodeSource: "targetLocCode",
-      }),
+      view_params: {
+        ID_JDDS: _buildPipeSeparatedViewParamConfig("jddIds", {
+          omitEmpty: true,
+        }),
+      },
     },
   };
 
@@ -510,28 +570,29 @@ window.sinpQueryBuilder = (function () {
    * @return {Object} - Objet options avec TYPENAME, VIEWPARAMS et éventuellement CQL_FILTER
    */
   const _buildRequestOptions = function (params = {}, view) {
-    if (!view) throw new Error(`Unknown view and schema : ${view}`);
+    const normalizedView = _normalizeViewName(view);
+    const normalizedParams = _normalizeParamsForView(params, normalizedView);
 
     const conditions = [];
-    const typename = `sinp_diffusion:${view}`;
-    const cfg = _viewConfig[view];
+    const typename = `sinp_diffusion:${normalizedView}`;
+    const cfg = _viewConfig[normalizedView];
 
     if (!cfg) throw new Error(`Unknown view: ${typename}`);
 
     for (const [, rule] of Object.entries(cfg.cql_filters || {})) {
       if (Array.isArray(rule.params)) {
-        const values = rule.params.map((p) => params[p]);
-        if (rule.condition && !rule.condition(params)) continue;
+        const values = rule.params.map((p) => normalizedParams[p]);
+        if (rule.condition && !rule.condition(normalizedParams)) continue;
         if (values.every((v) => v === undefined || v === null)) continue;
         const cond = rule.apply(...values);
         if (cond) conditions.push(cond);
         continue;
       }
 
-      const value = params[rule.param];
+      const value = normalizedParams[rule.param];
       if (value === undefined || value === null) continue;
       if (Array.isArray(value) && value.length === 0) continue;
-      if (rule.condition && !rule.condition(params)) continue;
+      if (rule.condition && !rule.condition(normalizedParams)) continue;
 
       const cond = rule.apply(value);
       if (cond) conditions.push(cond);
@@ -557,7 +618,7 @@ window.sinpQueryBuilder = (function () {
             typeof paramValue === "string" ? { source: paramValue } : paramValue;
           const serializedValue = _serializeViewParam(
             paramKey,
-            params[viewParamConfig.source],
+            normalizedParams[viewParamConfig.source],
             viewParamConfig
           );
           if (serializedValue === null) {
@@ -568,7 +629,7 @@ window.sinpQueryBuilder = (function () {
         .filter(Boolean);
 
       if (viewParamsArray.length > 0) {
-        result.VIEWPARAMS = viewParamsArray.join(";");
+        result.VIEWPARAMS = _sanitizeViewParamsString(viewParamsArray.join(";"));
       }
     }
 
@@ -577,5 +638,8 @@ window.sinpQueryBuilder = (function () {
 
   return {
     buildRequestOptions: _buildRequestOptions,
+    normalizeViewName: _normalizeViewName,
+    qualifiedTypeNamePattern: QUALIFIED_TYPENAME_PATTERN,
+    sanitizeViewParamsString: _sanitizeViewParamsString,
   };
 })();

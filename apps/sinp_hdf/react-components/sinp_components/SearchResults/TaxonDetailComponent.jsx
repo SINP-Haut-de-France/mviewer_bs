@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
-import PaginationControls from "./PaginationControls";
-import { getTableWrapperStyle, paginateItems } from "./searchResults.utils";
+import React from "react";
+import SearchResultsTable from "./SearchResultsTable";
+import { formatDisplayDate } from "../../utils/date.utils";
 
 const PAGE_SIZE_OPTIONS = [
   { value: 25, label: "25" },
@@ -8,103 +8,96 @@ const PAGE_SIZE_OPTIONS = [
   { value: "all", label: "Tous" },
 ];
 
+const getTaxonomicGroupLabel = (detail = {}) => {
+  return (
+    detail?.group2_inpn || detail?.group1_inpn || detail?.group3_inpn || detail?.groupe_taxo || "-"
+  );
+};
+
+const TAXON_COLUMNS = [
+  {
+    id: "taxonomicGroup",
+    label: "Groupe taxonomique",
+    sortable: true,
+    sortType: "text",
+    getValue: (detail) => getTaxonomicGroupLabel(detail),
+  },
+  {
+    id: "observedSpecies",
+    label: "Espèce(s) observée(s)",
+    sortable: true,
+    sortType: "text",
+    getValue: (detail) => detail?.nom_vern || detail?.nom_valide || "-",
+    getSortValue: (detail) => [detail?.nom_vern || "", detail?.nom_valide || ""].join(" "),
+    render: (detail) => (
+      <>
+        <div>{detail?.nom_vern || "-"}</div>
+        <div className="mv-sr-latin-name">{detail?.nom_valide || ""}</div>
+      </>
+    ),
+  },
+  {
+    id: "lastObservation",
+    label: "Dernière observation",
+    sortable: true,
+    sortType: "date",
+    getValue: (detail) => detail?.last_date_obs || null,
+    render: (detail) => formatDisplayDate(detail?.last_date_obs),
+  },
+  {
+    id: "observationCount",
+    label: "Nb. observations",
+    sortable: false,
+    getValue: (detail) => detail?.nb_observations ?? "-",
+  },
+];
+
 const TaxonDetailComponent = ({
   details = [],
+  selectionSummary = null,
   selectionPrompt = false,
   selectionPromptMessage = "",
   loadingState = false,
   errorMessage = "",
 }) => {
-  const [pageSize, setPageSize] = useState(25);
-  const [page, setPage] = useState(1);
-
-  useEffect(() => {
-    setPage(1);
-  }, [details, pageSize]);
-
-  const paginatedDetails = useMemo(
-    () => paginateItems(details, pageSize, page),
-    [details, pageSize, page]
-  );
-  const tableWrapperStyle = useMemo(
-    () =>
-      getTableWrapperStyle(paginatedDetails.length, {
-        headerHeight: 34,
-        rowHeight: 42,
-      }),
-    [paginatedDetails.length]
-  );
-
   if (!details.length && !selectionPrompt && !loadingState && !errorMessage) {
     return <p className="mv-sr-empty">Aucune observation détaillée disponible.</p>;
   }
 
   return (
     <div className="mv-sr-section">
-      <PaginationControls
-        items={details}
-        page={page}
-        pageSize={pageSize}
-        pageSizeOptions={PAGE_SIZE_OPTIONS}
-        onPageChange={setPage}
-        onPageSizeChange={setPageSize}
-        itemLabel="taxons"
-      />
+      {!selectionPrompt && selectionSummary ? (
+        <div className="mv-sr-selection-summary" aria-live="polite">
+          <strong>Sélection courante :</strong> {selectionSummary.selectionLabel}
+          <span className="mv-sr-selection-summary-separator" aria-hidden="true">
+            -
+          </span>
+          <strong>Évènement(s) rattaché(s) :</strong> {selectionSummary.eventCount}
+        </div>
+      ) : null}
 
-      <div className="table-responsive mv-sr-table-wrapper" style={tableWrapperStyle}>
-        <table className="table table-striped table-hover mv-sr-table">
-          <thead>
-            <tr>
-              <th>Groupe taxonomique</th>
-              <th>Espèce observée</th>
-              <th>Dernière observation</th>
-              <th>Nb. observations</th>
-            </tr>
-          </thead>
-          <tbody>
-            {selectionPrompt ? (
-              <tr>
-                <td colSpan="4" className="mv-sr-empty-row">
-                  {selectionPromptMessage}
-                </td>
-              </tr>
-            ) : loadingState ? (
-              <tr>
-                <td colSpan="4" className="mv-sr-loading-row">
-                  <div className="mv-sr-table-loading" role="status" aria-live="polite">
-                    <i className="fas fa-spinner fa-spin" aria-hidden="true"></i>
-                    <span>Chargement des observations...</span>
-                  </div>
-                </td>
-              </tr>
-            ) : errorMessage ? (
-              <tr>
-                <td colSpan="4" className="mv-sr-empty-row">
-                  {errorMessage}
-                </td>
-              </tr>
-            ) : (
-              paginatedDetails.map((detail, index) => (
-                <tr key={`${detail?.cd_ref || detail?.nom_valide || "detail"}-${index}`}>
-                  <td>
-                    {detail?.group2_inpn ||
-                      detail?.group1_inpn ||
-                      detail?.group3_inpn ||
-                      detail?.groupe_taxo ||
-                      "-"}
-                  </td>
-                  <td>
-                    <div>{detail?.nom_vern || "-"}</div>
-                    <div className="mv-sr-latin-name">{detail?.nom_valide || ""}</div>
-                  </td>
-                  <td>{detail?.last_date_obs || "-"}</td>
-                  <td>{detail?.nb_observations ?? "-"}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <SearchResultsTable
+        items={details}
+        columns={TAXON_COLUMNS}
+        rowKey={(detail, index) => `${detail?.cd_ref || detail?.nom_valide || "detail"}-${index}`}
+        tableClassName="table table-striped table-hover mv-sr-table"
+        itemLabel="taxons"
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
+        defaultPageSize={25}
+        selectionPrompt={selectionPrompt}
+        selectionPromptMessage={selectionPromptMessage}
+        loadingState={loadingState}
+        loadingMessage="Chargement des observations..."
+        errorMessage={errorMessage}
+        emptyMessage="Aucune observation détaillée disponible."
+        groupBy={{
+          columnId: "taxonomicGroup",
+          label: "groupe taxonomique",
+          toggleLabel: "Regrouper par groupe taxonomique",
+          getValue: (detail) => getTaxonomicGroupLabel(detail),
+          emptyLabel: "Groupe non renseigné",
+        }}
+      />
     </div>
   );
 };

@@ -1,13 +1,11 @@
 import React from "react";
-import DonneesDetailComponent from "./DonneesDetailComponent";
 import JddDetailComponent from "./JddDetailComponent";
 import TaxonDetailComponent from "./TaxonDetailComponent";
 import { TAB_IDS } from "./searchResults.utils";
 
 const TAB_DEFINITIONS = [
-  { id: TAB_IDS.OBSERVATIONS, label: "Taxon observé" },
-  { id: TAB_IDS.DATASETS, label: "Jeu de données" },
-  { id: TAB_IDS.INFORMATIONS, label: "Détail des données" },
+  { id: TAB_IDS.OBSERVATIONS, label: "Taxon(s) observé(s)" },
+  { id: TAB_IDS.DATASETS, label: "Métadonnées" },
 ];
 
 const SearchResultsTabs = ({
@@ -16,6 +14,7 @@ const SearchResultsTabs = ({
   properties,
   details,
   jddDetails,
+  selectionSummary,
   panelLabel,
   selectionPrompt,
   selectionPromptMessage,
@@ -42,6 +41,7 @@ const SearchResultsTabs = ({
         {activeTab === TAB_IDS.OBSERVATIONS ? (
           <TaxonDetailComponent
             details={details}
+            selectionSummary={selectionSummary}
             selectionPrompt={selectionPrompt}
             selectionPromptMessage={selectionPromptMessage}
             loadingState={loadingState}
@@ -55,13 +55,6 @@ const SearchResultsTabs = ({
             selectionPromptMessage={selectionPromptMessage}
             loadingState={datasetLoadingState}
             errorMessage={datasetErrorMessage}
-          />
-        ) : null}
-        {activeTab === TAB_IDS.INFORMATIONS ? (
-          <DonneesDetailComponent
-            properties={properties}
-            selectionPrompt={selectionPrompt}
-            selectionPromptMessage={selectionPromptMessage}
           />
         ) : null}
       </div>

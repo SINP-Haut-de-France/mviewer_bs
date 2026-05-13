@@ -256,6 +256,22 @@ describe("GRP_IDS - Gestion correcte des séparateurs", () => {
 // === TESTS POUR NOUVEAU CONTRAT POSTGRESQL ===
 
 describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
+  test("fn_get_stats accepte un nom de vue qualifié et le normalise", () => {
+    const params = {
+      dateDeb: "2005-12-10",
+      dateFin: "2025-12-10",
+      targetLocCode: "2",
+    };
+
+    const result = sinpQueryBuilder.buildRequestOptions(
+      params,
+      " sinp_diffusion:fn_get_stats "
+    );
+
+    expect(result.TYPENAME).toBe("sinp_diffusion:fn_get_stats");
+    expect(result.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
+  });
+
   test("fn_get_stats retourne un TYPENAME de fonction sans CQL_FILTER", () => {
     const params = {
       communes: ["62225", "59350"],
@@ -275,6 +291,22 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
     expect(result.VIEWPARAMS).toBe(
       "DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;DEPT_IDS:62|59;CODE_INSEES:62225|59350;CD_REF:2440|2442;GRP_IDS:13|15;EPCI_IDS:200069193;TARGET_LOC_CODE:2"
     );
+  });
+
+  test("les VIEWPARAMS sont sanitizés sans point-virgule final", () => {
+    const params = {
+      dateDeb: "2006-05-13",
+      dateFin: "2026-05-13",
+      departements: ["62"],
+      targetLocCode: "2",
+    };
+
+    const result = sinpQueryBuilder.buildRequestOptions(params, "fn_get_stats");
+
+    expect(result.VIEWPARAMS).toBe(
+      "DATE_DEB:2006-05-13;DATE_FIN:2026-05-13;DEPT_IDS:62;TARGET_LOC_CODE:2"
+    );
+    expect(result.VIEWPARAMS.endsWith(";")).toBe(false);
   });
 
   test("fn_get_obs_detaillee omet les filtres de liste vides", () => {
@@ -299,24 +331,45 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
     expect(result.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
   });
 
-  test("fn_get_metadatas suit le meme contrat VIEWPARAMS", () => {
+  test("fn_get_obs_detaillee passe les mailles sélectionnées via CODE_MAILLES", () => {
     const params = {
-      communes: ["62225"],
       departements: ["62"],
-      taxons: [2440, 2442],
-      groupes: [13],
+      communes: ["62165"],
+      mailles: ["E069N692", "E070N693"],
       dateDeb: "2020-01-01",
       dateFin: "2025-12-10",
-      targetLocCode: "2",
+      targetLocCode: "6",
+    };
+
+    const result = sinpQueryBuilder.buildRequestOptions(params, "fn_get_obs_detaillee");
+
+    expect(result.TYPENAME).toBe("sinp_diffusion:fn_get_obs_detaillee");
+    expect(result.CQL_FILTER).toBeUndefined();
+    expect(result.VIEWPARAMS).toContain("CODE_MAILLES:E069N692|E070N693");
+    expect(result.VIEWPARAMS).not.toContain("DEPT_IDS:");
+    expect(result.VIEWPARAMS).not.toContain("CODE_INSEES:");
+    expect(result.VIEWPARAMS).toContain("TARGET_LOC_CODE:6");
+  });
+
+  test("un nom de vue vide ou incomplet est rejeté explicitement", () => {
+    expect(() => sinpQueryBuilder.buildRequestOptions({}, " ")).toThrow(
+      "Unknown view and schema"
+    );
+    expect(() => sinpQueryBuilder.buildRequestOptions({}, "sinp_diffusion:")).toThrow(
+      "Unknown view and schema"
+    );
+  });
+
+  test("fn_get_metadatas passe la liste des jdd via ID_JDDS", () => {
+    const params = {
+      jddIds: ["idJdd1", "idJdd2", "idJdd3"],
     };
 
     const result = sinpQueryBuilder.buildRequestOptions(params, "fn_get_metadatas");
 
     expect(result.TYPENAME).toBe("sinp_diffusion:fn_get_metadatas");
     expect(result.CQL_FILTER).toBeUndefined();
-    expect(result.VIEWPARAMS).toBe(
-      "DATE_DEB:2020-01-01;DATE_FIN:2025-12-10;DEPT_IDS:62;CODE_INSEES:62225;CD_REF:2440|2442;GRP_IDS:13;TARGET_LOC_CODE:2"
-    );
+    expect(result.VIEWPARAMS).toBe("ID_JDDS:idJdd1|idJdd2|idJdd3");
   });
 
   test("CD_REF utilise des pipes comme les autres listes", () => {

@@ -1,3 +1,5 @@
+import { parseDateValue } from "../../utils/date.utils";
+
 export const TAB_IDS = {
   OBSERVATIONS: "observations",
   DATASETS: "datasets",
@@ -86,12 +88,56 @@ export const getFeatureProperties = (feature) => {
   return feature.getProperties() || {};
 };
 
+export const getSelectedEntitySummary = (layerId, properties = {}, layerConfig = null) => {
+  const resolvedLayerConfig = layerConfig || getLayerConfig(layerId);
+  const entityCode = getFirstDefinedValue(
+    properties.code_insee,
+    properties.code_maille,
+    properties.code,
+    properties.id_maille,
+    properties.maille
+  );
+  const rawEventCount = getFirstDefinedValue(
+    properties.nb_observations,
+    properties.nb_evenements,
+    properties.nb_events
+  );
+  const eventCount =
+    rawEventCount === null || rawEventCount === undefined || String(rawEventCount).trim() === ""
+      ? null
+      : String(rawEventCount).trim();
+
+  if (!entityCode && eventCount === null) {
+    return null;
+  }
+
+  const primaryValue = resolvedLayerConfig?.primaryValue?.(properties);
+  const normalizedPrimaryValue =
+    primaryValue !== undefined &&
+    primaryValue !== null &&
+    String(primaryValue).trim() !== "" &&
+    String(primaryValue).trim() !== "-"
+      ? String(primaryValue).trim()
+      : null;
+  const selectionLabel =
+    layerId === "communeSearch" && normalizedPrimaryValue && entityCode
+      ? `${normalizedPrimaryValue} (${entityCode})`
+      : entityCode
+        ? String(entityCode)
+        : normalizedPrimaryValue || "-";
+
+  return {
+    selectionLabel,
+    eventCount: eventCount ?? "-",
+  };
+};
+
 const LAYER_CONFIG = {
   communeSearch: {
     panelLabel: "Détails de la commune",
     primaryLabel: "Commune",
     primaryValue: (properties) =>
-      properties.commune_name || properties.nom_commune || "-",
+      properties.libelle || properties.commune_name || properties.nom_commune || "-",
     secondaryLabel: "Code INSEE",
     secondaryValue: (properties) => properties.code_insee || properties.code || "-",
     countLabel: "Nombre d'observations",
@@ -183,6 +229,116 @@ export const formatPageSizeValue = (value) => {
 
 export const parsePageSizeValue = (value) => {
   return value === "all" ? "all" : Number(value);
+};
+
+const getColumnSortValue = (item, column) => {
+  if (column?.getSortValue) {
+    return column.getSortValue(item);
+  }
+
+  if (column?.getValue) {
+    return column.getValue(item);
+  }
+
+  return item?.[column?.id];
+};
+
+const normalizeSortValue = (value, sortType = "text") => {
+  if (value === undefined || value === null || String(value).trim() === "") {
+    return null;
+  }
+
+  if (sortType === "date") {
+    const parsedDate = parseDateValue(value);
+    return parsedDate ? parsedDate.getTime() : null;
+  }
+
+  if (sortType === "number") {
+    const normalizedNumber = Number(value);
+    return Number.isFinite(normalizedNumber) ? normalizedNumber : null;
+  }
+
+  return String(value).trim().toLocaleLowerCase("fr");
+};
+
+export const sortTableItems = (items = [], columns = [], sortConfig = null) => {
+  if (!sortConfig?.columnId) {
+    return items;
+  }
+
+  const column = columns.find((candidate) => candidate.id === sortConfig.columnId);
+  if (!column?.sortable) {
+    return items;
+  }
+
+  const directionFactor = sortConfig.direction === "desc" ? -1 : 1;
+
+  return items
+    .map((item, index) => ({ item, index }))
+    .sort((left, right) => {
+      const leftValue = normalizeSortValue(getColumnSortValue(left.item, column), column.sortType);
+      const rightValue = normalizeSortValue(
+        getColumnSortValue(right.item, column),
+        column.sortType
+      );
+
+      if (leftValue === null && rightValue === null) {
+        return left.index - right.index;
+      }
+      if (leftValue === null) {
+        return 1;
+      }
+      if (rightValue === null) {
+        return -1;
+      }
+
+      if (leftValue < rightValue) {
+        return -1 * directionFactor;
+      }
+      if (leftValue > rightValue) {
+        return 1 * directionFactor;
+      }
+
+      return left.index - right.index;
+    })
+    .map(({ item }) => item);
+};
+
+export const groupTableItems = (items = [], groupBy = null, columns = [], sortConfig = null) => {
+  if (!groupBy?.getValue) {
+    return [];
+  }
+
+  const groupedItems = new Map();
+
+  items.forEach((item, index) => {
+    const rawLabel = groupBy.getValue(item);
+    const label =
+      rawLabel !== undefined && rawLabel !== null && String(rawLabel).trim() !== ""
+        ? String(rawLabel).trim()
+        : groupBy.emptyLabel || "Non renseigné";
+    const key = `${label}-${index}`;
+
+    if (!groupedItems.has(label)) {
+      groupedItems.set(label, {
+        key,
+        label,
+        items: [],
+      });
+    }
+
+    groupedItems.get(label).items.push(item);
+  });
+
+  return Array.from(groupedItems.values())
+    .sort((left, right) => left.label.localeCompare(right.label, "fr", { sensitivity: "base" }))
+    .map((group) => ({
+      ...group,
+      items:
+        sortConfig?.columnId && sortConfig.columnId !== groupBy.columnId
+          ? sortTableItems(group.items, columns, sortConfig)
+          : group.items,
+    }));
 };
 
 export const groupJddDetails = (details = []) => {

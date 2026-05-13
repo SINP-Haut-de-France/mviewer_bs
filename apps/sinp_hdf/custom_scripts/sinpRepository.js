@@ -25,9 +25,12 @@ window.sinpRepository = (function () {
     });
 
     if (finalParams.VIEWPARAMS) {
+      const sanitizedViewParams = String(finalParams.VIEWPARAMS)
+        .replace(/^;+|;+$/g, "")
+        .replace(/;;+/g, ";");
       // GeoServer EXIGE: uniquement le pipe (|) encodé en %7C
       // Les deux-points (:) et points-virgules (;) doivent rester non-encodés!
-      const encodedViewParams = finalParams.VIEWPARAMS.replace(/\|/g, '%7C');
+      const encodedViewParams = sanitizedViewParams.replace(/\|/g, "%7C");
       url += `&VIEWPARAMS=${encodedViewParams}`;
     }
 
@@ -41,7 +44,7 @@ window.sinpRepository = (function () {
    * @param {number} timeoutDuration - Durée du timeout en millisecondes (par défaut 1 minute)
    * @return {Promise<Object>} - Résultat de la requête au format JSON
    */
-  const _fetchGeoServerData = async function (options = {}, timeoutDuration = 60000) {
+  const _fetchGeoServerData = async function (options = {}, timeoutDuration = 240000) {
     let url = _buildQueryURL(options);
 
     // Utiliser le proxy mviewer si configuré (pour contourner CORS)

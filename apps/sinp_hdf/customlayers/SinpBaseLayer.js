@@ -18,6 +18,8 @@ class SinpBaseLayer {
     this.serverStyle = config.serverStyle || null;
     this._serverStyleActive = false;
     this._pendingServerRenderPromise = Promise.resolve();
+    this._selectionHighlightStyle = this._createSelectionHighlightStyle();
+    this._selectionLayer = this._createSelectionLayer();
 
     this.layer = new ol.layer.Vector({
       source: new ol.source.Vector(),
@@ -40,6 +42,62 @@ class SinpBaseLayer {
       fill: new ol.style.Fill({
         color: "rgba(0, 0, 0, 0)",
       }),
+    });
+  }
+
+  _createSelectionHighlightStyle() {
+    return new ol.style.Style({
+      stroke: new ol.style.Stroke({
+        color: "rgba(250, 204, 21, 1)",
+        width: 3,
+      }),
+      fill: new ol.style.Fill({
+        color: "rgba(250, 204, 21, 0.35)",
+      }),
+      zIndex: 1000,
+    });
+  }
+
+  _createSelectionLayer() {
+    const highlightLayer = new ol.layer.Vector({
+      source: new ol.source.Vector(),
+      style: this._selectionHighlightStyle,
+      visible: true,
+      updateWhileAnimating: true,
+      updateWhileInteracting: true,
+    });
+
+    highlightLayer.set("name", `${this.layerId}-selection-highlight`);
+    highlightLayer.set("queryable", false);
+    highlightLayer.setZIndex(1000);
+    return highlightLayer;
+  }
+
+  _clearSelectedFeatures() {
+    this._selectionLayer?.getSource?.()?.clear();
+  }
+
+  setSelectedFeatures(features = []) {
+    this._clearSelectedFeatures();
+    this._ensureSelectionLayer();
+
+    const selectionSource = this._selectionLayer?.getSource?.();
+    if (!selectionSource) {
+      return;
+    }
+
+    const normalizedFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
+    normalizedFeatures.forEach((feature) => {
+      const geometry = feature?.getGeometry?.();
+      if (!geometry) {
+        return;
+      }
+
+      selectionSource.addFeature(
+        new ol.Feature({
+          geometry: geometry.clone ? geometry.clone() : geometry,
+        })
+      );
     });
   }
 
@@ -161,6 +219,22 @@ class SinpBaseLayer {
     }
 
     this._syncServerRenderLayerState();
+  }
+
+  _ensureSelectionLayer() {
+    if (!this._selectionLayer) {
+      return;
+    }
+
+    const map = mviewer.getMap();
+    if (!map) {
+      return;
+    }
+
+    const existingLayers = map.getLayers().getArray();
+    if (!existingLayers.includes(this._selectionLayer)) {
+      map.addLayer(this._selectionLayer);
+    }
   }
 
   _syncServerRenderLayerState() {
@@ -479,6 +553,7 @@ class SinpBaseLayer {
   }
 
   clear() {
+    this._clearSelectedFeatures();
     this.layer?.getSource()?.clear();
     this._pendingServerRenderPromise = Promise.resolve();
     if (this._serverRenderLayer) {
@@ -493,6 +568,10 @@ class SinpBaseLayer {
 
   destroy() {
     this.clear();
+    if (this._selectionLayer) {
+      mviewer.getMap()?.removeLayer(this._selectionLayer);
+      this._selectionLayer = null;
+    }
     if (this._serverRenderLayer) {
       mviewer.getMap()?.removeLayer(this._serverRenderLayer);
       this._serverRenderLayer = null;

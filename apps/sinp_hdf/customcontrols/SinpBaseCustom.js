@@ -30,6 +30,7 @@ class SinpBaseCustom {
     this._dataCache = new Map();
     this._dataRequests = new Map();
     this._featureInfoRenderToken = 0;
+    this._selectionRequestInFlight = false;
   }
 
   getLayerInstance() {
@@ -47,7 +48,10 @@ class SinpBaseCustom {
     });
 
     if (finalParams.VIEWPARAMS) {
-      const encodedViewParams = finalParams.VIEWPARAMS.replace(/\|/g, "%7C");
+      const sanitizedViewParams = String(finalParams.VIEWPARAMS)
+        .replace(/^;+|;+$/g, "")
+        .replace(/;;+/g, ";");
+      const encodedViewParams = sanitizedViewParams.replace(/\|/g, "%7C");
       url += `&VIEWPARAMS=${encodedViewParams}`;
     }
 
@@ -55,11 +59,17 @@ class SinpBaseCustom {
   }
 
   buildRequestOptions(params, typeName = this.mainTypeName) {
-    return sinpQueryBuilder.buildRequestOptions(params, typeName);
+    const resolvedTypeName = this._resolveRequestTypeName(typeName, this.mainTypeName);
+    return sinpQueryBuilder.buildRequestOptions(params, resolvedTypeName);
   }
 
   async fetchGeoServerData(options) {
-    if (!options || !options.TYPENAME) {
+    const typenamePattern = sinpQueryBuilder?.qualifiedTypeNamePattern;
+    if (
+      !options ||
+      !options.TYPENAME ||
+      (typenamePattern && !typenamePattern.test(String(options.TYPENAME).trim()))
+    ) {
       throw new Error(`[${this.layerId}] options de requete invalides`);
     }
 
@@ -77,6 +87,18 @@ class SinpBaseCustom {
 
   _normalizeInputParams(params = {}) {
     return params;
+  }
+
+  _resolveRequestTypeName(primaryTypeName, fallbackTypeName = null) {
+    if (typeof primaryTypeName === "string" && primaryTypeName.trim() !== "") {
+      return primaryTypeName.trim();
+    }
+
+    if (typeof fallbackTypeName === "string" && fallbackTypeName.trim() !== "") {
+      return fallbackTypeName.trim();
+    }
+
+    return primaryTypeName;
   }
 
   _deferFeatureInfoRender(layerInstance, features = []) {
@@ -173,16 +195,28 @@ class SinpBaseCustom {
     overlay.innerHTML =
       '<div style="display:flex;flex-direction:column;align-items:center;gap:12px;max-width:420px;padding:24px 28px;border-radius:12px;background:#ffffff;box-shadow:0 18px 40px rgba(15,23,42,.25);text-align:center;color:#0f172a;">' +
       '<i class="fas fa-spinner fa-spin" aria-hidden="true" style="font-size:32px;color:#0b3a6e;"></i>' +
-      '<div style="font-size:16px;font-weight:700;">Recherche en cours</div>' +
-      '<div style="font-size:13px;line-height:1.45;color:#475569;">Merci de patienter, le volume de données à remonter peut nécessiter quelques instants.</div>' +
+      '<div id="mv-search-blocking-overlay-title" style="font-size:16px;font-weight:700;">Recherche en cours</div>' +
+      '<div id="mv-search-blocking-overlay-message" style="font-size:13px;line-height:1.45;color:#475569;">Merci de patienter, le volume de données à remonter peut nécessiter quelques instants.</div>' +
       "</div>";
 
     document.body.appendChild(overlay);
     return overlay;
   }
 
-  _setBlockingSearchOverlayVisible(visible) {
+  _setBlockingSearchOverlayVisible(visible, options = {}) {
     const overlay = this._ensureBlockingSearchOverlay();
+    const titleElement = overlay.querySelector("#mv-search-blocking-overlay-title");
+    const messageElement = overlay.querySelector("#mv-search-blocking-overlay-message");
+
+    if (titleElement) {
+      titleElement.textContent = options.title || "Recherche en cours";
+    }
+    if (messageElement) {
+      messageElement.textContent =
+        options.message ||
+        "Merci de patienter, le volume de données à remonter peut nécessiter quelques instants.";
+    }
+
     overlay.style.display = visible ? "flex" : "none";
     overlay.setAttribute("aria-hidden", visible ? "false" : "true");
   }
@@ -216,12 +250,227 @@ class SinpBaseCustom {
     };
   }
 
+  _getResolvedTargetLocCode(params = {}) {
+    return params.targetLocCode || this.targetLocCode || null;
+  }
+
+  _extractGridCode(value) {
+    if (value === undefined || value === null) {
+      return null;
+    }
+
+    const normalizedValue = String(value).trim();
+    if (normalizedValue === "") {
+      return null;
+    }
+
+    const upperValue = normalizedValue.toUpperCase();
+    const gridCodeMatch = upperValue.match(/([A-Z]\d{3}N\d{3})$/);
+    return gridCodeMatch ? gridCodeMatch[1] : upperValue;
+  }
+
+  _extractCommuneCode(value) {
+    if (value === undefined || value === null) {
+      return null;
+    }
+
+    const normalizedValue = String(value).trim().toUpperCase();
+    if (normalizedValue === "") {
+      return null;
+    }
+
+    return /^(?:\d{5}|2A\d{3}|2B\d{3})$/.test(normalizedValue) ? normalizedValue : null;
+  }
+
+  _expandEntityKeyVariants(value, params = {}) {
+    if (value === undefined || value === null) {
+      return [];
+    }
+
+    const normalizedValue = String(value).trim();
+    if (normalizedValue === "") {
+      return [];
+    }
+
+    const resolvedTargetLocCode = this._getResolvedTargetLocCode(params);
+    const variants = [];
+    const addVariant = (candidate) => {
+      if (
+        candidate !== undefined &&
+        candidate !== null &&
+        candidate !== "" &&
+        !variants.includes(candidate)
+      ) {
+        variants.push(candidate);
+      }
+    };
+
+    addVariant(normalizedValue);
+    addVariant(normalizedValue.toUpperCase());
+
+    if (resolvedTargetLocCode === "6" || resolvedTargetLocCode === "7") {
+      addVariant(this._extractGridCode(normalizedValue));
+    }
+
+    return variants;
+  }
+
+  _getDetailRequestScopeConfig(params = {}) {
+    const resolvedTargetLocCode = this._getResolvedTargetLocCode(params);
+
+    if (resolvedTargetLocCode === "2") {
+      return {
+        paramName: "communes",
+        featureKeys: ["code_insee", "code"],
+        normalizeValue: (value) => this._extractCommuneCode(value),
+      };
+    }
+
+    if (resolvedTargetLocCode === "6" || resolvedTargetLocCode === "7") {
+      return {
+        paramName: "mailles",
+        featureKeys: ["code_maille", "id_maille", "maille", "code", "codeLocali", "cd_sig"],
+        normalizeValue: (value) => this._extractGridCode(value),
+      };
+    }
+
+    return null;
+  }
+
+  _buildDetailRequestParams(features = [], params = {}) {
+    const scopeConfig = this._getDetailRequestScopeConfig(params);
+    if (!scopeConfig) {
+      return params;
+    }
+
+    const scopedValues = [];
+    const seenValues = new Set();
+
+    features.forEach((feature) => {
+      if (!feature?.get) {
+        return;
+      }
+
+      scopeConfig.featureKeys.forEach((key) => {
+        const value = feature.get(key);
+        const normalizedValue = scopeConfig.normalizeValue(value);
+        if (normalizedValue && !seenValues.has(normalizedValue)) {
+          seenValues.add(normalizedValue);
+          scopedValues.push(normalizedValue);
+        }
+      });
+    });
+
+    if (!scopedValues.length) {
+      return params;
+    }
+
+    const scopedParams =
+      scopeConfig.paramName === "mailles"
+        ? {
+            ...params,
+            departements: [],
+            communes: [],
+          }
+        : { ...params };
+
+    return {
+      ...scopedParams,
+      [scopeConfig.paramName]: scopedValues,
+    };
+  }
+
   async _loadDetailProperties(params, typeName = this.detailsTypeName) {
     return this._fetchPropertiesWithCache(params, typeName);
   }
 
   async _loadMetadataProperties(params, typeName = this.metadataTypeName) {
     return this._fetchPropertiesWithCache(params, typeName);
+  }
+
+  _normalizeJddIds(value) {
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => (item === undefined || item === null ? "" : String(item).trim()))
+        .filter((item) => item !== "");
+    }
+
+    if (value === undefined || value === null) {
+      return [];
+    }
+
+    return String(value)
+      .split("|")
+      .map((item) => item.trim())
+      .filter((item) => item !== "");
+  }
+
+  _getFeatureJddIds(feature) {
+    if (!feature?.get) {
+      return [];
+    }
+
+    const rawValue =
+      feature.get("jdd_ids") ??
+      feature.get("jddIds") ??
+      feature.get("idJdds") ??
+      feature.get("id_jdds");
+
+    return Array.from(new Set(this._normalizeJddIds(rawValue)));
+  }
+
+  _buildMetadataRequestParams(features = []) {
+    const jddIds = [];
+    const seenIds = new Set();
+
+    features.forEach((feature) => {
+      this._getFeatureJddIds(feature).forEach((jddId) => {
+        if (!seenIds.has(jddId)) {
+          seenIds.add(jddId);
+          jddIds.push(jddId);
+        }
+      });
+    });
+
+    return { jddIds };
+  }
+
+  _attachMetadataPropertiesToFeatures(features = [], metadataProperties = []) {
+    const propertiesByJddId = metadataProperties.reduce((accumulator, item) => {
+      const jddId =
+        item?.idJdd === undefined || item?.idJdd === null
+          ? null
+          : String(item.idJdd).trim();
+
+      if (!jddId) {
+        return accumulator;
+      }
+
+      if (!accumulator[jddId]) {
+        accumulator[jddId] = [];
+      }
+
+      accumulator[jddId].push(item);
+      return accumulator;
+    }, {});
+
+    features.forEach((feature) => {
+      const matches = [];
+      const seenMatches = new Set();
+
+      this._getFeatureJddIds(feature).forEach((jddId) => {
+        (propertiesByJddId[jddId] || []).forEach((item) => {
+          if (!seenMatches.has(item)) {
+            seenMatches.add(item);
+            matches.push(item);
+          }
+        });
+      });
+
+      feature.set("jdd_details", matches);
+    });
+
+    return features;
   }
 
   async _attachPropertiesToFeatures(mainFeatures, propertiesLoader, params, config = {}) {
@@ -250,12 +499,11 @@ class SinpBaseCustom {
 
         for (const candidate of candidateList) {
           const value = accessor(source, candidate);
-          if (value !== undefined && value !== null && String(value) !== "") {
-            const normalizedValue = String(value).trim();
-            if (normalizedValue !== "" && !values.includes(normalizedValue)) {
+          this._expandEntityKeyVariants(value, params).forEach((normalizedValue) => {
+            if (!values.includes(normalizedValue)) {
               values.push(normalizedValue);
             }
-          }
+          });
         }
 
         return values;
@@ -344,7 +592,7 @@ class SinpBaseCustom {
   }
 
   _getResultJoinConfig(params = {}) {
-    const resolvedTargetLocCode = params.targetLocCode || this.targetLocCode || null;
+    const resolvedTargetLocCode = this._getResolvedTargetLocCode(params);
 
     if (resolvedTargetLocCode === "2") {
       return {
@@ -355,8 +603,8 @@ class SinpBaseCustom {
 
     if (resolvedTargetLocCode === "6" || resolvedTargetLocCode === "7") {
       return {
-        featureKey: ["code_maille", "id_maille", "maille", "code"],
-        detailKey: ["code_maille", "id_maille", "maille", "code"],
+        featureKey: ["code_maille", "id_maille", "maille", "code", "adm_id", "codeLocali", "cd_sig"],
+        detailKey: ["code_maille", "id_maille", "maille", "code", "adm_id", "codeLocali", "cd_sig"],
       };
     }
 
@@ -365,12 +613,13 @@ class SinpBaseCustom {
 
   async _ensureEntityData(features = [], params = this._lastSearchParams || {}) {
     const normalizedFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
-    const joinConfig = this._getResultJoinConfig(params);
+    const detailParams = this._buildDetailRequestParams(normalizedFeatures, params);
+    const joinConfig = this._getResultJoinConfig(detailParams);
 
     await this._attachPropertiesToFeatures(
       normalizedFeatures,
       this._loadDetailProperties,
-      params,
+      detailParams,
       {
         typeName: this.detailsTypeName,
         mode: joinConfig ? "match" : "all",
@@ -396,7 +645,10 @@ class SinpBaseCustom {
     }
 
     const pendingFeatures = normalizedFeatures.filter((feature) => {
-      return feature.get("jdd_data_loaded") !== true && feature.get("jdd_data_loading") !== true;
+      return (
+        feature.get("jdd_data_loaded") !== true &&
+        feature.get("jdd_data_loading") !== true
+      );
     });
 
     if (!pendingFeatures.length) {
@@ -411,36 +663,14 @@ class SinpBaseCustom {
     });
 
     try {
-      const joinConfig = this._getResultJoinConfig(params);
-      await this._attachPropertiesToFeatures(
-        pendingFeatures,
-        this._loadMetadataProperties,
-        params,
-        {
-          typeName: this.metadataTypeName,
-          mode: joinConfig ? "match" : "all",
-          featureKey: joinConfig?.featureKey || null,
-          detailKey: joinConfig?.detailKey || null,
-          targetProperty: "jdd_details",
-        }
-      );
+      const metadataParams = this._buildMetadataRequestParams(pendingFeatures, params);
+      const metadataProperties =
+        metadataParams.jddIds.length > 0
+          ? await this._loadMetadataProperties(metadataParams, this.metadataTypeName)
+          : [];
 
-      if (
-        joinConfig &&
-        pendingFeatures.length === 1 &&
-        (!Array.isArray(pendingFeatures[0].get("jdd_details")) ||
-          pendingFeatures[0].get("jdd_details").length === 0)
-      ) {
-        await this._attachPropertiesToFeatures(
-          pendingFeatures,
-          this._loadMetadataProperties,
-          params,
-          {
-            typeName: this.metadataTypeName,
-            mode: "all",
-            targetProperty: "jdd_details",
-          }
-        );
+      if (metadataProperties.length > 0) {
+        this._attachMetadataPropertiesToFeatures(pendingFeatures, metadataProperties);
       }
 
       pendingFeatures.forEach((feature) => {
@@ -490,6 +720,20 @@ class SinpBaseCustom {
     return this._enrichSearchFeatures(mainFeatures, params);
   }
 
+  _prefetchMetadataForFeatures(layerInstance, features = []) {
+    if (!this.metadataTypeName) {
+      return;
+    }
+
+    Promise.resolve(this.ensureMetadataForFeatures(features, this._lastSearchParams))
+      .catch((error) => {
+        console.error(`[${this.layerId}] Error during metadata loading:`, error);
+      })
+      .finally(() => {
+        this._deferFeatureInfoRender(layerInstance, features);
+      });
+  }
+
   async handle(features = []) {
     const layerInstance = this.getLayerInstance();
     if (!layerInstance) {
@@ -500,6 +744,12 @@ class SinpBaseCustom {
     if (!normalizedFeatures.length) {
       return;
     }
+
+    if (this._selectionRequestInFlight) {
+      return;
+    }
+
+    layerInstance.setSelectedFeatures?.(normalizedFeatures);
 
     if (!this._lastSearchParams) {
       this._deferFeatureInfoRender(layerInstance, normalizedFeatures);
@@ -516,10 +766,16 @@ class SinpBaseCustom {
 
     if (alreadyLoaded) {
       this._deferFeatureInfoRender(layerInstance, normalizedFeatures);
+      this._prefetchMetadataForFeatures(layerInstance, normalizedFeatures);
       return;
     }
 
     $("#loading-indicator").show();
+    this._selectionRequestInFlight = true;
+    this._setBlockingSearchOverlayVisible(true, {
+      title: "Chargement de la selection",
+      message: "Merci de patienter, le detail de l'entite selectionnee est en cours de chargement.",
+    });
 
     try {
       normalizedFeatures.forEach((feature) => {
@@ -532,6 +788,7 @@ class SinpBaseCustom {
 
       await this._ensureEntityData(normalizedFeatures, this._lastSearchParams);
       this._deferFeatureInfoRender(layerInstance, normalizedFeatures);
+      this._prefetchMetadataForFeatures(layerInstance, normalizedFeatures);
     } catch (error) {
       normalizedFeatures.forEach((feature) => {
         feature.set("entity_data_loading", false);
@@ -544,6 +801,8 @@ class SinpBaseCustom {
       this._deferFeatureInfoRender(layerInstance, normalizedFeatures);
       throw error;
     } finally {
+      this._selectionRequestInFlight = false;
+      this._setBlockingSearchOverlayVisible(false);
       $("#loading-indicator").hide();
     }
   }
@@ -565,7 +824,11 @@ class SinpBaseCustom {
       }
       layerInstance.beforeLoad();
 
-      const mainOptions = this.buildRequestOptions(normalizedParams, this.mainTypeName);
+      const mainTypeName = this._resolveRequestTypeName(
+        this.mainTypeName,
+        layerInstance?.typeName
+      );
+      const mainOptions = this.buildRequestOptions(normalizedParams, mainTypeName);
       const mainData = await this.fetchGeoServerData(mainOptions);
       const mainFeatures = this.format.readFeatures(
         mainData || { type: "FeatureCollection", features: [] }
