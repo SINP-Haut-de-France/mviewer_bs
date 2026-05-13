@@ -1,0 +1,34 @@
+/* SidebarFilterPanel.css - Bootstrap 5 Compatible */
+
+/* Conteneur React du panneau dans le sidebar */
+#react-sidebar-filter-panel {
+  border: none !important;
+  line-height: normal !important;
+  text-indent: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  overflow: visible !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+}
+
+/* Wrapper simplifié pour GlobalFilters dans le sidebar */
+.sidebar-filter-panel-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0.5rem !important;
+  background-color: transparent !important;
+  overflow: visible !important;
+  position: relative !important;
+  display: block !important;
+}
+
+
+/* S'assurer que GlobalFilters ne déborde pas */
+.sidebar-filter-panel-wrapper .global-filters-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  position: relative !important;
+  display: block !important;
+}

@@ -1,0 +1,765 @@
+/* ========================================
+   SINP HDF - Custom Theme
+   Bootstrap 5 Compatible
+   ======================================== */
+
+/* Variables personnalisées héritées de mviewer */
+:root {
+  /* Utilisation des variables mviewer pour cohérence */
+  --sinp-primary: var(--mvcustom-color-primary, #191c36);
+  --sinp-secondary: var(--mvcustom-color-secondary, #0d6efd);
+  --sinp-navbar-height: var(--mvcustom-navbar-h, 80px);
+  --sinp-border-radius: var(--mvcustom-border-radius, 4px);
+  
+  /* Dimensions des panneaux */
+  --sinp-rightpanel-width: 30vw;
+  --sinp-sidebar-width: 350px; /* 👈 Largeur du menu de gauche (par défaut mviewer: 250px) */
+  
+  /* Couleurs spécifiques SINP */
+  --sinp-text-muted: #6c757d;
+  --sinp-bg-light: #f8f9fa;
+  --sinp-border-color: #dee2e6;
+}
+
+/* Redéfinir la variable en mode toggled-2 */
+#wrapper.toggled-2 {
+  --sinp-sidebar-width: 50px; /* 👈 Sidebar réduite */
+}
+
+/* ========================================
+   Adaptations du layout mviewer
+   ======================================== */
+
+/* Surcharge de la largeur du sidebar en mode normal */
+#wrapper #sidebar-wrapper {
+    width: var(--sinp-sidebar-width) !important;
+    transition: width 0.5s ease;
+}
+
+/* Réduction du sidebar en mode toggled-2 */
+#wrapper.toggled-2 #sidebar-wrapper {
+    width: 50px !important;
+}
+
+.sidebar-nav {
+    margin-top: 15px !important;
+    width: var(--sinp-sidebar-width) !important; /* Ajusté pour la largeur du sidebar personnalisé */
+    transition: width 0.5s ease;
+}
+
+/* Largeur de la sidebar-nav en mode réduit */
+#wrapper.toggled-2 .sidebar-nav {
+    width: 50px !important;
+}
+
+/* S'assurer que tous les menus dans le sidebar se réduisent */
+#wrapper.toggled-2 #react-filters-menu {
+    width: 50px !important;
+}
+
+#react-filters-menu {
+    transition: width 0.5s ease;
+}   
+
+#layers-container-box {
+    left: var(--sinp-sidebar-width) !important; /* Ajusté pour la largeur du sidebar personnalisé */
+}
+
+/* Nom scientifique en italique */
+.scientific_name {
+  font-style: italic;
+  font-size: 0.8125rem; /* 13px en rem */
+  margin: 0;
+  color: var(--sinp-text-muted);
+}
+
+/* Carousel avec scroll */
+.carousel-inner {
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
+
+/* Panneau droit élargi pour SINP */
+#right-panel.active {
+  width: var(--sinp-rightpanel-width) !important;
+  max-width: var(--sinp-rightpanel-width) !important;
+}
+
+#right-panel .popup-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+#right-panel .carousel-inner {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* Réduction de la taille de la police dans les sélecteurs */
+#right-panel-selector .row {
+  font-size: 0.6875rem; /* 11px */
+  margin-inline: 0;
+}
+
+/* Navigation tabs à gauche */
+.tabs-left .nav.nav-tabs {
+  margin-left: -1.25rem;
+}
+
+/* Navbar personnalisée */
+.navbar {
+  min-height: var(--sinp-navbar-height);
+}
+
+/* Sidebar avec espacement pour navbar */
+#sidebar-wrapper {
+  box-sizing: border-box;
+  height: 100%;
+  margin-top: 1.875rem; /* 30px */
+}
+
+/* Légende avec espacement */
+#legend {
+  margin-top: 1.875rem;
+}
+
+/* Logo agrandi */
+.mv-logo {
+  max-height: 70px;
+  margin-top: -0.875rem;
+}
+
+/* Titre aligné */
+.mv-title {
+  /*margin-top: 0.875rem;*/
+}
+
+/* ========================================
+   Composants React - Intégration Bootstrap 5
+   ======================================== */
+
+/* Conteneur modal responsive */
+.base-modal-content {
+  margin: 0;
+  max-width: min(90vw, 800px);
+  border-radius: var(--sinp-border-radius);
+}
+
+/* Wrapper des filtres */
+.modal-filters-wrapper {
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Conteneur global des filtres */
+.global-filters-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Sections de filtres collapsibles */
+.collapsible-filter-section {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--sinp-border-color);
+  border-radius: var(--sinp-border-radius);
+  margin-bottom: 0.75rem;
+}
+
+.collapsible-filter-section .section-header {
+  background-color: var(--sinp-bg-light);
+  padding: 0.625rem 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.collapsible-filter-section .section-header:hover {
+  background-color: #e9ecef;
+}
+
+.collapsible-filter-section .section-content {
+  width: 100%;
+  padding: 0.75rem;
+  box-sizing: border-box;
+}
+
+/* Composant multi-select avec Bootstrap styling */
+.multi-select-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.multi-select-container .search-input {
+  width: 100%;
+  border: 1px solid var(--sinp-border-color);
+  border-radius: var(--sinp-border-radius);
+  box-sizing: border-box;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.multi-select-container .search-input:focus-within {
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Tags sélectionnés avec couleur primaire */
+.selected-tag {
+  background-color: var(--sinp-secondary);
+  color: white;
+  border-radius: var(--sinp-border-radius);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Boutons d'action avec Bootstrap */
+.modal-filters-wrapper .btn {
+  border-radius: var(--sinp-border-radius);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.modal-filters-wrapper .btn-apply {
+  background-color: var(--sinp-secondary);
+  border-color: var(--sinp-secondary);
+  color: white;
+}
+
+.modal-filters-wrapper .btn-apply:hover:not(:disabled) {
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
+}
+
+.modal-filters-wrapper .btn-reset {
+  background-color: var(--sinp-text-muted);
+  border-color: var(--sinp-text-muted);
+  color: white;
+}
+
+.modal-filters-wrapper .btn-reset:hover:not(:disabled) {
+  background-color: #5c636a;
+  border-color: #565e64;
+}
+
+.modal-filters-wrapper .btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Alerts Bootstrap 5 */
+.modal-filters-wrapper .alert {
+  border-radius: var(--sinp-border-radius);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+/* ========================================
+   REACT FILTERS - Densite legacy compacte
+   ======================================== */
+
+:root {
+  --sinp-react-compact-font-size: 12px;
+  --sinp-react-compact-font-size-sm: 11px;
+  --sinp-react-compact-padding-y: 0.375rem;
+  --sinp-react-compact-padding-x: 0.5rem;
+}
+
+.legacy-compact,
+#react-sidebar-filter-panel .legacy-compact {
+  font-size: var(--sinp-react-compact-font-size);
+}
+
+.legacy-compact .global-filters-container {
+  font-size: var(--sinp-react-compact-font-size);
+  gap: 0.5rem;
+}
+
+.legacy-compact .collapsible-filter-section {
+  margin-bottom: 0.5rem;
+}
+
+.legacy-compact .section-header {
+  padding: 0.5rem 0.625rem;
+}
+
+.legacy-compact .section-title {
+  font-size: var(--sinp-react-compact-font-size);
+  line-height: 1.3;
+}
+
+.legacy-compact .section-title i,
+.legacy-compact .toggle-btn {
+  font-size: var(--sinp-react-compact-font-size-sm);
+}
+
+.legacy-compact .section-content {
+  padding: 0.625rem;
+}
+
+.legacy-compact .multi-select-label,
+.legacy-compact .date-filter-label,
+.legacy-compact .date-filter-field label,
+.legacy-compact .tree-header,
+.legacy-compact .node-content label,
+.legacy-compact .tree-node,
+.legacy-compact .loading-message,
+.legacy-compact .error-message,
+.legacy-compact .no-results-message,
+.legacy-compact .result-item {
+  font-size: var(--sinp-react-compact-font-size);
+}
+
+.legacy-compact .search-input {
+  min-height: 2rem;
+  padding: var(--sinp-react-compact-padding-y) var(--sinp-react-compact-padding-x);
+}
+
+.legacy-compact .search-input input,
+.legacy-compact .date-filter-field input[type="date"] {
+  font-size: var(--sinp-react-compact-font-size);
+}
+
+.legacy-compact .date-filter-container {
+  margin: 0.5rem 0;
+  gap: 0.5rem;
+}
+
+.legacy-compact .date-filter-inputs {
+  gap: 0.625rem;
+}
+
+.legacy-compact .date-filter-field {
+  gap: 0.25rem;
+}
+
+.legacy-compact .date-filter-field input[type="date"] {
+  padding: 0.25rem 0.5rem;
+}
+
+.legacy-compact .tree-view-ui {
+  padding: 0.125rem;
+  max-width: 100%;
+}
+
+.legacy-compact .filter-actions {
+  margin-top: 0.75rem;
+  padding-top: 0.625rem;
+  gap: 0.5rem;
+}
+
+.legacy-compact .btn,
+.legacy-compact .filter-actions .btn {
+  font-size: var(--sinp-react-compact-font-size);
+  padding: 0.375rem 0.625rem;
+}
+
+/* ========================================
+   Responsive - Mobile First avec Bootstrap
+   ======================================== */
+
+/* Tablettes et petits écrans */
+@media (max-width: 768px) {
+  :root {
+    --sinp-rightpanel-width: 350px;
+  }
+
+  .base-modal-content {
+    max-width: 95vw;
+    max-height: 90vh;
+  }
+
+  .modal-filters-wrapper {
+    padding: 0.75rem;
+  }
+
+  #right-panel.active {
+    width: var(--sinp-rightpanel-width) !important;
+    max-width: var(--sinp-rightpanel-width) !important;
+  }
+
+  #right-panel .carousel-inner {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Smartphones */
+@media (max-width: 480px) {
+  :root {
+    --sinp-rightpanel-width: 100%;
+    --sinp-sidebar-width: 50px; /* 👈 Sidebar réduite sur mobile */
+  }
+
+  .base-modal-content {
+    max-width: 98vw;
+    max-height: 95vh;
+    min-width: 260px;
+  }
+
+  .modal-filters-wrapper {
+    padding: 0.625rem;
+  }
+
+  .modal-filters-wrapper .filter-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .modal-filters-wrapper .btn {
+    width: 100%;
+  }
+
+  #right-panel.active {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  #right-panel .carousel-inner {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Force le comportement toggled-2 sur mobile */
+  #sidebar-wrapper {
+    width: 50px !important;
+  }
+
+  .sidebar-nav {
+    width: 50px !important;
+  }
+
+  #wrapper {
+    padding-left: 50px !important;
+  }
+
+  /* Masquer les textes, garder les icônes */
+  .sidebar-nav li span:not(.fa-stack),
+  .menu-theme-layers-name > span:not(.fa-stack) {
+    display: none;
+  }
+
+  #react-filters-menu > li > a > span:not(.fa-stack) {
+    display: none;
+  }
+
+  #react-filters-menu > li > ul {
+    display: none !important;
+  }
+
+  /* Centrer les icônes */
+  .sidebar-nav li a .fa-stack {
+    margin: 0 auto;
+    float: none !important;
+  }
+
+  .sidebar-nav li a {
+    padding-left: 0;
+    text-align: center;
+  }
+
+  .fa-stack {
+    display: inline-block !important;
+  }
+}
+
+/* ========================================
+   SIDEBAR - Agrandissement du menu de gauche
+   ======================================== */
+
+/* Appliquer la largeur personnalisée au wrapper principal (desktop uniquement) */
+#wrapper {
+  padding-left: var(--sinp-sidebar-width) !important;
+}
+
+/* Réduire le padding quand le sidebar est réduit */
+#wrapper.toggled-2 {
+  padding-left: 50px !important;
+}
+
+/* Ajuster le panneau du bas pour qu'il ne chevauche pas le sidebar */
+#bottom-panel {
+  padding-right: var(--sinp-sidebar-width) !important;
+}
+
+#bottom-panel .popup-content {
+  width: calc(100% - var(--sinp-sidebar-width) - 5px) !important;
+}
+
+/* Ajuster la position de la carte si nécessaire */
+#page-content-wrapper #map {
+  left: var(--sinp-sidebar-width);
+}
+
+/* S'assurer que le contenu du sidebar prend toute la largeur */
+.sidebar-filter-panel {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Plus d'espace pour le contenu avec un sidebar plus large */
+.filter-panel-content {
+  padding: 12px;
+}
+
+/* ========================================
+   MENU FILTRES REACT - Style legacy
+   ======================================== */
+
+/* Style du lien "Filtres avancés" pour correspondre au legacy */
+#theme-react-filters > a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.7em 0.85em !important;
+  text-decoration: none;
+  border-radius: 0;
+  box-sizing: border-box;
+}
+
+/* Conteneur du titre avec icône (comme .menu-theme-layers-name) */
+#theme-react-filters > a .menu-theme-layers-name {
+  display: flex;
+  flex-wrap: nowrap;
+  align-content: center;
+  align-items: center;
+  justify-content: flex-start;
+  line-height: 1.2;
+  color: var(--mv-color-body, #333);
+  font-weight: 500;
+  gap: 0;
+  min-width: 0;
+}
+
+/* Neutraliser les classes Bootstrap qui interfèrent */
+#theme-react-filters > a .pull-left {
+  float: none !important;
+}
+
+#theme-react-filters > a .col-sm-3 {
+  width: auto !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  flex: 0 0 auto !important;
+}
+
+/* Tous les enfants directs (span) ont une marge de 12px comme le legacy */
+#theme-react-filters > a > span {
+  display: inline-block;
+}
+
+#theme-react-filters > a .menu-theme-layers-name > span:last-child {
+  margin-left: 0.1rem;
+}
+
+#theme-react-filters > a .react-filters-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin-left: 0.75rem;
+  margin-right: 0.25rem;
+}
+
+#theme-react-filters > a .react-filters-toggle-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--sinp-border-color, #dee2e6);
+  border-radius: var(--sinp-border-radius, 4px);
+  background-color: #fff;
+  color: var(--mv-color-body, #333);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+/* Corrige l'offset visuel induit par .fa-stack pour garder l'icône parfaitement centrée */
+#theme-react-filters > a .react-filters-toggle-button.fa-stack {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+#theme-react-filters > a .react-filters-toggle-button .fa-stack-1x {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+#theme-react-filters > a .react-filters-toggle-button:hover {
+  color: var(--mv-theme-bicolore, #007bff);
+  border-color: var(--mv-theme-bicolore, #007bff);
+}
+
+#theme-react-filters > a .react-filters-toggle-button:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.2);
+}
+
+/* Effet hover */
+#theme-react-filters > a:hover {
+  background-color: color-mix(in srgb, var(--mv-theme-bicolore, #007bff) 20%, white);
+  color: var(--mv-theme-bicolore, #007bff) !important;
+  text-decoration: none;
+}
+
+/* Réinitialiser les styles des colonnes Bootstrap qui pourraient interférer */
+#theme-react-filters > a .col-sm-3 {
+  width: auto;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Les ul enfants sont visibles par défaut */
+#theme-react-filters > ul {
+  display: block;
+  list-style-type: none;
+  padding-left: 0;
+}
+
+/* ========================================
+   SIDEBAR TOGGLE - Comportement réduit (toggled-2)
+   ======================================== */
+
+/* Quand le sidebar est réduit (toggled-2), masquer les textes et enfants */
+#wrapper.toggled-2 .sidebar-nav li span:not(.fa-stack),
+#wrapper.toggled-2 .menu-theme-layers-name > span:not(.fa-stack) {
+  display: none;
+}
+
+/* Pour le menu des filtres React */
+#wrapper.toggled-2 #react-filters-menu > li > a > span:not(.fa-stack) {
+  display: none; /* Masquer le texte "Filtres avancés" */
+}
+
+#wrapper.toggled-2 #theme-react-filters > a .react-filters-header-actions {
+  display: none;
+}
+
+/* Masquer complètement l'ul des filtres quand le sidebar est réduit */
+#wrapper.toggled-2 #react-filters-menu > li > ul {
+  display: none !important;
+}
+
+/* Centrer les icônes quand le sidebar est réduit */
+#wrapper.toggled-2 .sidebar-nav li a .fa-stack {
+  margin: 0 auto;
+  float: none !important;
+  display: block;
+}
+
+/* Ajuster le padding des liens pour centrer les icônes */
+#wrapper.toggled-2 .sidebar-nav li a {
+  padding-left: 0;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px; /* Hauteur minimale pour alignement vertical */
+}
+
+/* S'assurer que les icônes restent visibles */
+#wrapper.toggled-2 .fa-stack {
+  display: inline-block !important;
+}
+
+/* ========================================
+   Utilitaires
+   ======================================== */
+
+/* Animation de rotation pour les spinners */
+@keyframes sinp-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.sinp-spinner {
+  animation: sinp-spin 1s linear infinite;
+}
+
+/* Transitions douces */
+.sinp-transition {
+  transition: all 0.15s ease-in-out;
+}
+
+/* Ombres subtiles */
+.sinp-shadow-sm {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.sinp-shadow {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.sinp-help .tab-content {
+  min-height: 24rem;
+}
+
+.sinp-help-tabs {
+  gap: 0.25rem;
+}
+
+.sinp-help-links {
+  padding-left: 1.25rem;
+}
+
+.sinp-help-links li + li {
+  margin-top: 0.5rem;
+}
+
+.sinp-help-credits-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.sinp-help-credit-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 11rem;
+  padding: 1rem;
+  text-align: center;
+  border: 1px solid var(--sinp-border-color);
+  border-radius: var(--sinp-border-radius);
+  background-color: #fff;
+}
+
+.sinp-help-credit-card img {
+  max-width: 100%;
+  max-height: 4.5rem;
+  object-fit: contain;
+  margin-bottom: 0.75rem;
+}
+
+.sinp-help-credit-card span {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.sinp-help-credit-card--placeholder {
+  border-style: dashed;
+  color: var(--sinp-text-muted);
+  background-color: var(--sinp-bg-light);
+}
+
+@media (max-width: 991px) {
+  .sinp-help-credits-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 576px) {
+  .sinp-help-credits-grid {
+    grid-template-columns: 1fr;
+  }
+}

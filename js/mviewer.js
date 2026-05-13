@@ -935,6 +935,7 @@ mviewer = (function () {
     _map.addLayer(l);
     if (oLayer.type === "customlayer" && mviewer.customLayers[oLayer.id]) {
       mviewer.customLayers[oLayer.id].config = oLayer;
+      mviewer.customLayers[oLayer.id]._instance?.attachLegacyConfig?.(oLayer);
     }
     _events.overLayersLoaded += 1;
   };

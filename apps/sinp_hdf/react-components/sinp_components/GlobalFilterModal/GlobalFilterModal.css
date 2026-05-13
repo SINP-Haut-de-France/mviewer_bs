@@ -1,0 +1,200 @@
+/* GlobalFilterModal.css - Bootstrap 5 Compatible */
+
+/* Wrapper principal avec variables Bootstrap */
+.modal-filters-wrapper {
+  padding: 0.625rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+  width: 100%;
+  /* Note: overflow-y auto nécessaire pour le scroll, mais les dropdowns 
+     utiliseront un z-index élevé pour apparaître au-dessus */
+}
+
+/* Alerts Bootstrap 5 */
+.modal-filters-wrapper .alert {
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.625rem;
+  border: 1px solid transparent;
+  border-radius: var(--bs-border-radius, 0.375rem);
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+}
+
+.modal-filters-wrapper .alert-danger {
+  color: var(--bs-danger-text-emphasis, #58151c);
+  background-color: var(--bs-danger-bg-subtle, #f8d7da);
+  border-color: var(--bs-danger-border-subtle, #f1aeb5);
+}
+
+.modal-filters-wrapper .alert i {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* Conteneur des filtres globaux */
+.modal-filters-wrapper .global-filters-container {
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Sections de filtres */
+.modal-filters-wrapper .collapsible-filter-section {
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: var(--bs-border-radius, 0.375rem);
+}
+
+.modal-filters-wrapper .section-content {
+  padding: 0.625rem;
+  box-sizing: border-box;
+  /* Permettre aux dropdowns de déborder */
+  overflow: visible !important;
+}
+
+/* Actions de filtrage */
+.modal-filters-wrapper .filter-actions {
+  display: flex;
+  gap: 0.625rem;
+  margin-top: 0.75rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--bs-border-color, #dee2e6);
+  flex-shrink: 0;
+}
+
+/* Boutons avec classes Bootstrap 5 */
+.modal-filters-wrapper .btn {
+  flex: 1;
+  padding: 0.375rem 0.625rem;
+  border: 1px solid transparent;
+  border-radius: var(--bs-border-radius, 0.375rem);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, 
+              border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  white-space: nowrap;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+/* Bouton principal (Appliquer) */
+.modal-filters-wrapper .btn-apply {
+  background-color: var(--bs-primary, #0d6efd);
+  border-color: var(--bs-primary, #0d6efd);
+  color: white;
+}
+
+.modal-filters-wrapper .btn-apply:hover:not(:disabled) {
+  background-color: var(--bs-primary-hover, #0b5ed7);
+  border-color: var(--bs-primary-border, #0a58ca);
+}
+
+.modal-filters-wrapper .btn-apply:focus {
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.5);
+  outline: 0;
+}
+
+/* Bouton secondaire (Réinitialiser) */
+.modal-filters-wrapper .btn-reset {
+  background-color: var(--bs-secondary, #6c757d);
+  border-color: var(--bs-secondary, #6c757d);
+  color: white;
+}
+
+.modal-filters-wrapper .btn-reset:hover:not(:disabled) {
+  background-color: var(--bs-secondary-hover, #5c636a);
+  border-color: var(--bs-secondary-border, #565e64);
+}
+
+.modal-filters-wrapper .btn-reset:focus {
+  box-shadow: 0 0 0 0.25rem rgba(108, 117, 125, 0.5);
+  outline: 0;
+}
+
+/* État désactivé des boutons */
+.modal-filters-wrapper .btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Spinner d'attente */
+.modal-filters-wrapper .fa-spinner {
+  animation: spinner-rotate 1s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spinner-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive - Tablettes */
+@media (max-width: 768px) {
+  .modal-filters-wrapper {
+    padding: 0.625rem;
+  }
+
+  .modal-filters-wrapper .btn {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
+  }
+
+  .modal-filters-wrapper .filter-actions {
+    gap: 0.5rem;
+    margin-top: 0.625rem;
+    padding-top: 0.5rem;
+  }
+}
+
+/* Responsive - Smartphones */
+@media (max-width: 480px) {
+  .modal-filters-wrapper {
+    padding: 0.5rem;
+  }
+
+  .modal-filters-wrapper .btn {
+    padding: 0.3125rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .modal-filters-wrapper .filter-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .modal-filters-wrapper .global-filters-container {
+    gap: 0.625rem;
+  }
+}
+
+/* Scrollbar personnalisée */
+.modal-filters-wrapper::-webkit-scrollbar {
+  width: 0.5rem;
+}
+
+.modal-filters-wrapper::-webkit-scrollbar-track {
+  background-color: var(--bs-light, #f8f9fa);
+}
+
+.modal-filters-wrapper::-webkit-scrollbar-thumb {
+  background-color: var(--bs-secondary, #6c757d);
+  border-radius: 0.25rem;
+}
+
+.modal-filters-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: var(--bs-dark, #343a40);
+}
