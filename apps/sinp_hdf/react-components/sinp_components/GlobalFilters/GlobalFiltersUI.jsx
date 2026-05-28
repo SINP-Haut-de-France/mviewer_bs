@@ -156,7 +156,7 @@ const GlobalFiltersUI = ({
                       label={(item) => `${item.code_dpt} - ${item.libelle}`}
                       minCharacters={1}
                       maxResults={10}
-                      multiselect={true}
+                      multiselect={false}
                       onChange={handleDptChange}
                     />
                   )}
@@ -185,7 +185,8 @@ const GlobalFiltersUI = ({
                             returnValueKey="code_insee"
                             minCharacters={1}
                             maxResults={10}
-                            title="Commune"
+                            maxSelections={5}
+                            title="Commune (5 max.)"
                             label={(item) =>
                               `${item.code_insee} - ${item.libelle_commune}`
                             }

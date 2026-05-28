@@ -14,6 +14,7 @@ const MultiSelectSearchComponent = ({
   multiselect = true,
   minCharacters = 2,
   maxResults = 10,
+  maxSelections = null,
   title = "",
   onChange = () => {},
   onSearch = () => {},
@@ -25,6 +26,8 @@ const MultiSelectSearchComponent = ({
   const [selected, setSelected] = useState([]);
   const [search, setSearch] = useState("");
   const [showResults, setShowResults] = useState(false);
+  const isSelectionLimitReached =
+    multiselect && Number.isInteger(maxSelections) && selected.length >= maxSelections;
 
   // Initialize cache hook if cacheKey is provided
   const cache = cacheKey ? useWFSCache(cacheKey, returnValueKey) : null;
@@ -223,6 +226,18 @@ const MultiSelectSearchComponent = ({
         (sel) => sel[returnValueKey] === item[returnValueKey]
       );
 
+      if (!isAlreadySelected && isSelectionLimitReached) {
+        if (window.sinpToast?.error) {
+          window.sinpToast.error(
+            `Vous pouvez sélectionner au maximum ${maxSelections} élément${
+              maxSelections > 1 ? "s" : ""
+            }.`
+          );
+        }
+        isSelectingRef.current = false;
+        return;
+      }
+
       if (!isAlreadySelected) {
         newSelected = [...selected, item];
         newlyAdded = [item]; // Only the newly added item
@@ -301,6 +316,8 @@ const MultiSelectSearchComponent = ({
       multiselect={multiselect}
       loading={loading}
       error={error}
+      maxSelections={maxSelections}
+      isSelectionLimitReached={isSelectionLimitReached}
     />
   );
 };

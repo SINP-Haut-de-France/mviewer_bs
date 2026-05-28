@@ -299,8 +299,10 @@ window.sinpQueryBuilder = (function () {
     "1ee0a3f1-0732-5b34-bf23-7820e30c8a77", // AUTRES
   ];
 
-  const PIPE_SEPARATED_LIST_PATTERN = /^[^|]+(\|[^|]+)*$/;
+  const VIEWPARAMS_LIST_SEPARATOR = "_";
+  const VIEWPARAMS_LIST_PATTERN = /^[^_]+(_[^_]+)*$/;
   const QUALIFIED_TYPENAME_PATTERN = /^[^:\s]+:[^:\s]+$/;
+  const MAX_SELECTED_COMMUNES = 5;
 
   const _normalizeViewName = function (view) {
     if (typeof view !== "string") {
@@ -323,11 +325,11 @@ window.sinpQueryBuilder = (function () {
     return normalizedView;
   };
 
-  const _buildPipeSeparatedViewParamConfig = function (source, options = {}) {
+  const _buildListSeparatedViewParamConfig = function (source, options = {}) {
     return {
       source,
-      separator: "|",
-      validationPattern: PIPE_SEPARATED_LIST_PATTERN,
+      separator: VIEWPARAMS_LIST_SEPARATOR,
+      validationPattern: VIEWPARAMS_LIST_PATTERN,
       ...options,
     };
   };
@@ -352,8 +354,8 @@ window.sinpQueryBuilder = (function () {
       return omitEmpty ? null : "";
     }
 
-    if (separator === "|" && normalizedValues.some((item) => item.includes("|"))) {
-      throw new Error(`Invalid ${paramKey} value: pipe is reserved as separator`);
+    if (separator && normalizedValues.some((item) => item.includes(separator))) {
+      throw new Error(`Invalid ${paramKey} value: "${separator}" is reserved as separator`);
     }
 
     const serializedValue = normalizedValues.join(separator);
@@ -384,6 +386,15 @@ window.sinpQueryBuilder = (function () {
 
   const _normalizeParamsForView = function (params = {}, view) {
     if (
+      Array.isArray(params.communes) &&
+      params.communes.length > MAX_SELECTED_COMMUNES
+    ) {
+      throw new Error(
+        `Invalid CODE_INSEES value: maximum ${MAX_SELECTED_COMMUNES} communes allowed`
+      );
+    }
+
+    if (
       view === "fn_get_obs_detaillee" &&
       Array.isArray(params.mailles) &&
       params.mailles.length > 0
@@ -399,7 +410,7 @@ window.sinpQueryBuilder = (function () {
   };
 
   const _serializeViewParam = function (paramKey, value, config = {}) {
-    const pipeSeparatedParams = ["GRP_IDS", "DEPT_IDS", "CODE_INSEES", "CODE_MAILLES"];
+    const listSeparatedParams = ["GRP_IDS", "DEPT_IDS", "CODE_INSEES", "CODE_MAILLES"];
     const { separator = null, omitEmpty = false, validationPattern = null } = config;
 
     if (separator) {
@@ -412,20 +423,20 @@ window.sinpQueryBuilder = (function () {
 
     if (paramKey === "GRP_IDS") {
       return _serializeListViewParam(paramKey, value, {
-        separator: "|",
+        separator: VIEWPARAMS_LIST_SEPARATOR,
         omitEmpty: true,
       });
     }
 
     if (paramKey === "CD_REF") {
       return _serializeListViewParam(paramKey, value, {
-        separator: "|",
+        separator: VIEWPARAMS_LIST_SEPARATOR,
       });
     }
 
-    if (pipeSeparatedParams.includes(paramKey)) {
+    if (listSeparatedParams.includes(paramKey)) {
       return _serializeListViewParam(paramKey, value, {
-        separator: "|",
+        separator: VIEWPARAMS_LIST_SEPARATOR,
       });
     }
 
@@ -443,25 +454,25 @@ window.sinpQueryBuilder = (function () {
     const sharedViewParams = {
       DATE_DEB: "dateDeb",
       DATE_FIN: "dateFin",
-      DEPT_IDS: _buildPipeSeparatedViewParamConfig("departements", {
+      DEPT_IDS: _buildListSeparatedViewParamConfig("departements", {
         omitEmpty: true,
       }),
-      CODE_INSEES: _buildPipeSeparatedViewParamConfig("communes", {
+      CODE_INSEES: _buildListSeparatedViewParamConfig("communes", {
         omitEmpty: true,
       }),
-      CODE_MAILLES: _buildPipeSeparatedViewParamConfig("mailles", {
+      CODE_MAILLES: _buildListSeparatedViewParamConfig("mailles", {
         omitEmpty: true,
       }),
-      CD_REF: _buildPipeSeparatedViewParamConfig("taxons", {
+      CD_REF: _buildListSeparatedViewParamConfig("taxons", {
         omitEmpty: true,
       }),
-      GRP_IDS: _buildPipeSeparatedViewParamConfig("groupes", {
+      GRP_IDS: _buildListSeparatedViewParamConfig("groupes", {
         omitEmpty: true,
       }),
     };
 
     if (includeEpciIds) {
-      sharedViewParams.EPCI_IDS = _buildPipeSeparatedViewParamConfig("epcis", {
+      sharedViewParams.EPCI_IDS = _buildListSeparatedViewParamConfig("epcis", {
         omitEmpty: true,
       });
     }
@@ -495,8 +506,8 @@ window.sinpQueryBuilder = (function () {
       view_params: {
         DATE_DEB: "dateDeb",
         DATE_FIN: "dateFin",
-        CD_REF: _buildPipeSeparatedViewParamConfig("taxons"),
-        GRP_IDS: _buildPipeSeparatedViewParamConfig("groupes", {
+        CD_REF: _buildListSeparatedViewParamConfig("taxons"),
+        GRP_IDS: _buildListSeparatedViewParamConfig("groupes", {
           omitEmpty: true,
         }),
       },
@@ -518,8 +529,8 @@ window.sinpQueryBuilder = (function () {
       view_params: {
         DATE_DEB: "dateDeb",
         DATE_FIN: "dateFin",
-        CD_REF: _buildPipeSeparatedViewParamConfig("taxons"),
-        GRP_IDS: _buildPipeSeparatedViewParamConfig("groupes", {
+        CD_REF: _buildListSeparatedViewParamConfig("taxons"),
+        GRP_IDS: _buildListSeparatedViewParamConfig("groupes", {
           omitEmpty: true,
         }),
       },
@@ -556,7 +567,7 @@ window.sinpQueryBuilder = (function () {
     fn_get_metadatas: {
       cql_filters: {},
       view_params: {
-        ID_JDDS: _buildPipeSeparatedViewParamConfig("jddIds", {
+        ID_JDDS: _buildListSeparatedViewParamConfig("jddIds", {
           omitEmpty: true,
         }),
       },

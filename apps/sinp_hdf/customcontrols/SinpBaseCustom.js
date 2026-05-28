@@ -1,4 +1,8 @@
 class SinpBaseCustom {
+  static MAX_SELECTED_DEPARTMENTS = 1;
+
+  static MAX_SELECTED_COMMUNES = 5;
+
   static DEFAULT_PARAMETERS = {
     BASEURL: `${mviewer.env?.[mviewer.env?.CURRENT_ENV]?.GEOSERVER_BASE_URL}/wfs`,
     SERVICE: "WFS",
@@ -51,6 +55,7 @@ class SinpBaseCustom {
       const sanitizedViewParams = String(finalParams.VIEWPARAMS)
         .replace(/^;+|;+$/g, "")
         .replace(/;;+/g, ";");
+      // Compat legacy: si un pipe subsiste dans VIEWPARAMS, on le conserve encodé.
       const encodedViewParams = sanitizedViewParams.replace(/\|/g, "%7C");
       url += `&VIEWPARAMS=${encodedViewParams}`;
     }
@@ -222,6 +227,21 @@ class SinpBaseCustom {
   }
 
   _normalizeStandardFilters(params = {}) {
+    const departements = this._normalizeDepartmentCodes(
+      params.filteredDepartments || params.departements || []
+    );
+    const communes = this._normalizeCommuneCodes(
+      params.filteredCommunes || params.communes || []
+    );
+
+    if (departements.length > this.constructor.MAX_SELECTED_DEPARTMENTS) {
+      throw new Error("Un seul département peut être sélectionné.");
+    }
+
+    if (communes.length > this.constructor.MAX_SELECTED_COMMUNES) {
+      throw new Error("Vous pouvez sélectionner au maximum 5 communes.");
+    }
+
     const epcis =
       params.filteredEpcis ||
       params.filteredEPCI ||
@@ -239,8 +259,8 @@ class SinpBaseCustom {
       : params.taxons || [];
 
     return {
-      communes: params.filteredCommunes || params.communes || [],
-      departements: params.filteredDepartments || params.departements || [],
+      communes,
+      departements,
       epcis,
       groupes: params.filteredGroupes || params.groupes || [],
       taxons,
@@ -248,6 +268,56 @@ class SinpBaseCustom {
       dateFin: params.dateFin || null,
       targetLocCode: params.targetLocCode || this.targetLocCode || null,
     };
+  }
+
+  _normalizeCodeList(values, normalizer) {
+    const sourceValues = Array.isArray(values) ? values : [values];
+    const normalizedValues = [];
+    const seenValues = new Set();
+
+    sourceValues.forEach((value) => {
+      const normalizedValue = normalizer.call(this, value);
+      if (normalizedValue && !seenValues.has(normalizedValue)) {
+        seenValues.add(normalizedValue);
+        normalizedValues.push(normalizedValue);
+      }
+    });
+
+    return normalizedValues;
+  }
+
+  _extractDepartmentCode(value) {
+    if (value === undefined || value === null) {
+      return null;
+    }
+
+    const rawValue =
+      typeof value === "object" && value?.code_dpt !== undefined ? value.code_dpt : value;
+    const normalizedValue = String(rawValue).trim().toUpperCase();
+
+    if (normalizedValue === "") {
+      return null;
+    }
+
+    return /^(?:\d{2,3}|2A|2B)$/.test(normalizedValue) ? normalizedValue : null;
+  }
+
+  _normalizeDepartmentCodes(values) {
+    return this._normalizeCodeList(values, this._extractDepartmentCode);
+  }
+
+  _normalizeCommuneCodes(values) {
+    return this._normalizeCodeList(values, (value) => {
+      const rawValue =
+        typeof value === "object" && value?.code_insee !== undefined
+          ? value.code_insee
+          : value;
+      return this._extractCommuneCode(rawValue);
+    });
+  }
+
+  _normalizeGridCodes(values) {
+    return this._normalizeCodeList(values, this._extractGridCode);
   }
 
   _getResolvedTargetLocCode(params = {}) {
@@ -329,7 +399,14 @@ class SinpBaseCustom {
     if (resolvedTargetLocCode === "6" || resolvedTargetLocCode === "7") {
       return {
         paramName: "mailles",
-        featureKeys: ["code_maille", "id_maille", "maille", "code", "codeLocali", "cd_sig"],
+        featureKeys: [
+          "code_maille",
+          "id_maille",
+          "maille",
+          "code",
+          "codeLocali",
+          "cd_sig",
+        ],
         normalizeValue: (value) => this._extractGridCode(value),
       };
     }
@@ -341,6 +418,27 @@ class SinpBaseCustom {
     const scopeConfig = this._getDetailRequestScopeConfig(params);
     if (!scopeConfig) {
       return params;
+    }
+
+    const explicitScopedValues =
+      scopeConfig.paramName === "communes"
+        ? this._normalizeCommuneCodes(params.communes || [])
+        : this._normalizeGridCodes(params.mailles || []);
+
+    if (explicitScopedValues.length > 0) {
+      const scopedParams =
+        scopeConfig.paramName === "mailles"
+          ? {
+              ...params,
+              departements: [],
+              communes: [],
+            }
+          : { ...params };
+
+      return {
+        ...scopedParams,
+        [scopeConfig.paramName]: explicitScopedValues,
+      };
     }
 
     const scopedValues = [];
@@ -603,8 +701,24 @@ class SinpBaseCustom {
 
     if (resolvedTargetLocCode === "6" || resolvedTargetLocCode === "7") {
       return {
-        featureKey: ["code_maille", "id_maille", "maille", "code", "adm_id", "codeLocali", "cd_sig"],
-        detailKey: ["code_maille", "id_maille", "maille", "code", "adm_id", "codeLocali", "cd_sig"],
+        featureKey: [
+          "code_maille",
+          "id_maille",
+          "maille",
+          "code",
+          "adm_id",
+          "codeLocali",
+          "cd_sig",
+        ],
+        detailKey: [
+          "code_maille",
+          "id_maille",
+          "maille",
+          "code",
+          "adm_id",
+          "codeLocali",
+          "cd_sig",
+        ],
       };
     }
 
@@ -774,7 +888,8 @@ class SinpBaseCustom {
     this._selectionRequestInFlight = true;
     this._setBlockingSearchOverlayVisible(true, {
       title: "Chargement de la selection",
-      message: "Merci de patienter, le detail de l'entite selectionnee est en cours de chargement.",
+      message:
+        "Merci de patienter, le detail de l'entite selectionnee est en cours de chargement.",
     });
 
     try {
