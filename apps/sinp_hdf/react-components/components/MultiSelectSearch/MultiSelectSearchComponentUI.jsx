@@ -17,6 +17,8 @@ const MultiSelectSearchUI = ({
   multiselect,
   loading,
   error,
+  maxSelections,
+  isSelectionLimitReached,
 }) => {
   const showSearchInput = multiselect || selected.length === 0;
   const dropdownRef = useRef(null);
@@ -25,8 +27,12 @@ const MultiSelectSearchUI = ({
   // Fermer le menu déroulant quand on clique en dehors
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target) &&
-          inputRef.current && !inputRef.current.contains(event.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target)
+      ) {
         setShowResults(false);
       }
     };
@@ -46,8 +52,10 @@ const MultiSelectSearchUI = ({
       <div className="search-input">
         {selected.map((item) => (
           <div key={item[selectedKey]} className="selected-tag">
-            <span>{typeof label === 'function' ? label(item) : label}</span>
-            <button className="remove-btn" onClick={() => handleRemove(item[selectedKey])}>
+            <span>{typeof label === "function" ? label(item) : label}</span>
+            <button
+              className="remove-btn"
+              onClick={() => handleRemove(item[selectedKey])}>
               ✕
             </button>
           </div>
@@ -58,6 +66,7 @@ const MultiSelectSearchUI = ({
             ref={inputRef}
             type="text"
             placeholder="Rechercher..."
+            disabled={isSelectionLimitReached}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -84,6 +93,12 @@ const MultiSelectSearchUI = ({
         )}
       </div>
 
+      {isSelectionLimitReached && (
+        <div className="text-muted">
+          Maximum atteint{Number.isInteger(maxSelections) ? ` (${maxSelections})` : ""}.
+        </div>
+      )}
+
       {showResults && (
         <div ref={dropdownRef} className="results-list">
           {loading ? (
@@ -95,9 +110,8 @@ const MultiSelectSearchUI = ({
               <div
                 key={item[selectedKey]}
                 className="result-item"
-                onClick={() => handleSelect(item)}
-              >
-                {typeof label === 'function' ? label(item) : label}
+                onClick={() => handleSelect(item)}>
+                {typeof label === "function" ? label(item) : label}
               </div>
             ))
           ) : (

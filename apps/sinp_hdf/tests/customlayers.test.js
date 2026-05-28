@@ -28,18 +28,18 @@ describe("SinpBaseLayer - Classe abstraite", () => {
     const layer = new mviewer.customLayers.SinpBaseLayer("testLayer", "fn_get_stats");
     const url = layer._buildQueryURL({
       TYPENAME: "fn_get_stats",
-      VIEWPARAMS: "DATE_DEB:2020-01-01|DATE_FIN:2026-03-10",
+      VIEWPARAMS: "DATE_DEB:2020-01-01;DATE_FIN:2026-03-10;GRP_IDS:13_15",
     });
 
     expect(url).toContain("SERVICE=WFS");
     expect(url).toContain("VERSION=2.0.0");
     expect(url).toContain("REQUEST=GetFeature");
     expect(url).toContain("TYPENAME=fn_get_stats");
-    // Les pipes doivent être encodés en %7C
-    expect(url).toContain("%7C");
+    expect(url).toContain("GRP_IDS:13_15");
+    expect(url).not.toContain("%7C");
   });
 
-  test("Encode correctement les VIEWPARAMS", () => {
+  test("Conserve la compatibilité avec les VIEWPARAMS legacy", () => {
     const layer = new mviewer.customLayers.SinpBaseLayer("testLayer", "fn_get_stats");
     const viewParams =
       "DATE_DEB:2020-01-01;DATE_FIN:2026-03-10;CD_REF:2440|2442;GRP_IDS:13|15";
@@ -47,13 +47,10 @@ describe("SinpBaseLayer - Classe abstraite", () => {
       TYPENAME: "testLayer",
       VIEWPARAMS: viewParams,
     });
-
     // Les deux-points et points-virgules ne doivent PAS être encodés
     expect(url).toContain("DATE_DEB:2020-01-01");
     expect(url).toContain("DATE_FIN:2026-03-10");
-    // Les pipes des listes doivent être encodés
     expect(url).toContain("CD_REF:2440%7C2442");
-    // Les pipes de GRP_IDS DOIVENT être encodés
     expect(url).toContain("GRP_IDS:13%7C15");
   });
 
@@ -142,6 +139,70 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     });
   });
 
+  test("Conserve la commune explicitement filtrée pour les détails initiaux", () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      targetLocCode: "2",
+    });
+    const params = {
+      departements: ["62"],
+      communes: ["62225"],
+      dateDeb: "2020-01-01",
+      dateFin: "2025-12-10",
+      targetLocCode: "2",
+    };
+    const features = [
+      {
+        get(key) {
+          return { code_insee: "62225" }[key];
+        },
+      },
+      {
+        get(key) {
+          return { code_insee: "59350" }[key];
+        },
+      },
+    ];
+
+    expect(control._buildDetailRequestParams(features, params)).toEqual(params);
+  });
+
+  test("normalise les filtres géographiques et limite les communes à 5", () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      targetLocCode: "2",
+    });
+
+    expect(() =>
+      control._normalizeStandardFilters({
+        filteredDepartments: ["59", "62"],
+      })
+    ).toThrow("Un seul département peut être sélectionné.");
+
+    expect(() =>
+      control._normalizeStandardFilters({
+        filteredDepartments: [{ code_dpt: "62" }],
+        filteredCommunes: ["62041", "62165", "62225", "59350", "59009", "51454"],
+      })
+    ).toThrow("Vous pouvez sélectionner au maximum 5 communes.");
+
+    expect(
+      control._normalizeStandardFilters({
+        filteredDepartments: [{ code_dpt: "62" }],
+        filteredCommunes: [{ code_insee: "62041" }, "62041", "62165", "62225"],
+      })
+    ).toEqual({
+      communes: ["62041", "62165", "62225"],
+      departements: ["62"],
+      epcis: [],
+      groupes: [],
+      taxons: [],
+      dateDeb: null,
+      dateFin: null,
+      targetLocCode: "2",
+    });
+  });
+
   test("Ignore les UUID quand il construit CODE_INSEES", () => {
     const control = new SinpBaseCustom({
       layerId: "testControl",
@@ -202,6 +263,69 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     });
   });
 
+  test("Conserve la maille explicitement filtrée pour les détails", () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      targetLocCode: "6",
+    });
+    const params = {
+      departements: ["62"],
+      communes: ["62165"],
+      mailles: ["E069N692"],
+      dateDeb: "2020-01-01",
+      dateFin: "2025-12-10",
+      targetLocCode: "6",
+    };
+    const features = [
+      {
+        get(key) {
+          return { code: "E069N692" }[key];
+        },
+      },
+      {
+        get(key) {
+          return { codeLocali: "10kmL93E070N693" }[key];
+        },
+      },
+    ];
+
+    expect(control._buildDetailRequestParams(features, params)).toEqual({
+      ...params,
+      departements: [],
+      communes: [],
+      mailles: ["E069N692"],
+    });
+  });
+
+  test("Charge immédiatement les détails seulement si une commune est explicitement filtrée", () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      targetLocCode: "2",
+    });
+
+    expect(
+      control._shouldLoadEntityDataImmediately({
+        departements: ["62"],
+        communes: ["62225"],
+        targetLocCode: "2",
+      })
+    ).toBe(true);
+
+    expect(
+      control._shouldLoadEntityDataImmediately({
+        departements: ["62"],
+        targetLocCode: "2",
+      })
+    ).toBe(false);
+
+    expect(
+      control._shouldLoadEntityDataImmediately({
+        communes: ["62225", "59350"],
+        targetLocCode: "2",
+      })
+    ).toBe(false);
+  });
+
   test("Cible communale: le rattachement se fait sur les codes INSEE", () => {
     const control = new SinpBaseCustom({
       layerId: "testControl",
@@ -248,9 +372,85 @@ describe("SinpBaseCustom - Scopage des détails", () => {
       targetLocCode: "6",
     });
 
-    expect(control._expandEntityKeyVariants("10kmL93E069N692", { targetLocCode: "6" })).toEqual(
-      expect.arrayContaining(["10kmL93E069N692", "E069N692"])
+    expect(
+      control._expandEntityKeyVariants("10kmL93E069N692", { targetLocCode: "6" })
+    ).toEqual(expect.arrayContaining(["10kmL93E069N692", "E069N692"]));
+  });
+});
+
+describe("sinpRepository - GET/POST GeoServer", () => {
+  test("construit un body POST x-www-form-urlencoded pour les fonctions PostgreSQL", () => {
+    const request = sinpRepository.buildPostRequest({
+      TYPENAME: "sinp_diffusion:fn_get_stats",
+      VIEWPARAMS:
+        "DATE_DEB:2006-05-28;DATE_FIN:2026-05-28;DEPT_IDS:62;CODE_INSEES:62225_62040;TARGET_LOC_CODE:2",
+    });
+
+    expect(request.url).toContain("/wfs");
+    expect(request.headers["Content-Type"]).toBe("application/x-www-form-urlencoded");
+    expect(request.body.toString()).toContain("SERVICE=WFS");
+    expect(request.body.toString()).toContain("REQUEST=GetFeature");
+    expect(request.body.toString()).toContain("TYPENAME=sinp_diffusion%3Afn_get_stats");
+    expect(request.body.toString()).toContain(
+      "VIEWPARAMS=DATE_DEB%3A2006-05-28%3BDATE_FIN%3A2026-05-28%3BDEPT_IDS%3A62%3BCODE_INSEES%3A62225_62040%3BTARGET_LOC_CODE%3A2"
     );
+  });
+
+  test("bascule automatiquement en POST pour les types fn_* avec VIEWPARAMS", async () => {
+    const previousFetch = global.fetch;
+    const previousGetProxy = mviewer.getProxy;
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ features: [] }),
+    });
+    mviewer.getProxy = jest.fn(() => "");
+
+    await sinpRepository.fetchGeoServerData({
+      TYPENAME: "sinp_diffusion:fn_get_stats",
+      VIEWPARAMS: "DATE_DEB:2006-05-28;DATE_FIN:2026-05-28;CODE_INSEES:62225_62040",
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/wfs"),
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: expect.any(URLSearchParams),
+      })
+    );
+
+    global.fetch = previousFetch;
+    mviewer.getProxy = previousGetProxy;
+  });
+
+  test("garde GET pour les couches legacy", async () => {
+    const previousFetch = global.fetch;
+    const previousGetProxy = mviewer.getProxy;
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ features: [] }),
+    });
+    mviewer.getProxy = jest.fn(() => "");
+
+    await sinpRepository.fetchGeoServerData({
+      TYPENAME: "sinp_diffusion:v_synthese_commune",
+      VIEWPARAMS: "DATE_DEB:2006-05-28;DATE_FIN:2026-05-28;CD_REF:2440_2442",
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("TYPENAME=sinp_diffusion%3Av_synthese_commune"),
+      expect.objectContaining({})
+    );
+
+    const [, requestOptions] = global.fetch.mock.calls[0];
+    expect(requestOptions?.method).toBeUndefined();
+
+    global.fetch = previousFetch;
+    mviewer.getProxy = previousGetProxy;
   });
 });
 
@@ -353,8 +553,8 @@ describe("sinpQueryBuilder - Configurations nouvelles", () => {
     expect(options.TYPENAME).toBe("sinp_diffusion:fn_get_stats");
     expect(options.VIEWPARAMS).toContain("DATE_DEB:2020-01-01");
     expect(options.VIEWPARAMS).toContain("DATE_FIN:2026-03-10");
-    expect(options.VIEWPARAMS).toContain("CD_REF:2440|2442");
-    expect(options.VIEWPARAMS).toContain("GRP_IDS:13|15");
+    expect(options.VIEWPARAMS).toContain("CD_REF:2440_2442");
+    expect(options.VIEWPARAMS).toContain("GRP_IDS:13_15");
     expect(options.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
   });
 
@@ -428,12 +628,12 @@ describe("sinpQueryBuilder - Configurations nouvelles", () => {
     );
 
     expect(options.TYPENAME).toBe("sinp_diffusion:fn_get_metadatas");
-    expect(options.VIEWPARAMS).toBe("ID_JDDS:123|456");
+    expect(options.VIEWPARAMS).toBe("ID_JDDS:123_456");
   });
 });
 
 describe("VIEWPARAMS - Séparation correcte des séparants", () => {
-  test("CD_REF utilise des pipes", () => {
+  test("CD_REF utilise des underscores", () => {
     const options = sinpQueryBuilder.buildRequestOptions(
       {
         dateDeb: "2020-01-01",
@@ -443,11 +643,11 @@ describe("VIEWPARAMS - Séparation correcte des séparants", () => {
       "fn_get_stats"
     );
 
-    expect(options.VIEWPARAMS).toMatch(/CD_REF:2440\|2442\|2444/);
+    expect(options.VIEWPARAMS).toMatch(/CD_REF:2440_2442_2444/);
     expect(options.VIEWPARAMS).not.toMatch(/CD_REF:2440,2442/);
   });
 
-  test("GRP_IDS utilise des pipes", () => {
+  test("GRP_IDS utilise des underscores", () => {
     const options = sinpQueryBuilder.buildRequestOptions(
       {
         dateDeb: "2020-01-01",
@@ -457,8 +657,8 @@ describe("VIEWPARAMS - Séparation correcte des séparants", () => {
       "fn_get_stats"
     );
 
-    // GRP_IDS doit avoir des pipes
-    expect(options.VIEWPARAMS).toMatch(/GRP_IDS:13\|15\|17/);
+    // GRP_IDS doit avoir des underscores
+    expect(options.VIEWPARAMS).toMatch(/GRP_IDS:13_15_17/);
     // Pas de virgules
     expect(options.VIEWPARAMS).not.toMatch(/GRP_IDS:13,15/);
   });

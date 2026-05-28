@@ -31,7 +31,7 @@ const TAXON_COLUMNS = [
     getSortValue: (detail) => [detail?.nom_vern || "", detail?.nom_valide || ""].join(" "),
     render: (detail) => (
       <>
-        <div>{detail?.nom_vern || "-"}</div>
+        <div>{detail?.nom_vern || detail?.nom_valide || "-"}</div>
         <div className="mv-sr-latin-name">{detail?.nom_valide || ""}</div>
       </>
     ),
