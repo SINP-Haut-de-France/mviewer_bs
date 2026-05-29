@@ -489,8 +489,8 @@ class SinpBaseCustom {
   _normalizeJddIds(value) {
     if (Array.isArray(value)) {
       return value
-        .map((item) => (item === undefined || item === null ? "" : String(item).trim()))
-        .filter((item) => item !== "");
+        .flatMap((item) => this._normalizeJddIds(item))
+        .filter((item, index, values) => values.indexOf(item) === index);
     }
 
     if (value === undefined || value === null) {
@@ -498,7 +498,7 @@ class SinpBaseCustom {
     }
 
     return String(value)
-      .split("|")
+      .split(/[|_]/)
       .map((item) => item.trim())
       .filter((item) => item !== "");
   }

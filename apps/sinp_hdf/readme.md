@@ -65,8 +65,10 @@ new CustomComponent("reactInjector", reactInjector.init);
 **Vite bundler commands for SINP HdF**
 
 - Open a terminal in apps/sinp_hdf
-- Run the first command for the main build :  BUILD_TARGET=main vite build
-- Run the second command for the reactComponentManager build : BUILD_TARGET=reactComponentManager vite build 
+- Run `npm run build` to generate the production package in `apps/sinp_hdf/dist`
+- Run `npm run build:main` for the main React bundle only
+- Run `npm run build:manager` for the `reactComponentManager` bundle only
 
-For testing in dev environment you must rebuild the 2 package each times you modify a react.js file.
+The production package keeps the SINP structure required by mviewer and includes the minified addons, custom scripts, custom controls, custom layers, theme assets, templates, data files, and the `sinp_hdf.json` / `sinp_hdf.xml` configuration files.
 
+For testing in dev environment you must rebuild the 2 packages each time you modify a React file.

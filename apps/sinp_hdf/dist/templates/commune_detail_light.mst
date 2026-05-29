@@ -1,0 +1,15 @@
+{{#features}} <h4>{{libCommune}}</h4> <div class="row"> {{#detailObs}} <div class="caption" style="margin:0 0 10px;"> <p class="scientific_name">{{nb_observations}} {{nom_valide}}</p> <div id="date-area-{{cd_ref}}"></div> <script> let date = "{{last_date_obs}}";
+                    let id = "{{cd_ref}}";
+                    let divWithDate = document.getElementById("date-area-" + id);
+                    // format de la date de la donnée d'entrée
+
+                    // voir ici pour les correspondances du code que vous devez modifier / adapter selon le format d'entrée :
+                    // https://momentjs.com/
+
+                    let inDate = "YYYY-MM-DDT";
+                    let outDate = "DD/MM/YYYY";
+
+                    // on transforme
+                    let dateFormated = moment(date, inDate).format(outDate);
+                    // on met le nouveau format à afficher dans la div
+                    divWithDate.innerHTML = "Dernière observation le " + dateFormated; </script> </div> {{/detailObs}} </div> {{/features}} 

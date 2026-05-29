@@ -1,0 +1,1 @@
+{{#features}} <div class="bottom-panel-content"> <mv-feature-search-results data-layer-id="gridSearch5x5" data-feature-uid="{{feature_ol_uid}}"> </mv-feature-search-results> </div> {{/features}}

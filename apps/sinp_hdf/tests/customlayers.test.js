@@ -768,4 +768,40 @@ describe("Intégration - Flux complet", () => {
     expect(feature.properties.jdd_data_loading).toBe(false);
     expect(feature.properties.jdd_data_error).toBeNull();
   });
+
+  test("ensureMetadataForFeatures accepte aussi les jdd_ids séparés par underscore", async () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      metadataTypeName: "fn_get_metadatas",
+    });
+    const feature = {
+      properties: {
+        jdd_ids: "11_22_11",
+      },
+      get(key) {
+        return this.properties[key];
+      },
+      set(key, value) {
+        this.properties[key] = value;
+      },
+    };
+
+    const loadMetadataSpy = jest
+      .spyOn(control, "_loadMetadataProperties")
+      .mockResolvedValue([
+        { idJdd: 11, libelJdd: "Jeu 11" },
+        { idJdd: 22, libelJdd: "Jeu 22" },
+      ]);
+
+    await control.ensureMetadataForFeatures([feature]);
+
+    expect(loadMetadataSpy).toHaveBeenCalledWith(
+      { jddIds: ["11", "22"] },
+      "fn_get_metadatas"
+    );
+    expect(feature.properties.jdd_details).toEqual([
+      { idJdd: 11, libelJdd: "Jeu 11" },
+      { idJdd: 22, libelJdd: "Jeu 22" },
+    ]);
+  });
 });
