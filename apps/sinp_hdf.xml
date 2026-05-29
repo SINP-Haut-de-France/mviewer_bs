@@ -13,8 +13,8 @@
 	<extensions>
 		<extension type="javascript" src="apps/sinp_hdf/customlayers/SinpBaseLayer.js" />
 		<extension type="javascript" src="apps/sinp_hdf/customcontrols/SinpBaseCustom.js" />
-		<extension type="component" id="reactInjector" path="apps/sinp_hdf/addons/"/>
-		<extension type="component" id="sinpOverriding" path="apps/sinp_hdf/addons/"/>
+		<extension type="component" id="reactInjector" path="apps/sinp_hdf/addons"/>
+		<extension type="component" id="sinpOverriding" path="apps/sinp_hdf/addons"/>
 	</extensions>
     <mapoptions maxzoom="19" projection="EPSG:2154" center="700000,7000000" zoom="9" projextent="-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244" />
     <baselayers style="gallery">
@@ -40,7 +40,7 @@
 				type="customlayer" 
 				url="apps/sinp_hdf/customlayers/communeSearch.js"
 				customcontrol="true"
-				customcontrolpath="apps/sinp_hdf/customcontrols/communeSearch/"
+				customcontrolpath="apps/sinp_hdf/customcontrols/communeSearch"
 				expanded="true"
 				fields=""
 				tooltip="true"
@@ -64,7 +64,7 @@
 				type="customlayer" 
 				url="apps/sinp_hdf/customlayers/grid5x5search.js"
 				customcontrol="true"
-				customcontrolpath="apps/sinp_hdf/customcontrols/grid5x5search/"
+				customcontrolpath="apps/sinp_hdf/customcontrols/grid5x5search"
 				fields=""
 				tooltip="true"
 				tooltipenabled="true"
@@ -88,7 +88,7 @@
 				url="apps/sinp_hdf/customlayers/gridSearch10x10.js"
 				expanded="true"
 				customcontrol="true"
-				customcontrolpath="apps/sinp_hdf/customcontrols/grid10x10search/"
+				customcontrolpath="apps/sinp_hdf/customcontrols/grid10x10search"
 				fields=""
 				tooltip="true"
 				tooltipenabled="true"

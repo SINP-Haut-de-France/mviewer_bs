@@ -6,6 +6,8 @@ const { minify } = require("html-minifier-terser");
 const APP_ROOT = path.resolve(__dirname, "..");
 const APPS_ROOT = path.resolve(APP_ROOT, "..");
 const DIST_ROOT = path.join(APP_ROOT, "dist");
+const DIST_APPS_ROOT = path.join(DIST_ROOT, "apps");
+const DIST_APP_ROOT = path.join(DIST_APPS_ROOT, "sinp_hdf");
 
 const DIRECTORIES_TO_PACKAGE = [
   "addons",
@@ -17,7 +19,13 @@ const DIRECTORIES_TO_PACKAGE = [
   "templates",
 ];
 
-const ROOT_FILES_TO_PACKAGE = ["sinp_hdf.json", "sinp_hdf.xml"];
+const ROOT_FILES_TO_PACKAGE = [
+  "accueil.html",
+  "default.xml",
+  "settings.json",
+  "sinp_hdf.json",
+  "sinp_hdf.xml",
+];
 
 const MARKUP_IGNORE_FRAGMENTS = [/\{\{[\s\S]*?\}\}/, /<%[\s\S]*?%>/, /\$\{[\s\S]*?\}/];
 
@@ -49,8 +57,9 @@ function shouldSkipFile(filePath) {
 async function minifyJavaScript(source) {
   const result = await transform(source, {
     loader: "js",
-    format: "iife",
-    minify: true,
+    minifySyntax: true,
+    minifyWhitespace: true,
+    minifyIdentifiers: false,
     legalComments: "none",
     charset: "utf8",
   });
@@ -146,6 +155,18 @@ async function transformFile(sourcePath, destinationPath) {
   await fs.writeFile(destinationPath, output, "utf8");
 }
 
+async function writeAddonEntrypointAlias(sourcePath, destinationPath) {
+  const normalizedSourcePath = sourcePath.split(path.sep).join("/");
+  const addonEntrypointPattern = /\/addons\/[^/]+\/[^/]+\.js$/;
+
+  if (!addonEntrypointPattern.test(normalizedSourcePath)) {
+    return;
+  }
+
+  const extensionlessPath = destinationPath.slice(0, -path.extname(destinationPath).length);
+  await fs.copyFile(destinationPath, extensionlessPath);
+}
+
 async function packageDirectory(relativeDirectory) {
   const sourceDirectory = path.join(APP_ROOT, relativeDirectory);
   const files = await walkFiles(sourceDirectory);
@@ -153,22 +174,24 @@ async function packageDirectory(relativeDirectory) {
   await Promise.all(
     files
       .filter((filePath) => !shouldSkipFile(filePath))
-      .map((sourcePath) => {
-        const relativePath = path.relative(APP_ROOT, sourcePath);
-        const destinationPath = path.join(DIST_ROOT, relativePath);
-        return transformFile(sourcePath, destinationPath);
+      .map(async (sourcePath) => {
+        const relativePath = path.relative(APPS_ROOT, sourcePath);
+        const destinationPath = path.join(DIST_APPS_ROOT, relativePath);
+        await transformFile(sourcePath, destinationPath);
+        await writeAddonEntrypointAlias(sourcePath, destinationPath);
       })
   );
 }
 
 async function packageRootFile(fileName) {
   const sourcePath = path.join(APPS_ROOT, fileName);
-  const destinationPath = path.join(DIST_ROOT, fileName);
+  const destinationPath = path.join(DIST_APPS_ROOT, fileName);
   await transformFile(sourcePath, destinationPath);
 }
 
 async function main() {
   await ensureCleanDir(DIST_ROOT);
+  await fs.mkdir(DIST_APP_ROOT, { recursive: true });
 
   await Promise.all(DIRECTORIES_TO_PACKAGE.map((directory) => packageDirectory(directory)));
   await Promise.all(ROOT_FILES_TO_PACKAGE.map((fileName) => packageRootFile(fileName)));
