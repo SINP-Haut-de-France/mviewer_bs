@@ -1,1 +1,0 @@
-{{#features}} <div class="bottom-panel-content"> <mv-commune-search-results data-layer-id="communeSearch" data-feature-uid="{{feature_ol_uid}}"> </mv-commune-search-results> </div> {{/features}}
