@@ -4,7 +4,6 @@ import GlobalFilters from "../GlobalFilters/GlobalFilters";
 import { useFilters } from "../../providers/FilterProvider";
 import { getSearchLayer, resolveSearchLayerId } from "../../configs/filtersConfig";
 import "./GlobalFilterModal.css";
-import ErrorButton from "../../components/ErrorButton.jsx";
 
 const GlobalFilterModal = ({
   isOpen,
@@ -181,7 +180,6 @@ const GlobalFilterModal = ({
         },
       ]}
       ref={modalRef}>
-      <ErrorButton />
       <div className={`modal-filters-wrapper ${density || ""}`.trim()}>
         <GlobalFilters
           ref={globalFiltersRef}

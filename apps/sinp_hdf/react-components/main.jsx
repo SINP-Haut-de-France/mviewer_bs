@@ -14,20 +14,8 @@ console.log("🚀 Chargement de main.jsx...");
 
 const initGlobalRoot = () => {
   Sentry.init({
-    dsn: "https://446e4a33a7547f744b8b1ed4626a342d@o4511070687526912.ingest.de.sentry.io/4511070688772176",
+    dsn: "https://dc7d9408662735efba1598edbbc7b0ed@o4511188751155200.ingest.de.sentry.io/4511188755677264",
     sendDefaultPii: true,
-    integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
-    // Tracing
-    tracesSampleRate: 1.0,
-    tracePropagationTargets: [
-      "http://localhost:5051/?config=apps/sinp_hdf.xml",
-      /^https:\/\/agence-regionale-biodiversite\.sentry\.io\/api/,
-    ],
-    // Session Replay
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
-    // Enable logs to be sent to Sentry
-    enableLogs: true,
   });
 
   const globalRootElement = document.getElementById("react-global-root");
