@@ -467,32 +467,47 @@
   }
 }
 
+
+/* Bouton filtre dans la barre de navigation mobile */
+#mvNavbarMobile #mobile-filter-btn {
+  font-size: 1.2em;
+  color: #c1c1c1;
+}
+
+#mvNavbarMobile #mobile-filter-btn.active {
+  color: #0d6efd;
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
 /* ========================================
    SIDEBAR - Agrandissement du menu de gauche
    ======================================== */
 
-/* Appliquer la largeur personnalisée au wrapper principal (desktop uniquement) */
-#wrapper {
-  padding-left: var(--sinp-sidebar-width) !important;
-}
+/* Appliquer la largeur personnalisée au wrapper principal (desktop uniquement)
+   Scopé à min-width:992px pour ne pas écraser le mode mobile de mviewer */
+@media (min-width: 992px) {
+  #wrapper {
+    padding-left: var(--sinp-sidebar-width) !important;
+  }
 
-/* Réduire le padding quand le sidebar est réduit */
-#wrapper.toggled-2 {
-  padding-left: 50px !important;
-}
+  /* Réduire le padding quand le sidebar est réduit */
+  #wrapper.toggled-2 {
+    padding-left: 50px !important;
+  }
 
-/* Ajuster le panneau du bas pour qu'il ne chevauche pas le sidebar */
-#bottom-panel {
-  padding-right: var(--sinp-sidebar-width) !important;
-}
+  /* Ajuster le panneau du bas pour qu'il ne chevauche pas le sidebar */
+  #bottom-panel {
+    padding-right: var(--sinp-sidebar-width) !important;
+  }
 
-#bottom-panel .popup-content {
-  width: calc(100% - var(--sinp-sidebar-width) - 5px) !important;
-}
+  #bottom-panel .popup-content {
+    width: calc(100% - var(--sinp-sidebar-width) - 5px) !important;
+  }
 
-/* Ajuster la position de la carte si nécessaire */
-#page-content-wrapper #map {
-  left: var(--sinp-sidebar-width);
+  /* Ajuster la position de la carte si nécessaire */
+  #page-content-wrapper #map {
+    left: var(--sinp-sidebar-width);
+  }
 }
 
 /* S'assurer que le contenu du sidebar prend toute la largeur */
@@ -765,5 +780,23 @@
 @media (max-width: 576px) {
   .sinp-help-credits-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ========================================
+   Mode mobile (< 992px) - masquage de la sidebar
+   Placé en FIN de fichier, scopé à min-width:992px
+   pour correspondre au seuil de bascule de mviewer.
+   ======================================== */
+
+@media (max-width: 991px) {
+  /* Masquer complètement la sidebar sur mobile */
+  #sidebar-wrapper {
+    display: none !important;
+  }
+
+  /* Supprimer le padding-left réservé à la sidebar */
+  #wrapper {
+    padding-left: 0 !important;
   }
 }
