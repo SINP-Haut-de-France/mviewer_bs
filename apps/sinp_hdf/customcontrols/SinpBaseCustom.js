@@ -334,9 +334,7 @@ class SinpBaseCustom {
       return null;
     }
 
-    const upperValue = normalizedValue.toUpperCase();
-    const gridCodeMatch = upperValue.match(/([A-Z]\d{3}N\d{3})$/);
-    return gridCodeMatch ? gridCodeMatch[1] : upperValue;
+    return normalizedValue;
   }
 
   _extractCommuneCode(value) {
@@ -498,7 +496,7 @@ class SinpBaseCustom {
     }
 
     return String(value)
-      .split(/[|_]/)
+      .split(/[|_,]/)
       .map((item) => item.trim())
       .filter((item) => item !== "");
   }

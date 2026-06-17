@@ -28,14 +28,14 @@ describe("SinpBaseLayer - Classe abstraite", () => {
     const layer = new mviewer.customLayers.SinpBaseLayer("testLayer", "fn_get_stats");
     const url = layer._buildQueryURL({
       TYPENAME: "fn_get_stats",
-      VIEWPARAMS: "DATE_DEB:2020-01-01;DATE_FIN:2026-03-10;GRP_IDS:13_15",
+      VIEWPARAMS: "DATE_DEB:2020-01-01;DATE_FIN:2026-03-10;GRP_IDS:13,15",
     });
 
     expect(url).toContain("SERVICE=WFS");
     expect(url).toContain("VERSION=2.0.0");
     expect(url).toContain("REQUEST=GetFeature");
     expect(url).toContain("TYPENAME=fn_get_stats");
-    expect(url).toContain("GRP_IDS:13_15");
+    expect(url).toContain("GRP_IDS:13,15");
     expect(url).not.toContain("%7C");
   });
 
@@ -374,7 +374,7 @@ describe("SinpBaseCustom - Scopage des détails", () => {
 
     expect(
       control._expandEntityKeyVariants("10kmL93E069N692", { targetLocCode: "6" })
-    ).toEqual(expect.arrayContaining(["10kmL93E069N692", "E069N692"]));
+    ).toEqual(expect.arrayContaining(["10kmL93E069N692"]));
   });
 });
 
@@ -383,7 +383,7 @@ describe("sinpRepository - GET/POST GeoServer", () => {
     const request = sinpRepository.buildPostRequest({
       TYPENAME: "sinp_diffusion:fn_get_stats",
       VIEWPARAMS:
-        "DATE_DEB:2006-05-28;DATE_FIN:2026-05-28;DEPT_IDS:62;CODE_INSEES:62225_62040;TARGET_LOC_CODE:2",
+        "DATE_DEB:2006-05-28;DATE_FIN:2026-05-28;DEPT_IDS:62;CODE_INSEES:62225,62040;TARGET_LOC_CODE:2",
     });
 
     expect(request.url).toContain("/wfs");
@@ -392,7 +392,7 @@ describe("sinpRepository - GET/POST GeoServer", () => {
     expect(request.body.toString()).toContain("REQUEST=GetFeature");
     expect(request.body.toString()).toContain("TYPENAME=sinp_diffusion%3Afn_get_stats");
     expect(request.body.toString()).toContain(
-      "VIEWPARAMS=DATE_DEB%3A2006-05-28%3BDATE_FIN%3A2026-05-28%3BDEPT_IDS%3A62%3BCODE_INSEES%3A62225_62040%3BTARGET_LOC_CODE%3A2"
+      "VIEWPARAMS=DATE_DEB%3A2006-05-28%3BDATE_FIN%3A2026-05-28%3BDEPT_IDS%3A62%3BCODE_INSEES%3A62225%2C62040%3BTARGET_LOC_CODE%3A2"
     );
   });
 
@@ -408,7 +408,7 @@ describe("sinpRepository - GET/POST GeoServer", () => {
 
     await sinpRepository.fetchGeoServerData({
       TYPENAME: "sinp_diffusion:fn_get_stats",
-      VIEWPARAMS: "DATE_DEB:2006-05-28;DATE_FIN:2026-05-28;CODE_INSEES:62225_62040",
+      VIEWPARAMS: "DATE_DEB:2006-05-28;DATE_FIN:2026-05-28;CODE_INSEES:62225,62040",
     });
 
     expect(global.fetch).toHaveBeenCalledWith(
@@ -438,7 +438,7 @@ describe("sinpRepository - GET/POST GeoServer", () => {
 
     await sinpRepository.fetchGeoServerData({
       TYPENAME: "sinp_diffusion:v_synthese_commune",
-      VIEWPARAMS: "DATE_DEB:2006-05-28;DATE_FIN:2026-05-28;CD_REF:2440_2442",
+      VIEWPARAMS: "DATE_DEB:2006-05-28;DATE_FIN:2026-05-28;CD_REF:2440,2442",
     });
 
     expect(global.fetch).toHaveBeenCalledWith(
@@ -553,8 +553,8 @@ describe("sinpQueryBuilder - Configurations nouvelles", () => {
     expect(options.TYPENAME).toBe("sinp_diffusion:fn_get_stats");
     expect(options.VIEWPARAMS).toContain("DATE_DEB:2020-01-01");
     expect(options.VIEWPARAMS).toContain("DATE_FIN:2026-03-10");
-    expect(options.VIEWPARAMS).toContain("CD_REF:2440_2442");
-    expect(options.VIEWPARAMS).toContain("GRP_IDS:13_15");
+    expect(options.VIEWPARAMS).toContain("CD_REF:2440,2442");
+    expect(options.VIEWPARAMS).toContain("GRP_IDS:13,15");
     expect(options.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
   });
 
@@ -628,12 +628,12 @@ describe("sinpQueryBuilder - Configurations nouvelles", () => {
     );
 
     expect(options.TYPENAME).toBe("sinp_diffusion:fn_get_metadatas");
-    expect(options.VIEWPARAMS).toBe("ID_JDDS:123_456");
+    expect(options.VIEWPARAMS).toBe("ID_JDDS:123,456");
   });
 });
 
 describe("VIEWPARAMS - Séparation correcte des séparants", () => {
-  test("CD_REF utilise des underscores", () => {
+  test("CD_REF utilise des virgules", () => {
     const options = sinpQueryBuilder.buildRequestOptions(
       {
         dateDeb: "2020-01-01",
@@ -643,11 +643,11 @@ describe("VIEWPARAMS - Séparation correcte des séparants", () => {
       "fn_get_stats"
     );
 
-    expect(options.VIEWPARAMS).toMatch(/CD_REF:2440_2442_2444/);
-    expect(options.VIEWPARAMS).not.toMatch(/CD_REF:2440,2442/);
+    expect(options.VIEWPARAMS).toMatch(/CD_REF:2440,2442,2444/);
+    expect(options.VIEWPARAMS).not.toMatch(/CD_REF:2440_2442/);
   });
 
-  test("GRP_IDS utilise des underscores", () => {
+  test("GRP_IDS utilise des virgules", () => {
     const options = sinpQueryBuilder.buildRequestOptions(
       {
         dateDeb: "2020-01-01",
@@ -657,10 +657,10 @@ describe("VIEWPARAMS - Séparation correcte des séparants", () => {
       "fn_get_stats"
     );
 
-    // GRP_IDS doit avoir des underscores
-    expect(options.VIEWPARAMS).toMatch(/GRP_IDS:13_15_17/);
-    // Pas de virgules
-    expect(options.VIEWPARAMS).not.toMatch(/GRP_IDS:13,15/);
+    // GRP_IDS doit avoir des virgules
+    expect(options.VIEWPARAMS).toMatch(/GRP_IDS:13,15,17/);
+    // Pas d'underscores
+    expect(options.VIEWPARAMS).not.toMatch(/GRP_IDS:13_15/);
   });
 
   test("CD_REF vide est omis", () => {
