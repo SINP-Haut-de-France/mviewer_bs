@@ -20,7 +20,7 @@ describe("sinpQueryBuilder - Gestion des tableaux cd_ref", () => {
     expect(result.VIEWPARAMS).not.toContain("undefined");
   });
 
-  test("Tableau cd_ref avec une valeur → format underscore correct", () => {
+  test("Tableau cd_ref avec une valeur → format virgule correct", () => {
     const params = {
       communes: ["62225"],
       departements: ["62"],
@@ -37,7 +37,7 @@ describe("sinpQueryBuilder - Gestion des tableaux cd_ref", () => {
     expect(result.VIEWPARAMS).toContain("CD_REF:2440");
   });
 
-  test("Tableau cd_ref avec plusieurs valeurs → format underscore correct", () => {
+  test("Tableau cd_ref avec plusieurs valeurs → format virgule correct", () => {
     const params = {
       communes: ["62225"],
       departements: ["62"],
@@ -50,8 +50,8 @@ describe("sinpQueryBuilder - Gestion des tableaux cd_ref", () => {
 
     expect(result.TYPENAME).toBe("sinp_diffusion:v_synthese_commune");
     expect(result.CQL_FILTER).toBe("code_insee IN ('62225') AND code_dpt IN ('62')");
-    // ✅ CD_REF contient les valeurs séparées par des underscores
-    expect(result.VIEWPARAMS).toContain("CD_REF:2440_2442_2444");
+    // ✅ CD_REF contient les valeurs séparées par des virgules
+    expect(result.VIEWPARAMS).toContain("CD_REF:2440,2442,2444");
   });
 
   test("cd_ref undefined → traiter comme tableau vide", () => {
@@ -101,29 +101,29 @@ describe("sinpQueryBuilder - Gestion des tableaux cd_ref", () => {
     expect(result.CQL_FILTER).toBe("code_insee IN ('62225') AND code_dpt IN ('62')");
     // Format sans encodage complémentaire pour les listes générées
     expect(result.VIEWPARAMS).toBe(
-      "DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;CD_REF:2440_2442"
+      "DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;CD_REF:2440,2442"
     );
   });
 
   test("SQL View reçoit correctement les paramètres", () => {
     // URL que mviewer envoie à GeoServer:
-    // VIEWPARAMS=DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;CD_REF:2440_2442
+    // VIEWPARAMS=DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;CD_REF:2440,2442
 
     // GeoServer decode et remplace:
     // '%DATE_DEB%' → '2005-12-10'
     // '%DATE_FIN%' → '2025-12-10'
-    // '%CD_REF%'   → '2440_2442'
+    // '%CD_REF%'   → '2440,2442'
 
     // SQL View exécute:
     // and (
-    //   '2440_2442' = ''  -- FALSE
+    //   '2440,2442' = ''  -- FALSE
     //   or cd_ref IN (
     //     SELECT CAST(TRIM(value) AS INTEGER)
-    //     FROM unnest(string_to_array('2440_2442', '_')) AS t(value)
+    //     FROM unnest(string_to_array('2440,2442', ',')) AS t(value)
     //   )
     // )
 
-    // string_to_array('2440_2442', '_') → ['2440', '2442']
+    // string_to_array('2440,2442', ',') → ['2440', '2442']
     // CAST(TRIM('2440') AS INTEGER) → 2440
     // CAST(TRIM('2442') AS INTEGER) → 2442
     // cd_ref IN (2440, 2442) → Filtre correctement appliqué
@@ -148,7 +148,7 @@ describe("Cas d'usage réels SINP", () => {
 
     // Doit créer une requête sans filtre communal/départemental
     expect(result.CQL_FILTER).toBe(""); // Pas de CQL_FILTER
-    expect(result.VIEWPARAMS).toContain("CD_REF:2440_2442");
+    expect(result.VIEWPARAMS).toContain("CD_REF:2440,2442");
   });
 
   test("Recherche départementale sans espèce spécifique", () => {
@@ -180,7 +180,7 @@ describe("Cas d'usage réels SINP", () => {
     const result = sinpQueryBuilder.buildRequestOptions(params, "v_synthese_commune");
 
     expect(result.CQL_FILTER).toBe("code_insee IN ('62225') AND code_dpt IN ('62')");
-    expect(result.VIEWPARAMS).toContain("CD_REF:2440_2442_2444_2500_2600");
+    expect(result.VIEWPARAMS).toContain("CD_REF:2440,2442,2444,2500,2600");
   });
 });
 
@@ -201,7 +201,7 @@ describe("GRP_IDS - Gestion correcte des séparateurs", () => {
     expect(result.VIEWPARAMS).toContain("GRP_IDS:12");
   });
 
-  test("GRP_IDS avec plusieurs IDs → séparés par underscore (_)", () => {
+  test("GRP_IDS avec plusieurs IDs → séparés par virgule (,)", () => {
     const params = {
       communes: ["62225"],
       departements: ["62"],
@@ -212,10 +212,10 @@ describe("GRP_IDS - Gestion correcte des séparateurs", () => {
 
     const result = sinpQueryBuilder.buildRequestOptions(params, "v_synthese_commune");
 
-    // Vérifier que les IDs sont séparés par des underscores
-    expect(result.VIEWPARAMS).toContain("GRP_IDS:13_15");
-    // Vérifier qu'il n'y a PAS de virgule ou de point-virgule entre les IDs
-    expect(result.VIEWPARAMS).not.toContain("13,15");
+    // Vérifier que les IDs sont séparés par des virgules
+    expect(result.VIEWPARAMS).toContain("GRP_IDS:13,15");
+    // Vérifier qu'il n'y a PAS d'underscore ou de point-virgule entre les IDs
+    expect(result.VIEWPARAMS).not.toContain("13_15");
     expect(result.VIEWPARAMS).not.toContain("13;15");
   });
 
@@ -234,7 +234,7 @@ describe("GRP_IDS - Gestion correcte des séparateurs", () => {
     expect(result.VIEWPARAMS).not.toContain("GRP_IDS");
   });
 
-  test("Cohérence CD_REF et GRP_IDS avec underscores", () => {
+  test("Cohérence CD_REF et GRP_IDS avec virgules", () => {
     const params = {
       communes: ["62225"],
       departements: ["62"],
@@ -246,10 +246,10 @@ describe("GRP_IDS - Gestion correcte des séparateurs", () => {
 
     const result = sinpQueryBuilder.buildRequestOptions(params, "v_synthese_commune");
 
-    // CD_REF utilise des underscores
-    expect(result.VIEWPARAMS).toContain("CD_REF:2440_2442");
-    // GRP_IDS utilise des underscores
-    expect(result.VIEWPARAMS).toContain("GRP_IDS:12_23");
+    // CD_REF utilise des virgules
+    expect(result.VIEWPARAMS).toContain("CD_REF:2440,2442");
+    // GRP_IDS utilise des virgules
+    expect(result.VIEWPARAMS).toContain("GRP_IDS:12,23");
   });
 });
 
@@ -289,7 +289,7 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
     expect(result.TYPENAME).toBe("sinp_diffusion:fn_get_stats");
     expect(result.CQL_FILTER).toBeUndefined();
     expect(result.VIEWPARAMS).toBe(
-      "DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;DEPT_IDS:62_59;CODE_INSEES:62225_59350;CD_REF:2440_2442;GRP_IDS:13_15;EPCI_IDS:200069193;TARGET_LOC_CODE:2"
+      "DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;DEPT_IDS:62,59;CODE_INSEES:62225,59350;CD_REF:2440,2442;GRP_IDS:13,15;EPCI_IDS:200069193;TARGET_LOC_CODE:2"
     );
   });
 
@@ -345,7 +345,7 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
 
     expect(result.TYPENAME).toBe("sinp_diffusion:fn_get_obs_detaillee");
     expect(result.CQL_FILTER).toBeUndefined();
-    expect(result.VIEWPARAMS).toContain("CODE_MAILLES:E069N692_E070N693");
+    expect(result.VIEWPARAMS).toContain("CODE_MAILLES:E069N692,E070N693");
     expect(result.VIEWPARAMS).not.toContain("DEPT_IDS:");
     expect(result.VIEWPARAMS).not.toContain("CODE_INSEES:");
     expect(result.VIEWPARAMS).toContain("TARGET_LOC_CODE:6");
@@ -369,10 +369,10 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
 
     expect(result.TYPENAME).toBe("sinp_diffusion:fn_get_metadatas");
     expect(result.CQL_FILTER).toBeUndefined();
-    expect(result.VIEWPARAMS).toBe("ID_JDDS:idJdd1_idJdd2_idJdd3");
+    expect(result.VIEWPARAMS).toBe("ID_JDDS:idJdd1,idJdd2,idJdd3");
   });
 
-  test("CD_REF utilise des underscores comme les autres listes", () => {
+  test("CD_REF utilise des virgules comme les autres listes", () => {
     const params = {
       taxons: [2440, 2442, 2444],
       groupes: [12, 23],
@@ -382,8 +382,8 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
 
     const result = sinpQueryBuilder.buildRequestOptions(params, "fn_get_stats");
 
-    expect(result.VIEWPARAMS).toContain("CD_REF:2440_2442_2444");
-    expect(result.VIEWPARAMS).toContain("GRP_IDS:12_23");
+    expect(result.VIEWPARAMS).toContain("CD_REF:2440,2442,2444");
+    expect(result.VIEWPARAMS).toContain("GRP_IDS:12,23");
   });
 
   test("communes et départements passent en VIEWPARAMS", () => {
@@ -453,7 +453,7 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
 
     expect(result.TYPENAME).toBe("sinp_diffusion:fn_get_stats");
     expect(result.VIEWPARAMS).toBe(
-      "DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;DEPT_IDS:62;CODE_INSEES:62225;CD_REF:2440_2442;GRP_IDS:13;EPCI_IDS:200069193;TARGET_LOC_CODE:2"
+      "DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;DEPT_IDS:62;CODE_INSEES:62225;CD_REF:2440,2442;GRP_IDS:13;EPCI_IDS:200069193;TARGET_LOC_CODE:2"
     );
   });
 

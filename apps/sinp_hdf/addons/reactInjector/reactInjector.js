@@ -154,6 +154,39 @@ var reactInjector = (function () {
         waitForMviewerInit();
       }
 
+      // Injecter le bouton filtre dans la barre mobile mviewer
+      const injectMobileFilterButton = () => {
+        const mobileNav = document.getElementById("mvNavbarMobile");
+
+        if (!mobileNav) {
+          setTimeout(injectMobileFilterButton, 300);
+          return;
+        }
+
+        if (document.getElementById("mobile-filter-btn")) {
+          return;
+        }
+
+        const filterBtn = document.createElement("a");
+        filterBtn.id = "mobile-filter-btn";
+        filterBtn.href = "#";
+        filterBtn.setAttribute("data-bs-original-title", "Filtres avancés");
+        filterBtn.innerHTML = '<i class="ri-filter-line"></i>';
+
+        filterBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent("reactSidebarFilters:openModal"));
+        });
+
+        mobileNav.appendChild(filterBtn);
+      };
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", injectMobileFilterButton);
+      } else {
+        injectMobileFilterButton();
+      }
+
       // Créer le conteneur global pour les modales (si pas déjà existant)
       if (!document.getElementById("react-global-root")) {
         const globalRoot = document.createElement("div");

@@ -299,8 +299,8 @@ window.sinpQueryBuilder = (function () {
     "1ee0a3f1-0732-5b34-bf23-7820e30c8a77", // AUTRES
   ];
 
-  const VIEWPARAMS_LIST_SEPARATOR = "_";
-  const VIEWPARAMS_LIST_PATTERN = /^[^_]+(_[^_]+)*$/;
+  const VIEWPARAMS_LIST_SEPARATOR = ",";
+  const VIEWPARAMS_LIST_PATTERN = /^[^,]+(,[^,]+)*$/;
   const QUALIFIED_TYPENAME_PATTERN = /^[^:\s]+:[^:\s]+$/;
   const MAX_SELECTED_COMMUNES = 5;
 

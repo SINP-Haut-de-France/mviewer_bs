@@ -4,9 +4,11 @@
   "description": "** React Addon",
   "main": "vite.config.js",
   "scripts": {
-    "build": "npm run build:main && npm run build:manager",
+    "build": "npm run build:dist",
+    "build:bundles": "npm run build:main && npm run build:manager",
     "build:main": "BUILD_TARGET=main vite build",
     "build:manager": "BUILD_TARGET=reactComponentManager vite build",
+    "build:dist": "npm run build:bundles && node ./scripts/build-dist.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -14,7 +16,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@sentry/react": "^10.44.0",
+    "@sentry/react": "^10.55.0",
     "@vitejs/plugin-react": "^5.1.0",
     "date-fns": "^4.1.0",
     "lodash": "^4.17.21",
@@ -23,5 +25,9 @@
     "react-dom": "^19.2.0",
     "react-modal": "^3.16.3",
     "vite": "^7.1.12"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "html-minifier-terser": "^7.2.0"
   }
 }

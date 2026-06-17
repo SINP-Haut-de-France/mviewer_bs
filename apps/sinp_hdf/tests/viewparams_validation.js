@@ -20,36 +20,36 @@ const VIEWPARAMS_VALIDATION = {
   DATE_FORMAT: /^\d{4}-\d{2}-\d{2}$/,
 
   /**
-   * Validation CD_REF - IDs entiers séparés par des underscores
-   * Format: CD_REF:id1_id2_id3
-   * Exemple: CD_REF:2440_2442_2444
-   * @regex ^CD_REF:\d+(_\d+)*$
+   * Validation CD_REF - IDs entiers séparés par des virgules
+   * Format: CD_REF:id1,id2,id3
+   * Exemple: CD_REF:2440,2442,2444
+   * @regex ^CD_REF:\d+(,\d+)*$
    */
-  CD_REF: /^CD_REF:\d+(_\d+)*$/,
+  CD_REF: /^CD_REF:\d+(,\d+)*$/,
 
   /**
    * Validation CD_REF (valeurs uniquement)
-   * Format: id1_id2_id3
-   * Exemple: 2440_2442_2444
-   * @regex ^\d+(_\d+)*$
+   * Format: id1,id2,id3
+   * Exemple: 2440,2442,2444
+   * @regex ^\d+(,\d+)*$
    */
-  CD_REF_VALUES: /^\d+(_\d+)*$/,
+  CD_REF_VALUES: /^\d+(,\d+)*$/,
 
   /**
-   * Validation GRP_IDS - IDs entiers séparés par des underscores
-   * Format: GRP_IDS:id1_id2_id3 ou GRP_IDS: (vide - ne doit pas apparaître)
-   * Exemple: GRP_IDS:13_15
-   * @regex ^GRP_IDS:(\d+_)*\d*$
+   * Validation GRP_IDS - IDs entiers séparés par des virgules
+   * Format: GRP_IDS:id1,id2,id3 ou GRP_IDS: (vide - ne doit pas apparaître)
+   * Exemple: GRP_IDS:13,15
+   * @regex ^GRP_IDS:(\d+,)*\d*$
    */
-  GRP_IDS: /^GRP_IDS:(\d+_)*\d*$/,
+  GRP_IDS: /^GRP_IDS:(\d+,)*\d*$/,
 
   /**
    * Validation GRP_IDS (valeurs uniquement)
-   * Format: id1_id2_id3 ou vide
-   * Exemple: 13_15
-   * @regex ^(\d+_)*\d*$
+   * Format: id1,id2,id3 ou vide
+   * Exemple: 13,15
+   * @regex ^(\d+,)*\d*$
    */
-  GRP_IDS_VALUES: /^(\d+_)*\d*$/,
+  GRP_IDS_VALUES: /^(\d+,)*\d*$/,
 
   /**
    * Validation séquence de paramètres
@@ -102,8 +102,8 @@ function validateVIEWPARAMS(viewparams) {
     if (cdRefValues && !VIEWPARAMS_VALIDATION.CD_REF_VALUES.test(cdRefValues)) {
       errors.push(`CD_REF contient des valeurs invalides: ${cdRefValues}`);
     }
-    if (cdRefValues && cdRefValues.endsWith("_")) {
-      errors.push(`CD_REF ne doit pas se terminer par un underscore: ${cdRefValues}`);
+    if (cdRefValues && cdRefValues.endsWith(",")) {
+      errors.push(`CD_REF ne doit pas se terminer par une virgule: ${cdRefValues}`);
     }
   }
 
@@ -114,8 +114,8 @@ function validateVIEWPARAMS(viewparams) {
     if (grpIdsValues && !VIEWPARAMS_VALIDATION.GRP_IDS_VALUES.test(grpIdsValues)) {
       errors.push(`GRP_IDS contient des valeurs invalides: ${grpIdsValues}`);
     }
-    if (grpIdsValues && grpIdsValues.endsWith("_")) {
-      errors.push(`GRP_IDS ne doit pas se terminer par un underscore: ${grpIdsValues}`);
+    if (grpIdsValues && grpIdsValues.endsWith(",")) {
+      errors.push(`GRP_IDS ne doit pas se terminer par une virgule: ${grpIdsValues}`);
     }
   }
 
@@ -137,19 +137,19 @@ function buildVIEWPARAMS(params) {
     parts.push(`DATE_FIN:${params.dateFin}`);
   }
   if (params.dept_ids && params.dept_ids.length > 0) {
-    parts.push(`DEPT_IDS:${params.dept_ids.join("_")}`);
+    parts.push(`DEPT_IDS:${params.dept_ids.join(",")}`);
   }
   if (params.code_insees && params.code_insees.length > 0) {
-    parts.push(`CODE_INSEES:${params.code_insees.join("_")}`);
+    parts.push(`CODE_INSEES:${params.code_insees.join(",")}`);
   }
   if (params.epci_ids && params.epci_ids.length > 0) {
-    parts.push(`EPCI_IDS:${params.epci_ids.join("_")}`);
+    parts.push(`EPCI_IDS:${params.epci_ids.join(",")}`);
   }
   if (params.cd_ref && params.cd_ref.length > 0) {
-    parts.push(`CD_REF:${params.cd_ref.join("_")}`);
+    parts.push(`CD_REF:${params.cd_ref.join(",")}`);
   }
   if (params.grp_ids && params.grp_ids.length > 0) {
-    parts.push(`GRP_IDS:${params.grp_ids.join("_")}`);
+    parts.push(`GRP_IDS:${params.grp_ids.join(",")}`);
   }
   if (params.target_loc_code) {
     parts.push(`TARGET_LOC_CODE:${params.target_loc_code}`);
@@ -163,7 +163,7 @@ function buildVIEWPARAMS(params) {
 describe("VIEWPARAMS Validation", () => {
   test("Format valide complet", () => {
     const viewparams =
-      "DATE_DEB:1900-03-09;DATE_FIN:2026-03-09;DEPT_IDS:59_62;CODE_INSEES:59350_62041;EPCI_IDS:200069193;CD_REF:2440_2442;GRP_IDS:13_15;TARGET_LOC_CODE:2";
+      "DATE_DEB:1900-03-09;DATE_FIN:2026-03-09;DEPT_IDS:59,62;CODE_INSEES:59350,62041;EPCI_IDS:200069193;CD_REF:2440,2442;GRP_IDS:13,15;TARGET_LOC_CODE:2";
     const result = validateVIEWPARAMS(viewparams);
     expect(result.isValid).toBe(true);
     expect(result.errors).toHaveLength(0);
@@ -177,7 +177,7 @@ describe("VIEWPARAMS Validation", () => {
   });
 
   test("Format valide avec CD_REF et GRP_IDS", () => {
-    const viewparams = "CD_REF:2440_2442;GRP_IDS:13_15";
+    const viewparams = "CD_REF:2440,2442;GRP_IDS:13,15";
     const result = validateVIEWPARAMS(viewparams);
     expect(result.isValid).toBe(true);
     expect(result.errors).toHaveLength(0);
@@ -190,18 +190,18 @@ describe("VIEWPARAMS Validation", () => {
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  test("Détecte CD_REF avec underscore final", () => {
-    const viewparams = "CD_REF:2440_2442_";
+  test("Détecte CD_REF avec virgule finale", () => {
+    const viewparams = "CD_REF:2440,2442,";
     const result = validateVIEWPARAMS(viewparams);
     expect(result.isValid).toBe(false);
-    expect(result.errors.some((e) => e.includes("underscore"))).toBe(true);
+    expect(result.errors.some((e) => e.includes("virgule"))).toBe(true);
   });
 
-  test("Détecte GRP_IDS avec underscore final", () => {
-    const viewparams = "GRP_IDS:13_15_";
+  test("Détecte GRP_IDS avec virgule finale", () => {
+    const viewparams = "GRP_IDS:13,15,";
     const result = validateVIEWPARAMS(viewparams);
     expect(result.isValid).toBe(false);
-    expect(result.errors.some((e) => e.includes("underscore"))).toBe(true);
+    expect(result.errors.some((e) => e.includes("virgule"))).toBe(true);
   });
 
   test("Construit VIEWPARAMS correctement", () => {
@@ -217,7 +217,7 @@ describe("VIEWPARAMS Validation", () => {
     };
     const viewparams = buildVIEWPARAMS(params);
     expect(viewparams).toBe(
-      "DATE_DEB:1900-03-09;DATE_FIN:2026-03-09;DEPT_IDS:59_62;CODE_INSEES:59350_62041;EPCI_IDS:200069193;CD_REF:2440_2442;GRP_IDS:13_15;TARGET_LOC_CODE:2"
+      "DATE_DEB:1900-03-09;DATE_FIN:2026-03-09;DEPT_IDS:59,62;CODE_INSEES:59350,62041;EPCI_IDS:200069193;CD_REF:2440,2442;GRP_IDS:13,15;TARGET_LOC_CODE:2"
     );
   });
 
@@ -226,7 +226,7 @@ describe("VIEWPARAMS Validation", () => {
       grp_ids: [13, 15],
     };
     const viewparams = buildVIEWPARAMS(params);
-    expect(viewparams).toBe("GRP_IDS:13_15");
+    expect(viewparams).toBe("GRP_IDS:13,15");
   });
 });
 
