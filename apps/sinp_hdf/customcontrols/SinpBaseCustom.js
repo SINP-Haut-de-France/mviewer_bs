@@ -41,6 +41,7 @@ class SinpBaseCustom {
     this._dataRequests = new Map();
     this._featureInfoRenderToken = 0;
     this._selectionRequestInFlight = false;
+    this._lastResultFeatures = [];
     this._boundMapClickHandler = this._handleMapClick.bind(this);
     this._mapClickHandlerRegistered = false;
   }
@@ -130,6 +131,7 @@ class SinpBaseCustom {
     }
 
     this._mapClickHandlerRegistered = false;
+    this._lastResultFeatures = [];
   }
 
   _resolveRequestTypeName(primaryTypeName, fallbackTypeName = null) {
@@ -168,6 +170,14 @@ class SinpBaseCustom {
   _resetDataCache() {
     this._dataCache.clear();
     this._dataRequests.clear();
+  }
+
+  _setLastResultFeatures(features = []) {
+    this._lastResultFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
+  }
+
+  _getLastResultFeatures() {
+    return this._lastResultFeatures;
   }
 
   _getDataRequestCacheKey(params = {}, typeName) {
@@ -431,6 +441,22 @@ class SinpBaseCustom {
     return variants;
   }
 
+  _getEntityJoinValues(source, candidates, accessor, params = {}) {
+    const candidateList = Array.isArray(candidates) ? candidates : [candidates];
+    const values = [];
+
+    for (const candidate of candidateList) {
+      const value = accessor(source, candidate);
+      this._expandEntityKeyVariants(value, params).forEach((normalizedValue) => {
+        if (!values.includes(normalizedValue)) {
+          values.push(normalizedValue);
+        }
+      });
+    }
+
+    return values;
+  }
+
   _getDetailRequestScopeConfig(params = {}) {
     const resolvedTargetLocCode = this._getResolvedTargetLocCode(params);
 
@@ -540,7 +566,10 @@ class SinpBaseCustom {
         return;
       }
 
-      const selectedFeature = this._normalizeSelectedFeature(features[0], this._lastSearchParams);
+      const selectedFeature = this._findCachedResultFeature(
+        this._normalizeSelectedFeature(features[0], this._lastSearchParams),
+        this._lastSearchParams
+      );
       const detailParams = this._buildDetailRequestParams(
         [selectedFeature],
         this._lastSearchParams
@@ -569,6 +598,42 @@ class SinpBaseCustom {
         );
       }
     }
+  }
+
+  _findCachedResultFeature(feature, params = this._lastSearchParams || {}) {
+    if (!feature?.get) {
+      return feature;
+    }
+
+    const joinConfig = this._getResultJoinConfig(params);
+    if (!joinConfig) {
+      return feature;
+    }
+
+    const featureKeys = this._getEntityJoinValues(
+      feature,
+      joinConfig.featureKey,
+      (source, candidate) => source?.get(candidate),
+      params
+    );
+    if (!featureKeys.length) {
+      return feature;
+    }
+
+    const featureKeySet = new Set(featureKeys);
+    const cachedFeature =
+      this._getLastResultFeatures().find((candidateFeature) => {
+        const candidateKeys = this._getEntityJoinValues(
+          candidateFeature,
+          joinConfig.featureKey,
+          (source, candidate) => source?.get(candidate),
+          params
+        );
+
+        return candidateKeys.some((candidateKey) => featureKeySet.has(candidateKey));
+      }) || null;
+
+    return cachedFeature || feature;
   }
 
   _buildDetailRequestParams(features = [], params = {}) {
@@ -743,31 +808,34 @@ class SinpBaseCustom {
 
     const properties = await propertiesLoader.call(this, params, typeName);
 
+    return this._attachResolvedPropertiesToFeatures(mainFeatures, properties, params, {
+      mode,
+      featureKey,
+      detailKey,
+      targetProperty,
+    });
+  }
+
+  _attachResolvedPropertiesToFeatures(mainFeatures, properties = [], params, config = {}) {
+    const {
+      mode = "all",
+      featureKey = null,
+      detailKey = null,
+      targetProperty = "details",
+    } = config;
+
     if (!properties.length) {
       return mainFeatures;
     }
 
     if (mode === "match" && featureKey && detailKey) {
-      const getCandidateValues = (source, candidates, accessor) => {
-        const candidateList = Array.isArray(candidates) ? candidates : [candidates];
-        const values = [];
-
-        for (const candidate of candidateList) {
-          const value = accessor(source, candidate);
-          this._expandEntityKeyVariants(value, params).forEach((normalizedValue) => {
-            if (!values.includes(normalizedValue)) {
-              values.push(normalizedValue);
-            }
-          });
-        }
-
-        return values;
-      };
-
       const propertiesByEntityId = properties.reduce((accumulator, item) => {
-        const keys = getCandidateValues(item, detailKey, (source, candidate) => {
-          return source?.[candidate];
-        });
+        const keys = this._getEntityJoinValues(
+          item,
+          detailKey,
+          (source, candidate) => source?.[candidate],
+          params
+        );
 
         if (!keys.length) {
           return accumulator;
@@ -785,9 +853,12 @@ class SinpBaseCustom {
       }, {});
 
       mainFeatures.forEach((feature) => {
-        const keys = getCandidateValues(feature, featureKey, (source, candidate) => {
-          return source?.get(candidate);
-        });
+        const keys = this._getEntityJoinValues(
+          feature,
+          featureKey,
+          (source, candidate) => source?.get(candidate),
+          params
+        );
         const matches = [];
         const seenMatches = new Set();
 
@@ -835,6 +906,14 @@ class SinpBaseCustom {
       Array.isArray(params.communes) &&
       params.communes.length === 1
     );
+  }
+
+  _shouldPrefetchEntityDataOnSubmit(params = {}) {
+    if (!this.detailsTypeName || this._shouldLoadEntityDataImmediately(params)) {
+      return false;
+    }
+
+    return Boolean(this._getResultJoinConfig(params));
   }
 
   _shouldUseBlockingSearchOverlay(params = {}) {
@@ -909,6 +988,37 @@ class SinpBaseCustom {
     return normalizedFeatures;
   }
 
+  async _prefetchEntityDataForSearch(
+    features = [],
+    params = this._lastSearchParams || {},
+    prefetchedProperties = null
+  ) {
+    const normalizedFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
+    if (!normalizedFeatures.length || !this._shouldPrefetchEntityDataOnSubmit(params)) {
+      return normalizedFeatures;
+    }
+
+    const joinConfig = this._getResultJoinConfig(params);
+    const properties =
+      prefetchedProperties ??
+      (await this._loadDetailProperties(params, this.detailsTypeName));
+
+    this._attachResolvedPropertiesToFeatures(normalizedFeatures, properties || [], params, {
+      mode: joinConfig ? "match" : "all",
+      featureKey: joinConfig?.featureKey || null,
+      detailKey: joinConfig?.detailKey || null,
+      targetProperty: "details",
+    });
+
+    normalizedFeatures.forEach((feature) => {
+      feature.set("entity_data_loading", false);
+      feature.set("entity_data_error", null);
+      feature.set("entity_data_loaded", true);
+    });
+
+    return normalizedFeatures;
+  }
+
   async ensureMetadataForFeatures(features = [], params = this._lastSearchParams || {}) {
     const normalizedFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
     if (!normalizedFeatures.length || !this.metadataTypeName) {
@@ -964,11 +1074,19 @@ class SinpBaseCustom {
     return normalizedFeatures;
   }
 
-  async _enrichSearchFeatures(mainFeatures, params) {
+  async _enrichSearchFeatures(mainFeatures, params, context = {}) {
     this._initializeFeatureCollections(mainFeatures);
 
     if (!this._shouldLoadEntityDataImmediately(params)) {
-      return mainFeatures;
+      if (!this._shouldPrefetchEntityDataOnSubmit(params)) {
+        return mainFeatures;
+      }
+
+      return this._prefetchEntityDataForSearch(
+        mainFeatures,
+        params,
+        context.prefetchedDetails ?? null
+      );
     }
 
     return this._ensureEntityData(mainFeatures, params);
@@ -987,8 +1105,8 @@ class SinpBaseCustom {
     });
   }
 
-  async _enrichMainFeatures(mainFeatures, params) {
-    return this._enrichSearchFeatures(mainFeatures, params);
+  async _enrichMainFeatures(mainFeatures, params, context = {}) {
+    return this._enrichSearchFeatures(mainFeatures, params, context);
   }
 
   _prefetchMetadataForFeatures(layerInstance, features = []) {
@@ -1094,6 +1212,7 @@ class SinpBaseCustom {
     try {
       this._lastSearchParams = normalizedParams;
       this._resetDataCache();
+      this._setLastResultFeatures([]);
       if (useBlockingOverlay) {
         this._setBlockingSearchOverlayVisible(true);
       }
@@ -1105,12 +1224,44 @@ class SinpBaseCustom {
       );
       const mainOptions = this.buildRequestOptions(normalizedParams, mainTypeName);
 
-      if (!this._shouldFetchMainFeatures(normalizedParams)) {
-        await layerInstance.renderServerOnly(mainOptions);
-        return {
-          type: "FeatureCollection",
-          features: [],
-        };
+      const shouldFetchMainFeatures = this._shouldFetchMainFeatures(normalizedParams);
+      const shouldPrefetchEntityData = this._shouldPrefetchEntityDataOnSubmit(normalizedParams);
+
+      if (!shouldFetchMainFeatures) {
+        if (!shouldPrefetchEntityData) {
+          await layerInstance.renderServerOnly(mainOptions);
+          return {
+            type: "FeatureCollection",
+            features: [],
+          };
+        }
+
+        const renderPromise = layerInstance.renderServerOnly(mainOptions);
+        const mainDataPromise = this.fetchGeoServerData(mainOptions);
+        const detailDataPromise = this._loadDetailProperties(
+          normalizedParams,
+          this.detailsTypeName
+        );
+
+        const [mainData, detailProperties] = await Promise.all([
+          mainDataPromise,
+          detailDataPromise,
+          renderPromise,
+        ]);
+
+        const mainFeatures = this.format.readFeatures(
+          mainData || { type: "FeatureCollection", features: [] }
+        );
+
+        if (mainFeatures.length === 0) {
+          return mainData;
+        }
+
+        const enrichedFeatures = await this._enrichMainFeatures(mainFeatures, normalizedParams, {
+          prefetchedDetails: detailProperties,
+        });
+        this._setLastResultFeatures(enrichedFeatures);
+        return mainData;
       }
 
       const mainData = await this.fetchGeoServerData(mainOptions);
@@ -1127,6 +1278,7 @@ class SinpBaseCustom {
         mainFeatures,
         normalizedParams
       );
+      this._setLastResultFeatures(enrichedFeatures);
       if (this._shouldLoadEntityDataImmediately(normalizedParams)) {
         await layerInstance.renderFeatures(enrichedFeatures, mainOptions);
       } else {
