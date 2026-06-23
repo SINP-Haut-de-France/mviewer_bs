@@ -16,8 +16,11 @@ class SinpBaseLayer {
     this.style = config.style || this._getDefaultStyle();
     this.format = new ol.format.GeoJSON();
     this.serverStyle = config.serverStyle || null;
+    this.serverRenderOnly = config.serverRenderOnly === true;
     this._serverStyleActive = false;
     this._pendingServerRenderPromise = Promise.resolve();
+    this._serverInfoFormat = config.serverInfoFormat || "application/vnd.ogc.gml";
+    this._serverInfoFeatureCount = config.serverInfoFeatureCount || 10;
     this._selectionHighlightStyle = this._createSelectionHighlightStyle();
     this._selectionLayer = this._createSelectionLayer();
 
@@ -99,6 +102,22 @@ class SinpBaseLayer {
         })
       );
     });
+  }
+
+  setFeatureInfoFeatures(features = []) {
+    const source = this.layer?.getSource?.();
+    if (!source) {
+      return;
+    }
+
+    source.clear();
+
+    const normalizedFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
+    if (!normalizedFeatures.length) {
+      return;
+    }
+
+    source.addFeatures(normalizedFeatures);
   }
 
   _createServerRenderLayer() {
@@ -198,6 +217,17 @@ class SinpBaseLayer {
       url: serverStyleContext.url,
     };
 
+    if (this.serverRenderOnly) {
+      Object.assign(legendConfig, {
+        infoformat: config.infoformat || this._serverInfoFormat,
+        featurecount: config.featurecount || this._serverInfoFeatureCount,
+        tooltip: false,
+        tooltipenabled: false,
+        tooltipcontent: "",
+        nohighlight: true,
+      });
+    }
+
     Object.assign(config, legendConfig);
     this._refreshLegacyLegend(config);
     return config;
@@ -244,6 +274,74 @@ class SinpBaseLayer {
 
     this._serverRenderLayer.setVisible(this.layer.getVisible() && this._serverStyleActive);
     this._serverRenderLayer.setOpacity(this.layer.getOpacity());
+  }
+
+  _canQueryServerRender() {
+    return Boolean(
+      this.serverRenderOnly &&
+        this._serverStyleActive &&
+        this.layer?.getVisible?.() &&
+        this._serverRenderLayer?.getVisible?.()
+    );
+  }
+
+  _buildServerFeatureInfoUrl(coordinate, params = {}) {
+    if (!this._canQueryServerRender()) {
+      return "";
+    }
+
+    const map = mviewer.getMap();
+    const source = this._serverRenderLayer?.getSource?.();
+    if (!map || !source || !Array.isArray(coordinate)) {
+      return "";
+    }
+
+    return (
+      source.getFeatureInfoUrl(
+        coordinate,
+        map.getView().getResolution(),
+        map.getView().getProjection(),
+        {
+          INFO_FORMAT: params.infoFormat || "application/vnd.ogc.gml",
+          FEATURE_COUNT: params.featureCount || this._serverInfoFeatureCount,
+        }
+      ) || ""
+    );
+  }
+
+  _parseServerFeatureInfoResponse(body, contentType = "") {
+    const responseBody = typeof body === "string" ? body.trim() : "";
+    if (!responseBody) {
+      return [];
+    }
+
+    const normalizedContentType = String(contentType).toLowerCase();
+
+    if (
+      normalizedContentType.includes("json") ||
+      responseBody.startsWith("{") ||
+      responseBody.startsWith("[")
+    ) {
+      return new ol.format.GeoJSON().readFeatures(JSON.parse(responseBody));
+    }
+
+    return new ol.format.WMSGetFeatureInfo().readFeatures($.parseXML(responseBody));
+  }
+
+  async fetchServerRenderFeatures(coordinate, params = {}) {
+    const url = this._buildServerFeatureInfoUrl(coordinate, params);
+    if (!url) {
+      return [];
+    }
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const body = await response.text();
+    const contentType = response.headers?.get?.("content-type") || "";
+    return this._parseServerFeatureInfoResponse(body, contentType);
   }
 
   _waitForServerRender(source, triggerRefresh) {
@@ -512,6 +610,12 @@ class SinpBaseLayer {
 
     const viewData = this._renderHTML(normalizedFeatures);
     return this._displayResults(normalizedFeatures, viewData, queryOptions);
+  }
+
+  renderServerOnly(queryOptions = null) {
+    this._clearSelectedFeatures();
+    this.layer?.getSource()?.clear();
+    return this._updateServerRenderLayer(queryOptions, true);
   }
 
   showFeatureInfo(features) {

@@ -1,7 +1,7 @@
 /**
  * LAYER COMMUNE: AdvancedSearch
  * ==============================
- * Recherche avancée par communes avec détails d'observations.
+ * Recherche avancée par communes en rendu WMS GeoServer uniquement.
  *
  * Les filtres métier sont transmis uniquement via VIEWPARAMS:
  * - DATE_DEB / DATE_FIN
@@ -15,16 +15,17 @@ mviewer.customLayers.communeSearch = (function () {
     constructor() {
       super("communeSearch", "fn_get_stats", {
         maxZoom: 15,
+        serverRenderOnly: true,
         serverStyle: {
           enabled: true,
         },
         style: new ol.style.Style({
           stroke: new ol.style.Stroke({
-            color: "rgba(45, 64, 89, 255)",
-            width: 1.5,
+            color: "rgba(45, 64, 89, 0.001)",
+            width: 1,
           }),
           fill: new ol.style.Fill({
-            color: "rgba(0, 0, 0, 0)",
+            color: "rgba(0, 0, 0, 0.001)",
           }),
         }),
       });

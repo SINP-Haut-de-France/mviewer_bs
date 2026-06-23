@@ -32,6 +32,21 @@
     <proxy url=""/>
     <searchparameters bbox="false" localities="true" features="false" />
     <themes>
+		<theme
+			name="Limites administrative"
+			collapsed="false"
+			id="limiteAdm"
+			icon="fa fa-search-minus"
+		>
+			<layer
+				id="communes"
+				name="Communes"
+				visible="false"
+				queryable="false"
+				url="https://www.geo2france.fr/geoserver/spld/ows"
+			>
+			</layer>
+		</theme>
 		<theme 
 			name="Couches SINP"
 			collapsed="true" 
@@ -41,7 +56,9 @@
 				id="communeSearch"
 				name="Communes"
 				visible="true"
-				queryable="true"
+				opacity="0.7"
+				queryable="false"
+				tiled="true"
 				exclusive="true"
 				type="customlayer"
 				url="apps/sinp_hdf/customlayers/communeSearch.js"
@@ -49,9 +66,6 @@
 				customcontrolpath="apps/sinp_hdf/customcontrols/communeSearch"
 				expanded="true"
 				fields=""
-				tooltip="true"
-				tooltipenabled="true"
-				tooltipcontent="{{libelle}} : {{nb_observations}} Evènement(s)."
 				attribution="Source: SINP Hauts-de-France. Synthèse des observations naturalistes par commune."
 				nohighlight="false"
 				jsonfields="details"
@@ -65,16 +79,15 @@
 				id="gridSearch5x5"
 				name="Grille 5x5"
 				visible="true"
-				queryable="true"
+				opacity="0.7"
+				queryable="false"
+				tiled="true"
 				exclusive="true"
 				type="customlayer" 
 				url="apps/sinp_hdf/customlayers/grid5x5search.js"
 				customcontrol="true"
 				customcontrolpath="apps/sinp_hdf/customcontrols/grid5x5search"
 				fields=""
-				tooltip="true"
-				tooltipenabled="true"
-				tooltipcontent="{{code}} : {{nb_observations}} Evènement(s)."
 				attribution="Source: SINP Hauts-de-France. Synthèse des observations naturalistes par commune."
 				nohighlight="false"
 				jsonfields="details"
@@ -88,7 +101,9 @@
 				id="grid10x10search"
 				name="Grille 10x10"
 				visible="true"
-				queryable="true"
+				opacity="0.7"
+				queryable="false"
+				tiled="true"
 				exclusive="true"
 				type="customlayer" 
 				url="apps/sinp_hdf/customlayers/gridSearch10x10.js"
@@ -96,9 +111,6 @@
 				customcontrol="true"
 				customcontrolpath="apps/sinp_hdf/customcontrols/grid10x10search"
 				fields=""
-				tooltip="true"
-				tooltipenabled="true"
-				tooltipcontent="{{code}} : {{nb_observations}} Evènement(s)."
 				nohighlight="false"
 				jsonfields="details"
 				infopanel="right-panel"

@@ -18,23 +18,31 @@ class SinpBaseCustom {
     this.detailsTypeName = config.detailsTypeName || null;
     this.metadataTypeName = config.metadataTypeName || config.jddDetailsTypeName || null;
     this.targetLocCode = config.targetLocCode || null;
-    this.entityCodeKeys = config.entityCodeKeys || [
+    const defaultEntityCodeKeys = [
       "code_insee",
+      "insee_com",
       "code_maille",
       "id_maille",
       "maille",
       "code",
+      "codeLocali",
+      "cd_sig",
       "adm_id",
       "commune_id",
       "communeId",
       "ref_dep",
     ];
+    this.entityCodeKeys = Array.from(
+      new Set([...(config.entityCodeKeys || []), ...defaultEntityCodeKeys])
+    );
     this.format = new ol.format.GeoJSON();
     this._lastSearchParams = null;
     this._dataCache = new Map();
     this._dataRequests = new Map();
     this._featureInfoRenderToken = 0;
     this._selectionRequestInFlight = false;
+    this._boundMapClickHandler = this._handleMapClick.bind(this);
+    this._mapClickHandlerRegistered = false;
   }
 
   getLayerInstance() {
@@ -94,6 +102,36 @@ class SinpBaseCustom {
     return params;
   }
 
+  _shouldFetchMainFeatures() {
+    return !this.getLayerInstance()?.serverRenderOnly;
+  }
+
+  init() {
+    const layerInstance = this.getLayerInstance();
+    if (!layerInstance?.serverRenderOnly) {
+      return;
+    }
+
+    layerInstance._ensureServerRenderLayer?.();
+
+    const map = mviewer.getMap();
+    if (!map || this._mapClickHandlerRegistered) {
+      return;
+    }
+
+    map.on("singleclick", this._boundMapClickHandler);
+    this._mapClickHandlerRegistered = true;
+  }
+
+  destroy() {
+    const map = mviewer.getMap();
+    if (map && this._mapClickHandlerRegistered) {
+      map.un("singleclick", this._boundMapClickHandler);
+    }
+
+    this._mapClickHandlerRegistered = false;
+  }
+
   _resolveRequestTypeName(primaryTypeName, fallbackTypeName = null) {
     if (typeof primaryTypeName === "string" && primaryTypeName.trim() !== "") {
       return primaryTypeName.trim();
@@ -104,6 +142,16 @@ class SinpBaseCustom {
     }
 
     return primaryTypeName;
+  }
+
+  async _handleMapClick(evt) {
+    if (!Array.isArray(evt?.coordinate)) {
+      return;
+    }
+
+    window.setTimeout(() => {
+      this._querySelectedFeature(evt.coordinate);
+    }, 0);
   }
 
   _deferFeatureInfoRender(layerInstance, features = []) {
@@ -410,6 +458,117 @@ class SinpBaseCustom {
     }
 
     return null;
+  }
+
+  _normalizeSelectedFeature(feature, params = this._lastSearchParams || {}) {
+    if (!feature?.getProperties || !feature?.getGeometry) {
+      return feature;
+    }
+
+    const scopeConfig = this._getDetailRequestScopeConfig(params);
+    const properties = feature.getProperties();
+    const normalizedFeature = new ol.Feature({
+      ...properties,
+      geometry: feature.getGeometry()?.clone?.() || feature.getGeometry(),
+    });
+
+    if (!scopeConfig) {
+      return normalizedFeature;
+    }
+
+    const selectedCode = this._extractSelectedEntityCode(feature, params);
+    if (!selectedCode) {
+      return normalizedFeature;
+    }
+
+    if (scopeConfig.paramName === "communes") {
+      normalizedFeature.set("code_insee", selectedCode);
+      normalizedFeature.set("code", selectedCode);
+      return normalizedFeature;
+    }
+
+    if (scopeConfig.paramName === "mailles") {
+      normalizedFeature.set("code_maille", selectedCode);
+      normalizedFeature.set("maille", selectedCode);
+      normalizedFeature.set("code", selectedCode);
+    }
+
+    return normalizedFeature;
+  }
+
+  _extractSelectedEntityCode(feature, params = this._lastSearchParams || {}) {
+    if (!feature?.get) {
+      return null;
+    }
+
+    const scopeConfig = this._getDetailRequestScopeConfig(params);
+    if (!scopeConfig) {
+      return null;
+    }
+
+    for (const key of this.entityCodeKeys) {
+      const normalizedValue = scopeConfig.normalizeValue(feature.get(key));
+      if (normalizedValue) {
+        return normalizedValue;
+      }
+    }
+
+    return null;
+  }
+
+  async _fetchSelectionFeatures(coordinate) {
+    const layerInstance = this.getLayerInstance();
+    if (!layerInstance?.fetchServerRenderFeatures) {
+      return [];
+    }
+
+    return layerInstance.fetchServerRenderFeatures(coordinate);
+  }
+
+  async _querySelectedFeature(coordinate) {
+    const layerInstance = this.getLayerInstance();
+    if (!layerInstance?._canQueryServerRender() || !this._lastSearchParams) {
+      return;
+    }
+
+    try {
+      const features = await this._fetchSelectionFeatures(coordinate);
+
+      if (!features.length) {
+        layerInstance.setSelectedFeatures([]);
+        layerInstance.setFeatureInfoFeatures?.([]);
+        return;
+      }
+
+      const selectedFeature = this._normalizeSelectedFeature(features[0], this._lastSearchParams);
+      const detailParams = this._buildDetailRequestParams(
+        [selectedFeature],
+        this._lastSearchParams
+      );
+
+      if (detailParams === this._lastSearchParams) {
+        layerInstance.setSelectedFeatures([]);
+        layerInstance.setFeatureInfoFeatures?.([]);
+        return;
+      }
+
+      const previousParams = this._lastSearchParams;
+      this._lastSearchParams = detailParams;
+
+      try {
+        await this.handle([selectedFeature]);
+      } finally {
+        this._lastSearchParams = previousParams;
+      }
+    } catch (error) {
+      console.error(`[${this.layerId}] Error during WMS GetFeatureInfo:`, error);
+      if (typeof mviewer.alert === "function") {
+        mviewer.alert(
+          "Impossible d'interroger la couche GeoServer pour cette sélection.",
+          "alert-danger"
+        );
+      }
+    }
   }
 
   _buildDetailRequestParams(features = [], params = {}) {
@@ -862,6 +1021,9 @@ class SinpBaseCustom {
     }
 
     layerInstance.setSelectedFeatures?.(normalizedFeatures);
+    if (layerInstance.serverRenderOnly) {
+      layerInstance.setFeatureInfoFeatures?.(normalizedFeatures);
+    }
 
     if (!this._lastSearchParams) {
       this._deferFeatureInfoRender(layerInstance, normalizedFeatures);
@@ -942,6 +1104,15 @@ class SinpBaseCustom {
         layerInstance?.typeName
       );
       const mainOptions = this.buildRequestOptions(normalizedParams, mainTypeName);
+
+      if (!this._shouldFetchMainFeatures(normalizedParams)) {
+        await layerInstance.renderServerOnly(mainOptions);
+        return {
+          type: "FeatureCollection",
+          features: [],
+        };
+      }
+
       const mainData = await this.fetchGeoServerData(mainOptions);
       const mainFeatures = this.format.readFeatures(
         mainData || { type: "FeatureCollection", features: [] }
