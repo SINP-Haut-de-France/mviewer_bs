@@ -12,6 +12,14 @@ class SinpBaseCustom {
     srsName: "EPSG:2154",
   };
 
+  static SEARCH_LAYER_IDS = [
+    "communeSearch",
+    "advancedSearch",
+    "gridSearch5x5",
+    "grid10x10search",
+    "gridSearch10x10",
+  ];
+
   constructor(config = {}) {
     this.layerId = config.layerId;
     this.mainTypeName = config.mainTypeName;
@@ -48,6 +56,40 @@ class SinpBaseCustom {
 
   getLayerInstance() {
     return mviewer.customLayers?.[this.layerId]?._instance || null;
+  }
+
+  _activateSearchLayer() {
+    const layerConfig = mviewer.getLayer?.(this.layerId);
+    const layer = layerConfig?.layer;
+
+    if (!layer) {
+      return;
+    }
+
+    if (!layer.getVisible?.()) {
+      if (typeof mviewer.addLayer === "function" && layerConfig.showintoc) {
+        mviewer.addLayer(layerConfig);
+      } else {
+        layer.setVisible(true);
+      }
+    }
+  }
+
+  _clearOtherSearchLayers() {
+    const currentLayerInstance = this.getLayerInstance();
+
+    this.constructor.SEARCH_LAYER_IDS.forEach((layerId) => {
+      if (layerId === this.layerId) {
+        return;
+      }
+
+      const layerInstance = mviewer.customLayers?.[layerId]?._instance;
+      if (!layerInstance || layerInstance === currentLayerInstance) {
+        return;
+      }
+
+      layerInstance.clear?.();
+    });
   }
 
   _buildQueryURL(options = {}) {
@@ -572,7 +614,10 @@ class SinpBaseCustom {
       );
       const detailParams = this._buildDetailRequestParams(
         [selectedFeature],
-        this._lastSearchParams
+        this._lastSearchParams,
+        {
+          preferFeatureScope: true,
+        }
       );
 
       if (detailParams === this._lastSearchParams) {
@@ -636,18 +681,19 @@ class SinpBaseCustom {
     return cachedFeature || feature;
   }
 
-  _buildDetailRequestParams(features = [], params = {}) {
+  _buildDetailRequestParams(features = [], params = {}, options = {}) {
     const scopeConfig = this._getDetailRequestScopeConfig(params);
     if (!scopeConfig) {
       return params;
     }
 
+    const preferFeatureScope = options.preferFeatureScope === true;
     const explicitScopedValues =
       scopeConfig.paramName === "communes"
         ? this._normalizeCommuneCodes(params.communes || [])
         : this._normalizeGridCodes(params.mailles || []);
 
-    if (explicitScopedValues.length > 0) {
+    if (explicitScopedValues.length > 0 && !preferFeatureScope) {
       const scopedParams =
         scopeConfig.paramName === "mailles"
           ? {
@@ -1216,6 +1262,8 @@ class SinpBaseCustom {
       if (useBlockingOverlay) {
         this._setBlockingSearchOverlayVisible(true);
       }
+      this._activateSearchLayer();
+      this._clearOtherSearchLayers();
       layerInstance.beforeLoad();
 
       const mainTypeName = this._resolveRequestTypeName(
@@ -1228,20 +1276,11 @@ class SinpBaseCustom {
       const shouldPrefetchEntityData = this._shouldPrefetchEntityDataOnSubmit(normalizedParams);
 
       if (!shouldFetchMainFeatures) {
-        if (!shouldPrefetchEntityData) {
-          await layerInstance.renderServerOnly(mainOptions);
-          return {
-            type: "FeatureCollection",
-            features: [],
-          };
-        }
-
         const renderPromise = layerInstance.renderServerOnly(mainOptions);
         const mainDataPromise = this.fetchGeoServerData(mainOptions);
-        const detailDataPromise = this._loadDetailProperties(
-          normalizedParams,
-          this.detailsTypeName
-        );
+        const detailDataPromise = shouldPrefetchEntityData
+          ? this._loadDetailProperties(normalizedParams, this.detailsTypeName)
+          : Promise.resolve(null);
 
         const [mainData, detailProperties] = await Promise.all([
           mainDataPromise,
@@ -1261,6 +1300,7 @@ class SinpBaseCustom {
           prefetchedDetails: detailProperties,
         });
         this._setLastResultFeatures(enrichedFeatures);
+        layerInstance.fitToFeatures?.(enrichedFeatures);
         return mainData;
       }
 

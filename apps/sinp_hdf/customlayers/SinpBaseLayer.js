@@ -36,6 +36,102 @@ class SinpBaseLayer {
     }
   }
 
+  static _getServerRenderLoaderState() {
+    const stateKey = "__sinpServerRenderLoader";
+    window[stateKey] = window[stateKey] || {
+      pendingCount: 0,
+      hideTimer: null,
+    };
+
+    return window[stateKey];
+  }
+
+  static _ensureServerRenderLoaderElement() {
+    let loader = document.getElementById("sinp-server-render-loader");
+
+    if (loader) {
+      return loader;
+    }
+
+    loader = document.createElement("div");
+    loader.id = "sinp-server-render-loader";
+    loader.setAttribute("role", "status");
+    loader.setAttribute("aria-live", "polite");
+    loader.setAttribute("aria-hidden", "true");
+    Object.assign(loader.style, {
+      position: "fixed",
+      right: "24px",
+      bottom: "24px",
+      zIndex: "99999",
+      display: "none",
+      alignItems: "center",
+      gap: "10px",
+      maxWidth: "360px",
+      padding: "10px 14px",
+      borderRadius: "999px",
+      background: "rgba(15, 23, 42, 0.92)",
+      color: "#ffffff",
+      boxShadow: "0 10px 28px rgba(15, 23, 42, 0.28)",
+      fontSize: "13px",
+      fontWeight: "600",
+      pointerEvents: "none",
+    });
+
+    loader.innerHTML =
+      '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>' +
+      "<span>Rafraîchissement des données cartographiques…</span>";
+
+    document.body.appendChild(loader);
+    return loader;
+  }
+
+  static _isBlockingSearchOverlayVisible() {
+    const overlay = document.getElementById("mv-search-blocking-overlay");
+    if (!overlay) {
+      return false;
+    }
+
+    return overlay.style.display !== "none" && overlay.getAttribute("aria-hidden") !== "true";
+  }
+
+  static _syncServerRenderLoader() {
+    const state = this._getServerRenderLoaderState();
+    const loader = this._ensureServerRenderLoaderElement();
+    const shouldDisplay =
+      state.pendingCount > 0 && !this._isBlockingSearchOverlayVisible();
+
+    loader.style.display = shouldDisplay ? "flex" : "none";
+    loader.setAttribute("aria-hidden", shouldDisplay ? "false" : "true");
+  }
+
+  static _startServerRenderLoad() {
+    const state = this._getServerRenderLoaderState();
+
+    if (state.hideTimer) {
+      window.clearTimeout(state.hideTimer);
+      state.hideTimer = null;
+    }
+
+    state.pendingCount += 1;
+    this._syncServerRenderLoader();
+  }
+
+  static _finishServerRenderLoad() {
+    const state = this._getServerRenderLoaderState();
+
+    state.pendingCount = Math.max(0, state.pendingCount - 1);
+
+    if (state.pendingCount === 0) {
+      state.hideTimer = window.setTimeout(() => {
+        state.hideTimer = null;
+        this._syncServerRenderLoader();
+      }, 150);
+      return;
+    }
+
+    this._syncServerRenderLoader();
+  }
+
   _getDefaultStyle() {
     return new ol.style.Style({
       stroke: new ol.style.Stroke({
@@ -135,6 +231,8 @@ class SinpBaseLayer {
       serverType: "geoserver",
     });
 
+    this._attachServerRenderLoader(source);
+
     if (this.serverStyle?.styleName) {
       source.updateParams({
         STYLES: this.serverStyle.styleName,
@@ -149,6 +247,23 @@ class SinpBaseLayer {
     renderLayer.set("name", `${this.layerId}-server-render`);
     renderLayer.set("queryable", false);
     return renderLayer;
+  }
+
+  _attachServerRenderLoader(source) {
+    if (!source?.on || source.get?.("sinpServerRenderLoaderAttached")) {
+      return;
+    }
+
+    source.set?.("sinpServerRenderLoaderAttached", true);
+    source.on("imageloadstart", () => {
+      SinpBaseLayer._startServerRenderLoad();
+    });
+    source.on("imageloadend", () => {
+      SinpBaseLayer._finishServerRenderLoad();
+    });
+    source.on("imageloaderror", () => {
+      SinpBaseLayer._finishServerRenderLoad();
+    });
   }
 
   _getServerStyleContext() {
@@ -616,6 +731,10 @@ class SinpBaseLayer {
     this._clearSelectedFeatures();
     this.layer?.getSource()?.clear();
     return this._updateServerRenderLayer(queryOptions, true);
+  }
+
+  fitToFeatures(features = []) {
+    this._fitMapToFeatures(features);
   }
 
   showFeatureInfo(features) {

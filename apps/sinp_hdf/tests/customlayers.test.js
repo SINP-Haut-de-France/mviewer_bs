@@ -266,6 +266,36 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     expect(control._buildDetailRequestParams(features, params)).toEqual(params);
   });
 
+  test("Utilise la commune cliquée pour les détails hors scope de recherche", () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      targetLocCode: "2",
+    });
+    const params = {
+      departements: ["62"],
+      communes: ["62225"],
+      dateDeb: "2020-01-01",
+      dateFin: "2025-12-10",
+      targetLocCode: "2",
+    };
+    const features = [
+      {
+        get(key) {
+          return { code_insee: "59350" }[key];
+        },
+      },
+    ];
+
+    expect(
+      control._buildDetailRequestParams(features, params, {
+        preferFeatureScope: true,
+      })
+    ).toEqual({
+      ...params,
+      communes: ["59350"],
+    });
+  });
+
   test("normalise les filtres géographiques et limite les communes à 5", () => {
     const control = new SinpBaseCustom({
       layerId: "testControl",
@@ -300,6 +330,61 @@ describe("SinpBaseCustom - Scopage des détails", () => {
       dateFin: null,
       targetLocCode: "2",
     });
+  });
+
+  test("Active la couche de restitution ciblée avant une recherche", () => {
+    const previousGetLayer = mviewer.getLayer;
+    const previousAddLayer = mviewer.addLayer;
+    const layer = {
+      getVisible: jest.fn(() => false),
+      setVisible: jest.fn(),
+    };
+    const layerConfig = {
+      layer,
+      showintoc: true,
+    };
+    const control = new SinpBaseCustom({
+      layerId: "gridSearch5x5",
+    });
+
+    mviewer.getLayer = jest.fn(() => layerConfig);
+    mviewer.addLayer = jest.fn();
+
+    control._activateSearchLayer();
+
+    expect(mviewer.addLayer).toHaveBeenCalledWith(layerConfig);
+    expect(layer.setVisible).not.toHaveBeenCalled();
+
+    mviewer.getLayer = previousGetLayer;
+    mviewer.addLayer = previousAddLayer;
+  });
+
+  test("Nettoie les autres restitutions sans vider l'alias de la couche courante", () => {
+    const control = new SinpBaseCustom({
+      layerId: "grid10x10search",
+    });
+    const communeClearSpy = jest.spyOn(
+      mviewer.customLayers.communeSearch._instance,
+      "clear"
+    );
+    const grid5ClearSpy = jest.spyOn(
+      mviewer.customLayers.gridSearch5x5._instance,
+      "clear"
+    );
+    const currentClearSpy = jest.spyOn(
+      mviewer.customLayers.grid10x10search._instance,
+      "clear"
+    );
+
+    control._clearOtherSearchLayers();
+
+    expect(communeClearSpy).toHaveBeenCalled();
+    expect(grid5ClearSpy).toHaveBeenCalled();
+    expect(currentClearSpy).not.toHaveBeenCalled();
+
+    communeClearSpy.mockRestore();
+    grid5ClearSpy.mockRestore();
+    currentClearSpy.mockRestore();
   });
 
   test("Ignore les UUID quand il construit CODE_INSEES", () => {
@@ -1067,6 +1152,9 @@ describe("CommuneSearchLayer", () => {
     const renderServerOnlySpy = jest
       .spyOn(layerInstance, "renderServerOnly")
       .mockResolvedValue(undefined);
+    const fitToFeaturesSpy = jest
+      .spyOn(layerInstance, "fitToFeatures")
+      .mockImplementation(() => {});
     const fetchGeoServerDataSpy = jest.spyOn(
       SinpBaseCustom.prototype,
       "fetchGeoServerData"
@@ -1119,6 +1207,13 @@ describe("CommuneSearchLayer", () => {
       })
     );
     expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(2);
+    expect(fitToFeaturesSpy).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          getGeometry: expect.any(Function),
+        }),
+      ])
+    );
     expect(fetchGeoServerDataSpy).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
@@ -1133,6 +1228,7 @@ describe("CommuneSearchLayer", () => {
     );
 
     renderServerOnlySpy.mockRestore();
+    fitToFeaturesSpy.mockRestore();
     fetchGeoServerDataSpy.mockRestore();
   });
 
@@ -1282,6 +1378,126 @@ describe("CommuneSearchLayer", () => {
     global.fetch = previousFetch;
     fetchServerRenderFeaturesSpy.mockRestore();
     ensureEntityDataSpy.mockRestore();
+    fetchGeoServerDataSpy.mockRestore();
+  });
+
+  test("Le clic sur une commune adjacente recharge les détails de cette commune", async () => {
+    const controlApi = mviewer.customControls.communeSearch;
+    const layerInstance = mviewer.customLayers.communeSearch._instance;
+    const previousGetMap = mviewer.getMap;
+    const previousFetch = global.fetch;
+    const fetchGeoServerDataSpy = jest.spyOn(
+      SinpBaseCustom.prototype,
+      "fetchGeoServerData"
+    ).mockImplementation(async (options) => {
+      if (options.TYPENAME === "sinp_diffusion:fn_get_stats") {
+        return {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: [1, 2],
+              },
+              properties: {
+                code_insee: "62225",
+              },
+            },
+          ],
+        };
+      }
+
+      if (options.TYPENAME === "sinp_diffusion:fn_get_obs_detaillee") {
+        const codeInsee = options.VIEWPARAMS.includes("CODE_INSEES:59350")
+          ? "59350"
+          : "62225";
+
+        return {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: {
+                code_insee: codeInsee,
+                id_origine: `obs-${codeInsee}`,
+              },
+            },
+          ],
+        };
+      }
+
+      return { type: "FeatureCollection", features: [] };
+    });
+    const onSpy = jest.fn();
+    const unSpy = jest.fn();
+
+    await controlApi.submit({
+      filteredDepartments: ["62"],
+      filteredCommunes: ["62225"],
+      dateDeb: "2020-01-01",
+      dateFin: "2026-03-10",
+    });
+
+    layerInstance._serverStyleActive = true;
+    layerInstance.layer.setVisible(true);
+    layerInstance._serverRenderLayer = {
+      getVisible: () => true,
+    };
+
+    mviewer.getMap = jest.fn(() => ({
+      on: onSpy,
+      un: unSpy,
+      getView: () => ({
+        getResolution: () => 42,
+        getProjection: () => "EPSG:2154",
+      }),
+      getLayers: () => ({
+        getArray: () => [],
+      }),
+      addLayer: jest.fn(),
+    }));
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [3, 4],
+            },
+            properties: {
+              insee_com: "59350",
+            },
+          },
+        ],
+      }),
+    });
+
+    const previousSetTimeout = window.setTimeout;
+    window.setTimeout = (callback) => {
+      callback();
+      return 0;
+    };
+
+    controlApi.init();
+    const clickHandler = onSpy.mock.calls[0][1];
+    await clickHandler({ coordinate: [10, 20] });
+    controlApi.destroy();
+
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        TYPENAME: "sinp_diffusion:fn_get_obs_detaillee",
+        VIEWPARAMS: expect.stringContaining("CODE_INSEES:59350"),
+      })
+    );
+    expect(unSpy).toHaveBeenCalledWith("singleclick", clickHandler);
+
+    mviewer.getMap = previousGetMap;
+    window.setTimeout = previousSetTimeout;
+    global.fetch = previousFetch;
     fetchGeoServerDataSpy.mockRestore();
   });
 
