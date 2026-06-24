@@ -16,6 +16,8 @@ import {
   isFilterVisible,
   FILTER_TYPES,
   getFilterProfileForLayer,
+  resolveSearchLayerId,
+  SEARCH_RESTITUTION_LAYERS,
 } from "../../configs/filtersConfig";
 
 const GlobalFiltersComponent = (
@@ -66,6 +68,11 @@ const GlobalFiltersComponent = (
   const [filters, setFilters] = useState(initialFilters || defaultFilters);
   // Synchronous ref mirror to avoid race between setState and immediate submit
   const filtersRef = useRef(initialFilters || defaultFilters);
+  const [selectedRestitutionLayerId, setSelectedRestitutionLayerId] = useState(() =>
+    resolveSearchLayerId(activeLayerId)
+  );
+  const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
+  const lastSubmittedFiltersRef = useRef(null);
 
   const updateFilters = useCallback((updater) => {
     setFilters((prev) => {
@@ -86,6 +93,13 @@ const GlobalFiltersComponent = (
       onFiltersChange(filters);
     }
   }, [filters, onFiltersChange]);
+
+  useEffect(() => {
+    const resolvedLayerId = resolveSearchLayerId(activeLayerId);
+    if (resolvedLayerId) {
+      setSelectedRestitutionLayerId(resolvedLayerId);
+    }
+  }, [activeLayerId]);
 
   // Déterminer quel profil utiliser
   const activeProfile = useMemo(() => {
@@ -127,12 +141,12 @@ const GlobalFiltersComponent = (
   // === HANDLERS ===
 
   const handleDateChange = useCallback((dateRange) => {
-    setFilters((prev) => ({
+    updateFilters((prev) => ({
       ...prev,
       dateDeb: dateRange?.startDate,
       dateFin: dateRange?.endDate,
     }));
-  }, []);
+  }, [updateFilters]);
 
   const handleTaxChange = useCallback(
     (taxons) => {
@@ -163,7 +177,7 @@ const GlobalFiltersComponent = (
         filteredTaxons: selectedTaxons,
       }));
     },
-    [taxonsCache]
+    [taxonsCache, updateFilters]
   );
 
   const handleDptChange = useCallback((departements) => {
@@ -180,7 +194,7 @@ const GlobalFiltersComponent = (
       filteredDepartments: selectedCodes,
       filteredCommunes: [],
     }));
-  }, []);
+  }, [updateFilters]);
 
   const handleComChange = useCallback((communes) => {
     console.log(
@@ -220,7 +234,7 @@ const GlobalFiltersComponent = (
       );
       return newState;
     });
-  }, []);
+  }, [updateFilters]);
 
   const handleGrpChange = useCallback((selectedNodes) => {
     console.log("🌳 Nœuds sélectionnés (deepest only):", selectedNodes);
@@ -235,9 +249,40 @@ const GlobalFiltersComponent = (
       ...prev,
       filteredGroupes: selectedIds, // Stocker les IDs pour l'UI et la soumission
     }));
-  }, []);
+  }, [updateFilters]);
 
-  const handleSubmit = useCallback(async () => {
+  const buildSubmitParams = useCallback((filtersSnapshot = filtersRef.current) => {
+    // Extract cd_ref from complete taxon objects for URL generation
+    const taxonsForURL = (filtersSnapshot.filteredTaxons || []).map((tx) =>
+      typeof tx === "object" && tx.cd_ref ? tx.cd_ref : tx
+    );
+
+    // Construire les paramètres en excluant les filtres non visibles
+    return {
+      ...(filterVisibility.showDate && {
+        dateDeb: filtersSnapshot.dateDeb,
+        dateFin: filtersSnapshot.dateFin,
+      }),
+      ...(filterVisibility.showTaxon &&
+        taxonsForURL.length > 0 && {
+          taxons: taxonsForURL, // Send only cd_ref values to URL builder
+        }),
+      ...(filterVisibility.showDepartment &&
+        (filtersSnapshot.filteredDepartments || []).length > 0 && {
+          departements: filtersSnapshot.filteredDepartments,
+        }),
+      ...(filterVisibility.showCommune &&
+        (filtersSnapshot.filteredCommunes || []).length > 0 && {
+          communes: filtersSnapshot.filteredCommunes,
+        }),
+      ...(filterVisibility.showTaxonomicGroup &&
+        (filtersSnapshot.filteredGroupes || []).length > 0 && {
+          groupes: filtersSnapshot.filteredGroupes, // Envoyer directement les IDs sélectionnés
+        }),
+    };
+  }, [filterVisibility]);
+
+  const submitForLayer = useCallback(async (layerId, filtersSnapshot = filtersRef.current) => {
     console.log("🚀 [GlobalFilters] handleSubmit APPELÉ");
     console.log(
       "🚀 [GlobalFilters] onSubmit disponible:",
@@ -245,40 +290,13 @@ const GlobalFiltersComponent = (
       onSubmit !== undefined
     );
 
-    // Extract cd_ref from complete taxon objects for URL generation
-    const taxonsForURL = filters.filteredTaxons.map((tx) =>
-      typeof tx === "object" && tx.cd_ref ? tx.cd_ref : tx
-    );
-
-    // Construire les paramètres en excluant les filtres non visibles
-    const params = {
-      ...(filterVisibility.showDate && {
-        dateDeb: filters.dateDeb,
-        dateFin: filters.dateFin,
-      }),
-      ...(filterVisibility.showTaxon &&
-        taxonsForURL.length > 0 && {
-          taxons: taxonsForURL, // Send only cd_ref values to URL builder
-        }),
-      ...(filterVisibility.showDepartment &&
-        filters.filteredDepartments.length > 0 && {
-          departements: filters.filteredDepartments,
-        }),
-      ...(filterVisibility.showCommune &&
-        filters.filteredCommunes.length > 0 && {
-          communes: filters.filteredCommunes,
-        }),
-      ...(filterVisibility.showTaxonomicGroup &&
-        filters.filteredGroupes.length > 0 && {
-          groupes: filters.filteredGroupes, // Envoyer directement les IDs sélectionnés
-        }),
-    };
-
     // Use the synchronous ref to avoid stale state when submit is immediate
-    const currentFilters = filtersRef.current;
+    const currentFilters = filtersSnapshot;
+    const params = buildSubmitParams(currentFilters);
     console.log("===== 📤 SOUMISSION DES PARAMETRES =====");
     console.log("État complet des filtres (ref):", currentFilters);
     console.log("Paramètres à envoyer à mviewer:", params);
+    console.log("Couche de restitution:", layerId);
     console.log("=".repeat(40));
 
     if (onSubmit) {
@@ -286,7 +304,9 @@ const GlobalFiltersComponent = (
       setIsLoading(true);
       try {
         // Passer aussi l'état complet des filtres pour le rebinding
-        await onSubmit(params, currentFilters);
+        await onSubmit(params, currentFilters, layerId);
+        lastSubmittedFiltersRef.current = currentFilters;
+        setHasSubmittedSearch(true);
         console.log("✅ [GlobalFilters] onSubmit terminé avec succès");
       } catch (error) {
         console.error("❌ [GlobalFilters] Erreur lors de la soumission:", error);
@@ -299,15 +319,38 @@ const GlobalFiltersComponent = (
     } else {
       console.error("❌ [GlobalFilters] onSubmit est undefined !");
     }
-  }, [filters, filterVisibility, onSubmit, onSubmitError]);
+  }, [buildSubmitParams, onSubmit, onSubmitError]);
+
+  const handleSubmit = useCallback(() => {
+    return submitForLayer(selectedRestitutionLayerId);
+  }, [selectedRestitutionLayerId, submitForLayer]);
+
+  const handleRestitutionChange = useCallback(
+    async (layerId) => {
+      if (!layerId || layerId === selectedRestitutionLayerId) {
+        return;
+      }
+
+      setSelectedRestitutionLayerId(layerId);
+      const lastSubmittedFilters = lastSubmittedFiltersRef.current;
+      if (!hasSubmittedSearch || !lastSubmittedFilters) {
+        return;
+      }
+
+      await submitForLayer(layerId, lastSubmittedFilters);
+    },
+    [hasSubmittedSearch, selectedRestitutionLayerId, submitForLayer]
+  );
 
   const handleReset = useCallback(() => {
     console.log("🔄 Réinitialisation des filtres");
     updateFilters(defaultFilters);
+    setHasSubmittedSearch(false);
+    lastSubmittedFiltersRef.current = null;
     if (onReset) {
       onReset();
     }
-  }, [defaultFilters, onReset]);
+  },   [defaultFilters, onReset, updateFilters]);
 
   // Vérifier si au moins un filtre est actif (différent des valeurs par défaut)
   const hasActiveFilters = useMemo(() => {
@@ -372,6 +415,9 @@ const GlobalFiltersComponent = (
       actionLabels={actionLabels}
       isLoading={isLoading}
       hasActiveFilters={hasActiveFilters}
+      restitutionLayers={SEARCH_RESTITUTION_LAYERS}
+      selectedRestitutionLayerId={selectedRestitutionLayerId}
+      onRestitutionChange={handleRestitutionChange}
     />
   );
 };

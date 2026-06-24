@@ -160,9 +160,10 @@
 			>
 			</layer>
 		</theme>
-		<theme 
+		<theme
 			name="Couches de restitution"
-			collapsed="true" 
+			visible="false"
+			collapsed="true"
 			id="searchTheme"
 			icon="fa fa-search-minus">
 			<layer
@@ -189,7 +190,7 @@
 				>
 				<template url="apps/sinp_hdf/customlayers/communeSearch.mst"/>
 			</layer>
-			<layer 
+			<layer
 				id="gridSearch5x5"
 				name="Grille 5x5"
 				visible="true"
@@ -197,7 +198,7 @@
 				queryable="false"
 				tiled="true"
 				exclusive="true"
-				type="customlayer" 
+				type="customlayer"
 				url="apps/sinp_hdf/customlayers/grid5x5search.js"
 				customcontrol="true"
 				customcontrolpath="apps/sinp_hdf/customcontrols/grid5x5search"
@@ -212,7 +213,7 @@
 				>
 				<template url="apps/sinp_hdf/customlayers/grid5x5search.mst"/>
 			</layer>
-			<layer 
+			<layer
 				id="grid10x10search"
 				name="Grille 10x10"
 				visible="true"
@@ -220,7 +221,7 @@
 				queryable="false"
 				tiled="true"
 				exclusive="true"
-				type="customlayer" 
+				type="customlayer"
 				url="apps/sinp_hdf/customlayers/gridSearch10x10.js"
 				expanded="true"
 				customcontrol="true"

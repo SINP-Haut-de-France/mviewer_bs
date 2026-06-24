@@ -34,8 +34,8 @@ mviewer.customLayers.grid10x10search = (function () {
   const api = {
     layer: instance.getLayer(),
     handle: false,
-    get_datas: function (params) {
-      return mviewer.customControls.grid10x10search.submit(params);
+    get_datas: function (params, options) {
+      return mviewer.customControls.grid10x10search.submit(params, options);
     },
     _instance: instance,
   };

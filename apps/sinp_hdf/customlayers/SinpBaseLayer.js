@@ -40,7 +40,9 @@ class SinpBaseLayer {
     const stateKey = "__sinpServerRenderLoader";
     window[stateKey] = window[stateKey] || {
       pendingCount: 0,
+      mapBlockCount: 0,
       hideTimer: null,
+      messages: [],
     };
 
     return window[stateKey];
@@ -79,32 +81,75 @@ class SinpBaseLayer {
 
     loader.innerHTML =
       '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>' +
-      "<span>Rafraîchissement des données cartographiques…</span>";
+      '<span class="sinp-server-render-loader-message">Rafraîchissement des données cartographiques…</span>';
 
     document.body.appendChild(loader);
     return loader;
   }
 
-  static _isBlockingSearchOverlayVisible() {
-    const overlay = document.getElementById("mv-search-blocking-overlay");
-    if (!overlay) {
-      return false;
+  static _ensureMapBlockerElement() {
+    let blocker = document.getElementById("sinp-map-loading-blocker");
+
+    if (blocker) {
+      return blocker;
     }
 
-    return overlay.style.display !== "none" && overlay.getAttribute("aria-hidden") !== "true";
+    blocker = document.createElement("div");
+    blocker.id = "sinp-map-loading-blocker";
+    blocker.setAttribute("aria-hidden", "true");
+    Object.assign(blocker.style, {
+      position: "fixed",
+      display: "none",
+      zIndex: "99998",
+      background: "transparent",
+      cursor: "progress",
+      pointerEvents: "all",
+    });
+
+    document.body.appendChild(blocker);
+    return blocker;
+  }
+
+  static _syncMapBlocker() {
+    const state = this._getServerRenderLoaderState();
+    const blocker = this._ensureMapBlockerElement();
+    const mapElement = document.getElementById("map");
+    const shouldBlock = state.mapBlockCount > 0 && mapElement;
+
+    blocker.style.display = shouldBlock ? "block" : "none";
+    blocker.setAttribute("aria-hidden", shouldBlock ? "false" : "true");
+
+    if (!shouldBlock) {
+      return;
+    }
+
+    const mapBounds = mapElement.getBoundingClientRect();
+    Object.assign(blocker.style, {
+      left: `${mapBounds.left}px`,
+      top: `${mapBounds.top}px`,
+      width: `${mapBounds.width}px`,
+      height: `${mapBounds.height}px`,
+    });
   }
 
   static _syncServerRenderLoader() {
     const state = this._getServerRenderLoaderState();
     const loader = this._ensureServerRenderLoaderElement();
-    const shouldDisplay =
-      state.pendingCount > 0 && !this._isBlockingSearchOverlayVisible();
+    const shouldDisplay = state.pendingCount > 0;
+    const messageElement = loader.querySelector(".sinp-server-render-loader-message");
+
+    if (messageElement) {
+      messageElement.textContent =
+        state.messages[state.messages.length - 1] ||
+        "Rafraîchissement des données cartographiques…";
+    }
 
     loader.style.display = shouldDisplay ? "flex" : "none";
     loader.setAttribute("aria-hidden", shouldDisplay ? "false" : "true");
+    this._syncMapBlocker();
   }
 
-  static _startServerRenderLoad() {
+  static _startServerRenderLoad(options = {}) {
     const state = this._getServerRenderLoaderState();
 
     if (state.hideTimer) {
@@ -113,15 +158,37 @@ class SinpBaseLayer {
     }
 
     state.pendingCount += 1;
+    if (options.blockMap === true) {
+      state.mapBlockCount += 1;
+    }
+    state.messages.push(
+      options.message || "Rafraîchissement des données cartographiques…"
+    );
     this._syncServerRenderLoader();
   }
 
-  static _finishServerRenderLoad() {
+  static _finishServerRenderLoad(options = {}) {
     const state = this._getServerRenderLoaderState();
 
     state.pendingCount = Math.max(0, state.pendingCount - 1);
+    if (options.blockMap === true) {
+      state.mapBlockCount = Math.max(0, state.mapBlockCount - 1);
+    }
+
+    if (options.message && state.messages.length > 0) {
+      const messageIndex = state.messages.lastIndexOf(options.message);
+      if (messageIndex >= 0) {
+        state.messages.splice(messageIndex, 1);
+      } else {
+        state.messages.pop();
+      }
+    } else if (state.messages.length > 0) {
+      state.messages.pop();
+    }
 
     if (state.pendingCount === 0) {
+      state.mapBlockCount = 0;
+      state.messages = [];
       state.hideTimer = window.setTimeout(() => {
         state.hideTimer = null;
         this._syncServerRenderLoader();

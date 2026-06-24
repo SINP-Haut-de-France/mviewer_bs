@@ -3,6 +3,10 @@ class SinpBaseCustom {
 
   static MAX_SELECTED_COMMUNES = 5;
 
+  static SEARCH_RESULT_CACHE = new Map();
+
+  static SEARCH_RESULT_REQUESTS = new Map();
+
   static DEFAULT_PARAMETERS = {
     BASEURL: `${mviewer.env?.[mviewer.env?.CURRENT_ENV]?.GEOSERVER_BASE_URL}/wfs`,
     SERVICE: "WFS",
@@ -50,6 +54,7 @@ class SinpBaseCustom {
     this._featureInfoRenderToken = 0;
     this._selectionRequestInFlight = false;
     this._lastResultFeatures = [];
+    this._activeSearchLoaderMessages = [];
     this._boundMapClickHandler = this._handleMapClick.bind(this);
     this._mapClickHandlerRegistered = false;
   }
@@ -214,6 +219,87 @@ class SinpBaseCustom {
     this._dataRequests.clear();
   }
 
+  _normalizeCacheValue(value) {
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => this._normalizeCacheValue(item))
+        .sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right)));
+    }
+
+    if (value && typeof value === "object") {
+      return Object.keys(value)
+        .sort()
+        .reduce((accumulator, key) => {
+          if (key === "forceRefresh" || key === "__forceRefresh") {
+            return accumulator;
+          }
+
+          accumulator[key] = this._normalizeCacheValue(value[key]);
+          return accumulator;
+        }, {});
+    }
+
+    return value;
+  }
+
+  _getSearchResultCacheKey(params = {}, mainOptions = {}) {
+    return JSON.stringify({
+      layerId: this.layerId,
+      typeName: mainOptions?.TYPENAME || this.mainTypeName || "",
+      viewParams: mainOptions?.VIEWPARAMS || "",
+      cqlFilter: mainOptions?.CQL_FILTER || "",
+      params: this._normalizeCacheValue(params),
+    });
+  }
+
+  _shouldForceSearchRefresh(params = {}, options = {}) {
+    return (
+      options.forceRefresh === true ||
+      params.forceRefresh === true ||
+      params.__forceRefresh === true
+    );
+  }
+
+  _getCachedSearchResult(cacheKey, forceRefresh = false) {
+    if (!cacheKey || forceRefresh) {
+      return null;
+    }
+
+    return this.constructor.SEARCH_RESULT_CACHE.get(cacheKey) || null;
+  }
+
+  _setCachedSearchResult(cacheKey, result) {
+    if (!cacheKey) {
+      return;
+    }
+
+    this.constructor.SEARCH_RESULT_CACHE.set(cacheKey, result);
+  }
+
+  _getSearchResultRequest(cacheKey, forceRefresh = false) {
+    if (!cacheKey || forceRefresh) {
+      return null;
+    }
+
+    return this.constructor.SEARCH_RESULT_REQUESTS.get(cacheKey) || null;
+  }
+
+  _setSearchResultRequest(cacheKey, request) {
+    if (!cacheKey) {
+      return;
+    }
+
+    this.constructor.SEARCH_RESULT_REQUESTS.set(cacheKey, request);
+  }
+
+  _clearSearchResultRequest(cacheKey) {
+    if (!cacheKey) {
+      return;
+    }
+
+    this.constructor.SEARCH_RESULT_REQUESTS.delete(cacheKey);
+  }
+
   _setLastResultFeatures(features = []) {
     this._lastResultFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
   }
@@ -276,54 +362,27 @@ class SinpBaseCustom {
     return request;
   }
 
-  _ensureBlockingSearchOverlay() {
-    let overlay = document.getElementById("mv-search-blocking-overlay");
-    if (overlay) {
-      return overlay;
-    }
-
-    overlay = document.createElement("div");
-    overlay.id = "mv-search-blocking-overlay";
-    overlay.setAttribute("aria-hidden", "true");
-    Object.assign(overlay.style, {
-      position: "fixed",
-      inset: "0",
-      zIndex: "100000",
-      display: "none",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "rgba(15, 23, 42, 0.45)",
-      backdropFilter: "blur(1px)",
-      pointerEvents: "all",
-    });
-
-    overlay.innerHTML =
-      '<div style="display:flex;flex-direction:column;align-items:center;gap:12px;max-width:420px;padding:24px 28px;border-radius:12px;background:#ffffff;box-shadow:0 18px 40px rgba(15,23,42,.25);text-align:center;color:#0f172a;">' +
-      '<i class="fas fa-spinner fa-spin" aria-hidden="true" style="font-size:32px;color:#0b3a6e;"></i>' +
-      '<div id="mv-search-blocking-overlay-title" style="font-size:16px;font-weight:700;">Recherche en cours</div>' +
-      '<div id="mv-search-blocking-overlay-message" style="font-size:13px;line-height:1.45;color:#475569;">Merci de patienter, le volume de données à remonter peut nécessiter quelques instants.</div>' +
-      "</div>";
-
-    document.body.appendChild(overlay);
-    return overlay;
-  }
-
   _setBlockingSearchOverlayVisible(visible, options = {}) {
-    const overlay = this._ensureBlockingSearchOverlay();
-    const titleElement = overlay.querySelector("#mv-search-blocking-overlay-title");
-    const messageElement = overlay.querySelector("#mv-search-blocking-overlay-message");
-
-    if (titleElement) {
-      titleElement.textContent = options.title || "Recherche en cours";
-    }
-    if (messageElement) {
-      messageElement.textContent =
-        options.message ||
-        "Merci de patienter, le volume de données à remonter peut nécessiter quelques instants.";
+    const loader = mviewer.customLayers?.SinpBaseLayer;
+    if (!loader) {
+      return;
     }
 
-    overlay.style.display = visible ? "flex" : "none";
-    overlay.setAttribute("aria-hidden", visible ? "false" : "true");
+    const message = options.message || "Chargement des données de recherche…";
+
+    if (visible) {
+      this._activeSearchLoaderMessages.push(message);
+      loader._startServerRenderLoad({
+        blockMap: true,
+        message,
+      });
+      return;
+    }
+
+    loader._finishServerRenderLoad({
+      blockMap: true,
+      message: this._activeSearchLoaderMessages.pop() || message,
+    });
   }
 
   _normalizeStandardFilters(params = {}) {
@@ -1208,7 +1267,6 @@ class SinpBaseCustom {
       return;
     }
 
-    $("#loading-indicator").show();
     this._selectionRequestInFlight = true;
     this._setBlockingSearchOverlayVisible(true, {
       title: "Chargement de la selection",
@@ -1242,96 +1300,134 @@ class SinpBaseCustom {
     } finally {
       this._selectionRequestInFlight = false;
       this._setBlockingSearchOverlayVisible(false);
-      $("#loading-indicator").hide();
     }
   }
 
-  async submit(params = {}) {
+  async _renderSearchResult(layerInstance, features = [], mainOptions = {}, mainData = null) {
+    const normalizedFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
+
+    this._setLastResultFeatures(normalizedFeatures);
+
+    if (normalizedFeatures.length === 0) {
+      layerInstance.clear();
+      return mainData;
+    }
+
+    if (layerInstance.serverRenderOnly) {
+      await layerInstance.renderServerOnly(mainOptions);
+      layerInstance.fitToFeatures?.(normalizedFeatures);
+      return mainData;
+    }
+
+    if (this._shouldLoadEntityDataImmediately(this._lastSearchParams || {})) {
+      await layerInstance.renderFeatures(normalizedFeatures, mainOptions);
+      return mainData;
+    }
+
+    await layerInstance.showSelectionPrompt(normalizedFeatures, mainOptions);
+    return mainData;
+  }
+
+  async _loadSearchResultInMemory(params = {}, options = {}) {
     const layerInstance = this.getLayerInstance();
     if (!layerInstance) {
       throw new Error(`Layer introuvable pour ${this.layerId}`);
     }
 
     const normalizedParams = this._normalizeInputParams(params);
-    const useBlockingOverlay = this._shouldUseBlockingSearchOverlay(normalizedParams);
+    const mainTypeName = this._resolveRequestTypeName(
+      this.mainTypeName,
+      layerInstance?.typeName
+    );
+    const mainOptions = this.buildRequestOptions(normalizedParams, mainTypeName);
+    const forceRefresh = this._shouldForceSearchRefresh(params, options);
+    const cacheKey = this._getSearchResultCacheKey(normalizedParams, mainOptions);
+    const cachedResult = this._getCachedSearchResult(cacheKey, forceRefresh);
+
+    if (cachedResult) {
+      return cachedResult;
+    }
+
+    const pendingRequest = this._getSearchResultRequest(cacheKey, forceRefresh);
+    if (pendingRequest) {
+      return pendingRequest;
+    }
+
+    const request = (async () => {
+      const shouldPrefetchEntityData = this._shouldPrefetchEntityDataOnSubmit(normalizedParams);
+      const mainDataPromise = this.fetchGeoServerData(mainOptions);
+      const detailDataPromise = shouldPrefetchEntityData
+        ? this._loadDetailProperties(normalizedParams, this.detailsTypeName)
+        : Promise.resolve(null);
+
+      const [mainData, detailProperties] = await Promise.all([
+        mainDataPromise,
+        detailDataPromise,
+      ]);
+      const mainFeatures = this.format.readFeatures(
+        mainData || { type: "FeatureCollection", features: [] }
+      );
+      const enrichedFeatures =
+        mainFeatures.length > 0
+          ? await this._enrichMainFeatures(mainFeatures, normalizedParams, {
+              prefetchedDetails: detailProperties,
+            })
+          : [];
+      const result = {
+        mainData,
+        features: enrichedFeatures,
+      };
+
+      this._setCachedSearchResult(cacheKey, result);
+      return result;
+    })()
+      .catch((error) => {
+        this._clearSearchResultRequest(cacheKey);
+        throw error;
+      })
+      .finally(() => {
+        this._clearSearchResultRequest(cacheKey);
+      });
+
+    this._setSearchResultRequest(cacheKey, request);
+    return request;
+  }
+
+  async submit(params = {}, options = {}) {
+    const layerInstance = this.getLayerInstance();
+    if (!layerInstance) {
+      throw new Error(`Layer introuvable pour ${this.layerId}`);
+    }
+
+    const normalizedParams = this._normalizeInputParams(params);
+    const mainTypeName = this._resolveRequestTypeName(
+      this.mainTypeName,
+      layerInstance?.typeName
+    );
+    const mainOptions = this.buildRequestOptions(normalizedParams, mainTypeName);
+    const useSearchLoader = true;
 
     try {
       this._lastSearchParams = normalizedParams;
-      this._resetDataCache();
       this._setLastResultFeatures([]);
-      if (useBlockingOverlay) {
-        this._setBlockingSearchOverlayVisible(true);
-      }
+      this._setBlockingSearchOverlayVisible(useSearchLoader);
       this._activateSearchLayer();
       this._clearOtherSearchLayers();
       layerInstance.beforeLoad();
 
-      const mainTypeName = this._resolveRequestTypeName(
-        this.mainTypeName,
-        layerInstance?.typeName
+      const result = await this._loadSearchResultInMemory(normalizedParams, options);
+      return this._renderSearchResult(
+        layerInstance,
+        result.features,
+        mainOptions,
+        result.mainData
       );
-      const mainOptions = this.buildRequestOptions(normalizedParams, mainTypeName);
-
-      const shouldFetchMainFeatures = this._shouldFetchMainFeatures(normalizedParams);
-      const shouldPrefetchEntityData = this._shouldPrefetchEntityDataOnSubmit(normalizedParams);
-
-      if (!shouldFetchMainFeatures) {
-        const renderPromise = layerInstance.renderServerOnly(mainOptions);
-        const mainDataPromise = this.fetchGeoServerData(mainOptions);
-        const detailDataPromise = shouldPrefetchEntityData
-          ? this._loadDetailProperties(normalizedParams, this.detailsTypeName)
-          : Promise.resolve(null);
-
-        const [mainData, detailProperties] = await Promise.all([
-          mainDataPromise,
-          detailDataPromise,
-          renderPromise,
-        ]);
-
-        const mainFeatures = this.format.readFeatures(
-          mainData || { type: "FeatureCollection", features: [] }
-        );
-
-        if (mainFeatures.length === 0) {
-          return mainData;
-        }
-
-        const enrichedFeatures = await this._enrichMainFeatures(mainFeatures, normalizedParams, {
-          prefetchedDetails: detailProperties,
-        });
-        this._setLastResultFeatures(enrichedFeatures);
-        layerInstance.fitToFeatures?.(enrichedFeatures);
-        return mainData;
-      }
-
-      const mainData = await this.fetchGeoServerData(mainOptions);
-      const mainFeatures = this.format.readFeatures(
-        mainData || { type: "FeatureCollection", features: [] }
-      );
-
-      if (mainFeatures.length === 0) {
-        layerInstance.clear();
-        return mainData;
-      }
-
-      const enrichedFeatures = await this._enrichMainFeatures(
-        mainFeatures,
-        normalizedParams
-      );
-      this._setLastResultFeatures(enrichedFeatures);
-      if (this._shouldLoadEntityDataImmediately(normalizedParams)) {
-        await layerInstance.renderFeatures(enrichedFeatures, mainOptions);
-      } else {
-        await layerInstance.showSelectionPrompt(enrichedFeatures, mainOptions);
-      }
-
-      return mainData;
     } catch (error) {
       console.error(`[${this.layerId}] Error during search:`, error);
       layerInstance.clear();
       throw error;
     } finally {
-      if (useBlockingOverlay) {
+      if (useSearchLoader) {
         this._setBlockingSearchOverlayVisible(false);
       }
     }

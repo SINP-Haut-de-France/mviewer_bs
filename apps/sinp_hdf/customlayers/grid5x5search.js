@@ -31,8 +31,8 @@ mviewer.customLayers.gridSearch5x5 = (function () {
   return {
     layer: instance.getLayer(),
     handle: false,
-    get_datas: function (params) {
-      return mviewer.customControls.gridSearch5x5.submit(params);
+    get_datas: function (params, options) {
+      return mviewer.customControls.gridSearch5x5.submit(params, options);
     },
     _instance: instance,
   };

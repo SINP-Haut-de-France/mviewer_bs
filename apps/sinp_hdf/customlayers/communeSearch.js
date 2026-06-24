@@ -37,8 +37,8 @@ mviewer.customLayers.communeSearch = (function () {
   return {
     layer: instance.getLayer(),
     handle: false,
-    get_datas: function (params) {
-      return mviewer.customControls.communeSearch.submit(params);
+    get_datas: function (params, options) {
+      return mviewer.customControls.communeSearch.submit(params, options);
     },
     _instance: instance,
   };
