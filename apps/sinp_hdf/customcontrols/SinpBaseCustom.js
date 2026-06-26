@@ -53,6 +53,7 @@ class SinpBaseCustom {
     this._dataRequests = new Map();
     this._featureInfoRenderToken = 0;
     this._selectionRequestInFlight = false;
+    this._searchRequestInFlight = false;
     this._lastResultFeatures = [];
     this._activeSearchLoaderMessages = [];
     this._boundMapClickHandler = this._handleMapClick.bind(this);
@@ -194,6 +195,10 @@ class SinpBaseCustom {
   }
 
   async _handleMapClick(evt) {
+    if (this._searchRequestInFlight) {
+      return;
+    }
+
     if (!Array.isArray(evt?.coordinate)) {
       return;
     }
@@ -654,16 +659,22 @@ class SinpBaseCustom {
 
   async _querySelectedFeature(coordinate) {
     const layerInstance = this.getLayerInstance();
-    if (!layerInstance?._canQueryServerRender() || !this._lastSearchParams) {
+    if (
+      this._searchRequestInFlight ||
+      !layerInstance?._canQueryServerRender() ||
+      !this._lastSearchParams
+    ) {
       return;
     }
 
     try {
+      layerInstance.showFeatureInfoLoading?.();
       const features = await this._fetchSelectionFeatures(coordinate);
 
       if (!features.length) {
         layerInstance.setSelectedFeatures([]);
         layerInstance.setFeatureInfoFeatures?.([]);
+        layerInstance.showSelectionPromptPanel?.();
         return;
       }
 
@@ -682,6 +693,7 @@ class SinpBaseCustom {
       if (detailParams === this._lastSearchParams) {
         layerInstance.setSelectedFeatures([]);
         layerInstance.setFeatureInfoFeatures?.([]);
+        layerInstance.showSelectionPromptPanel?.();
         return;
       }
 
@@ -1006,19 +1018,11 @@ class SinpBaseCustom {
   }
 
   _shouldLoadEntityDataImmediately(params = {}) {
-    return (
-      params.targetLocCode === "2" &&
-      Array.isArray(params.communes) &&
-      params.communes.length === 1
-    );
+    return false;
   }
 
   _shouldPrefetchEntityDataOnSubmit(params = {}) {
-    if (!this.detailsTypeName || this._shouldLoadEntityDataImmediately(params)) {
-      return false;
-    }
-
-    return Boolean(this._getResultJoinConfig(params));
+    return false;
   }
 
   _shouldUseBlockingSearchOverlay(params = {}) {
@@ -1268,11 +1272,6 @@ class SinpBaseCustom {
     }
 
     this._selectionRequestInFlight = true;
-    this._setBlockingSearchOverlayVisible(true, {
-      title: "Chargement de la selection",
-      message:
-        "Merci de patienter, le detail de l'entite selectionnee est en cours de chargement.",
-    });
 
     try {
       normalizedFeatures.forEach((feature) => {
@@ -1299,7 +1298,6 @@ class SinpBaseCustom {
       throw error;
     } finally {
       this._selectionRequestInFlight = false;
-      this._setBlockingSearchOverlayVisible(false);
     }
   }
 
@@ -1314,8 +1312,8 @@ class SinpBaseCustom {
     }
 
     if (layerInstance.serverRenderOnly) {
-      await layerInstance.renderServerOnly(mainOptions);
       layerInstance.fitToFeatures?.(normalizedFeatures);
+      await layerInstance.renderServerOnly(mainOptions);
       return mainData;
     }
 
@@ -1354,24 +1352,14 @@ class SinpBaseCustom {
     }
 
     const request = (async () => {
-      const shouldPrefetchEntityData = this._shouldPrefetchEntityDataOnSubmit(normalizedParams);
       const mainDataPromise = this.fetchGeoServerData(mainOptions);
-      const detailDataPromise = shouldPrefetchEntityData
-        ? this._loadDetailProperties(normalizedParams, this.detailsTypeName)
-        : Promise.resolve(null);
-
-      const [mainData, detailProperties] = await Promise.all([
-        mainDataPromise,
-        detailDataPromise,
-      ]);
+      const mainData = await mainDataPromise;
       const mainFeatures = this.format.readFeatures(
         mainData || { type: "FeatureCollection", features: [] }
       );
       const enrichedFeatures =
         mainFeatures.length > 0
-          ? await this._enrichMainFeatures(mainFeatures, normalizedParams, {
-              prefetchedDetails: detailProperties,
-            })
+          ? await this._enrichMainFeatures(mainFeatures, normalizedParams)
           : [];
       const result = {
         mainData,
@@ -1408,6 +1396,7 @@ class SinpBaseCustom {
     const useSearchLoader = true;
 
     try {
+      this._searchRequestInFlight = true;
       this._lastSearchParams = normalizedParams;
       this._setLastResultFeatures([]);
       this._setBlockingSearchOverlayVisible(useSearchLoader);
@@ -1427,6 +1416,7 @@ class SinpBaseCustom {
       layerInstance.clear();
       throw error;
     } finally {
+      this._searchRequestInFlight = false;
       if (useSearchLoader) {
         this._setBlockingSearchOverlayVisible(false);
       }

@@ -359,6 +359,21 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     mviewer.addLayer = previousAddLayer;
   });
 
+  test("Ignore les clics carte pendant une nouvelle recherche", async () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+    });
+    const querySelectedFeatureSpy = jest
+      .spyOn(control, "_querySelectedFeature")
+      .mockResolvedValue(undefined);
+
+    control._searchRequestInFlight = true;
+    await control._handleMapClick({ coordinate: [10, 20] });
+
+    expect(querySelectedFeatureSpy).not.toHaveBeenCalled();
+    querySelectedFeatureSpy.mockRestore();
+  });
+
   test("Nettoie les autres restitutions sans vider l'alias de la couche courante", () => {
     const control = new SinpBaseCustom({
       layerId: "grid10x10search",
@@ -481,7 +496,7 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     });
   });
 
-  test("Charge immédiatement les détails seulement si une commune est explicitement filtrée", () => {
+  test("Ne charge jamais les détails pendant la recherche initiale", () => {
     const control = new SinpBaseCustom({
       layerId: "testControl",
       targetLocCode: "2",
@@ -493,7 +508,7 @@ describe("SinpBaseCustom - Scopage des détails", () => {
         communes: ["62225"],
         targetLocCode: "2",
       })
-    ).toBe(true);
+    ).toBe(false);
 
     expect(
       control._shouldLoadEntityDataImmediately({
@@ -548,6 +563,60 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     expect(result.detailKey).toContain("code_maille");
     expect(result.featureKey).toContain("codeLocali");
     expect(result.detailKey).toContain("cd_sig");
+  });
+
+  test("Met en cache les détails chargés à la demande pour une même entité", async () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      mainTypeName: "fn_get_stats",
+      detailsTypeName: "fn_get_obs_detaillee",
+      targetLocCode: "2",
+    });
+    const params = {
+      departements: ["62"],
+      dateDeb: "2021-01-01",
+      dateFin: "2026-03-10",
+      targetLocCode: "2",
+    };
+    const firstFeature = new ol.Feature({ code_insee: "62001" });
+    const secondFeature = new ol.Feature({ code_insee: "62001" });
+    const fetchGeoServerDataSpy = jest
+      .spyOn(control, "fetchGeoServerData")
+      .mockResolvedValue({
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            properties: {
+              code_insee: "62001",
+              id_origine: "obs-cache",
+            },
+          },
+        ],
+      });
+
+    await control._ensureEntityData([firstFeature], params);
+    await control._ensureEntityData([secondFeature], params);
+
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        TYPENAME: "sinp_diffusion:fn_get_obs_detaillee",
+        VIEWPARAMS: expect.stringContaining("CODE_INSEES:62001"),
+      })
+    );
+    expect(firstFeature.get("details")).toEqual([
+      expect.objectContaining({
+        id_origine: "obs-cache",
+      }),
+    ]);
+    expect(secondFeature.get("details")).toEqual([
+      expect.objectContaining({
+        id_origine: "obs-cache",
+      }),
+    ]);
+
+    fetchGeoServerDataSpy.mockRestore();
   });
 
   test("Les variantes de clés de maille reconnaissent le suffixe cd_sig", () => {
@@ -724,7 +793,7 @@ describe("GridSearch10x10Layer", () => {
 });
 
 describe("Grid server-render controls", () => {
-  test("Le contrôle gridSearch5x5 précharge les détails et les réutilise au clic", async () => {
+  test("Le contrôle gridSearch5x5 charge les détails seulement au clic", async () => {
     const controlApi = mviewer.customControls.gridSearch5x5;
     const layerInstance = mviewer.customLayers.gridSearch5x5._instance;
     const previousGetMap = mviewer.getMap;
@@ -841,7 +910,7 @@ describe("Grid server-render controls", () => {
     await clickHandler({ coordinate: [10, 20] });
     controlApi.destroy();
 
-    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(2);
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
     expect(fetchServerRenderFeaturesSpy).not.toHaveBeenCalled();
     expect(referenceSource.getFeatureInfoUrl).toHaveBeenCalledWith(
       [10, 20],
@@ -852,7 +921,7 @@ describe("Grid server-render controls", () => {
         FEATURE_COUNT: 1,
       })
     );
-    expect(ensureEntityDataSpy).not.toHaveBeenCalled();
+    expect(ensureEntityDataSpy).toHaveBeenCalled();
     expect(unSpy).toHaveBeenCalledWith("singleclick", clickHandler);
 
     mviewer.getMap = previousGetMap;
@@ -864,7 +933,7 @@ describe("Grid server-render controls", () => {
     fetchServerRenderFeaturesSpy.mockRestore();
   });
 
-  test("Le contrôle grid10x10search précharge les détails et les réutilise au clic", async () => {
+  test("Le contrôle grid10x10search charge les détails seulement au clic", async () => {
     const controlApi = mviewer.customControls.grid10x10search;
     const layerInstance = mviewer.customLayers.grid10x10search._instance;
     const previousGetMap = mviewer.getMap;
@@ -981,7 +1050,7 @@ describe("Grid server-render controls", () => {
     await clickHandler({ coordinate: [10, 20] });
     controlApi.destroy();
 
-    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(2);
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
     expect(fetchServerRenderFeaturesSpy).not.toHaveBeenCalled();
     expect(referenceSource.getFeatureInfoUrl).toHaveBeenCalledWith(
       [10, 20],
@@ -992,7 +1061,7 @@ describe("Grid server-render controls", () => {
         FEATURE_COUNT: 1,
       })
     );
-    expect(ensureEntityDataSpy).not.toHaveBeenCalled();
+    expect(ensureEntityDataSpy).toHaveBeenCalled();
     expect(unSpy).toHaveBeenCalledWith("singleclick", clickHandler);
 
     mviewer.getMap = previousGetMap;
@@ -1036,7 +1105,7 @@ describe("Grid server-render controls", () => {
       },
     },
   ])(
-    "Le contrôle $label réutilise les détails préchargés via le flux WMS-only",
+    "Le contrôle $label charge les détails au clic via le flux WMS-only",
     async ({
       controlKey,
       layerKey,
@@ -1124,9 +1193,9 @@ describe("Grid server-render controls", () => {
       await clickHandler({ coordinate: [10, 20] });
       controlApi.destroy();
 
-      expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(2);
+      expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
       expect(fetchServerRenderFeaturesSpy).toHaveBeenCalledWith([10, 20]);
-      expect(ensureEntityDataSpy).not.toHaveBeenCalled();
+      expect(ensureEntityDataSpy).toHaveBeenCalled();
       expect(unSpy).toHaveBeenCalledWith("singleclick", clickHandler);
 
       mviewer.getMap = previousGetMap;
@@ -1143,10 +1212,11 @@ describe("CommuneSearchLayer", () => {
     const instance = mviewer.customLayers.communeSearch._instance;
     expect(instance.serverStyle?.enabled).toBe(true);
     expect(instance.serverRenderOnly).toBe(true);
+    expect(instance.serverRenderRatio).toBe(1.5);
     expect(instance._serverRenderLayer).toBeDefined();
   });
 
-  test("Le contrôle communeSearch précharge fn_get_stats et fn_get_obs_detaillee en plus du rendu WMS", async () => {
+  test("Le contrôle communeSearch ne précharge pas fn_get_obs_detaillee avec fn_get_stats", async () => {
     const control = mviewer.customControls.communeSearch;
     const layerInstance = mviewer.customLayers.communeSearch._instance;
     const renderServerOnlySpy = jest
@@ -1206,7 +1276,7 @@ describe("CommuneSearchLayer", () => {
         TYPENAME: "sinp_diffusion:fn_get_stats",
       })
     );
-    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(2);
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
     expect(fitToFeaturesSpy).toHaveBeenCalledWith(
       expect.arrayContaining([
         expect.objectContaining({
@@ -1214,14 +1284,16 @@ describe("CommuneSearchLayer", () => {
         }),
       ])
     );
+    expect(fitToFeaturesSpy.mock.invocationCallOrder[0]).toBeLessThan(
+      renderServerOnlySpy.mock.invocationCallOrder[0]
+    );
     expect(fetchGeoServerDataSpy).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         TYPENAME: "sinp_diffusion:fn_get_stats",
       })
     );
-    expect(fetchGeoServerDataSpy).toHaveBeenNthCalledWith(
-      2,
+    expect(fetchGeoServerDataSpy).not.toHaveBeenCalledWith(
       expect.objectContaining({
         TYPENAME: "sinp_diffusion:fn_get_obs_detaillee",
       })
@@ -1256,7 +1328,7 @@ describe("CommuneSearchLayer", () => {
     mviewer.getMap = previousGetMap;
   });
 
-  test("Le contrôle communeSearch réutilise les détails préchargés après GetFeatureInfo", async () => {
+  test("Le contrôle communeSearch charge les détails après GetFeatureInfo", async () => {
     const controlApi = mviewer.customControls.communeSearch;
     const layerInstance = mviewer.customLayers.communeSearch._instance;
     const previousGetMap = mviewer.getMap;
@@ -1368,8 +1440,8 @@ describe("CommuneSearchLayer", () => {
 
     expect(fetchServerRenderFeaturesSpy).not.toHaveBeenCalled();
     expect(global.fetch).toHaveBeenCalled();
-    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(2);
-    expect(ensureEntityDataSpy).not.toHaveBeenCalled();
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
+    expect(ensureEntityDataSpy).toHaveBeenCalled();
     expect(unSpy).toHaveBeenCalledWith("singleclick", clickHandler);
 
     mviewer.getMap = previousGetMap;

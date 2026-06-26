@@ -17,6 +17,7 @@ class SinpBaseLayer {
     this.format = new ol.format.GeoJSON();
     this.serverStyle = config.serverStyle || null;
     this.serverRenderOnly = config.serverRenderOnly === true;
+    this.serverRenderRatio = config.serverRenderRatio || 1.5;
     this._serverStyleActive = false;
     this._pendingServerRenderPromise = Promise.resolve();
     this._serverInfoFormat = config.serverInfoFormat || "application/vnd.ogc.gml";
@@ -294,7 +295,7 @@ class SinpBaseLayer {
         FORMAT: "image/png",
         TRANSPARENT: true,
       },
-      ratio: 1,
+      ratio: this.serverRenderRatio,
       serverType: "geoserver",
     });
 
@@ -813,6 +814,38 @@ class SinpBaseLayer {
 
     const viewData = this._renderHTML(normalizedFeatures);
     this._showResultsPanel(viewData);
+  }
+
+  showFeatureInfoLoading() {
+    const loadingFeature = new ol.Feature({
+      details: [],
+      jdd_details: [],
+      entity_data_loading: true,
+      entity_data_loaded: false,
+      entity_data_error: null,
+      jdd_data_loading: false,
+      jdd_data_loaded: false,
+      jdd_data_error: null,
+    });
+
+    if (!loadingFeature.ol_uid) {
+      loadingFeature.ol_uid =
+        typeof ol.getUid === "function"
+          ? ol.getUid(loadingFeature)
+          : `sinp-loading-${Date.now()}`;
+    }
+
+    this.setFeatureInfoFeatures([loadingFeature]);
+    this.showFeatureInfo([loadingFeature]);
+  }
+
+  showSelectionPromptPanel() {
+    this._showResultsPanel({
+      html: `<mv-feature-search-results data-layer-id="${this.layerId}" data-selection-prompt="true"></mv-feature-search-results>`,
+      panelType: configuration.getConfiguration().mobile
+        ? "modal-panel"
+        : mviewer.getLayer(this.layerId)?.infospanel || "right-panel",
+    });
   }
 
   showSelectionPrompt(features, queryOptions = null) {
