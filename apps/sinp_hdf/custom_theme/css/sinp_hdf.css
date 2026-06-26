@@ -61,6 +61,19 @@
     transition: width 0.5s ease;
 }   
 
+/* Les restitutions restent configurees pour mviewer mais sont pilotees par le switch React. */
+#theme-layers-searchTheme,
+#theme-layers-searchTheme .mv-nav-item,
+#layers-container .mv-layer-details[data-layerid="communeSearch"],
+#layers-container .mv-layer-details[data-layerid="gridSearch5x5"],
+#layers-container .mv-layer-details[data-layerid="grid10x10search"],
+#legend-modal .mv-layer-details[data-layerid="communeSearch"],
+#legend-modal .mv-layer-details[data-layerid="gridSearch5x5"],
+#legend-modal .mv-layer-details[data-layerid="grid10x10search"],
+#thematic-modal #theme-layers-searchTheme {
+  display: none !important;
+}
+
 #layers-container-box {
     left: var(--sinp-sidebar-width) !important; /* Ajusté pour la largeur du sidebar personnalisé */
 }

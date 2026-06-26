@@ -10,7 +10,11 @@ import {
   TAB_IDS,
 } from "./searchResults.utils";
 
-const SearchResultsComponent = ({ layerId, featureUid, promptOnly = false }) => {
+const SearchResultsComponent = ({
+  layerId,
+  featureUid,
+  promptOnly = false,
+}) => {
   const [activeTab, setActiveTab] = useState(TAB_IDS.OBSERVATIONS);
   const [feature, setFeature] = useState(() => getFeatureByUid(layerId, featureUid));
   const [, setFeatureRevision] = useState(0);

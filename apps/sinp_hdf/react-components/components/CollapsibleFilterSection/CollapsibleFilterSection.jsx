@@ -26,11 +26,11 @@ const CollapsibleFilterSection = ({
         </button>
       </div>
 
-      {isExpanded && (
+      <div className="section-content-collapse" aria-hidden={!isExpanded}>
         <div className="section-content">
           {children}
         </div>
-      )}
+      </div>
     </div>
   );
 };

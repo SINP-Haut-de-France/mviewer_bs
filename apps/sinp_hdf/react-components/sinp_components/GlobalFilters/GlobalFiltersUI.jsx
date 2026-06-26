@@ -20,6 +20,9 @@ const GlobalFiltersUI = ({
   actionLabels,
   isLoading = false,
   hasActiveFilters = true,
+  restitutionLayers = [],
+  selectedRestitutionLayerId = null,
+  onRestitutionChange = null,
 }) => {
   return (
     <div className="global-filters-container">
@@ -31,6 +34,31 @@ const GlobalFiltersUI = ({
       {/*    </small>*/}
       {/*  </div>*/}
       {/*)}*/}
+      {restitutionLayers.length > 0 && (
+        <CollapsibleFilterSection
+          title="Couche de restitution"
+          icon="fa-layer-group"
+          defaultExpanded={true}>
+          <div className="btn-group btn-group-sm mv-restitution-switch" role="group">
+            {restitutionLayers.map((restitutionLayer) => {
+              const isSelected = restitutionLayer.id === selectedRestitutionLayerId;
+
+              return (
+                <button
+                  key={restitutionLayer.id}
+                  type="button"
+                  className={`btn ${isSelected ? "btn-primary" : "btn-outline-primary"}`}
+                  disabled={isLoading || isSelected}
+                  aria-pressed={isSelected}
+                  onClick={() => onRestitutionChange?.(restitutionLayer.id)}>
+                  {restitutionLayer.label}
+                </button>
+              );
+            })}
+          </div>
+        </CollapsibleFilterSection>
+      )}
+
       {/* Section Groupes taxonomiques */}
       {filterVisibility.showTaxonomicGroup && (
         <CollapsibleFilterSection

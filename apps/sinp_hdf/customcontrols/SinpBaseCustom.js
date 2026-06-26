@@ -3,6 +3,10 @@ class SinpBaseCustom {
 
   static MAX_SELECTED_COMMUNES = 5;
 
+  static SEARCH_RESULT_CACHE = new Map();
+
+  static SEARCH_RESULT_REQUESTS = new Map();
+
   static DEFAULT_PARAMETERS = {
     BASEURL: `${mviewer.env?.[mviewer.env?.CURRENT_ENV]?.GEOSERVER_BASE_URL}/wfs`,
     SERVICE: "WFS",
@@ -12,33 +16,86 @@ class SinpBaseCustom {
     srsName: "EPSG:2154",
   };
 
+  static SEARCH_LAYER_IDS = [
+    "communeSearch",
+    "advancedSearch",
+    "gridSearch5x5",
+    "grid10x10search",
+    "gridSearch10x10",
+  ];
+
   constructor(config = {}) {
     this.layerId = config.layerId;
     this.mainTypeName = config.mainTypeName;
     this.detailsTypeName = config.detailsTypeName || null;
     this.metadataTypeName = config.metadataTypeName || config.jddDetailsTypeName || null;
     this.targetLocCode = config.targetLocCode || null;
-    this.entityCodeKeys = config.entityCodeKeys || [
+    const defaultEntityCodeKeys = [
       "code_insee",
+      "insee_com",
       "code_maille",
       "id_maille",
       "maille",
       "code",
+      "codeLocali",
+      "cd_sig",
       "adm_id",
       "commune_id",
       "communeId",
       "ref_dep",
     ];
+    this.entityCodeKeys = Array.from(
+      new Set([...(config.entityCodeKeys || []), ...defaultEntityCodeKeys])
+    );
     this.format = new ol.format.GeoJSON();
     this._lastSearchParams = null;
     this._dataCache = new Map();
     this._dataRequests = new Map();
     this._featureInfoRenderToken = 0;
     this._selectionRequestInFlight = false;
+    this._searchRequestInFlight = false;
+    this._lastResultFeatures = [];
+    this._activeSearchLoaderMessages = [];
+    this._boundMapClickHandler = this._handleMapClick.bind(this);
+    this._mapClickHandlerRegistered = false;
   }
 
   getLayerInstance() {
     return mviewer.customLayers?.[this.layerId]?._instance || null;
+  }
+
+  _activateSearchLayer() {
+    const layerConfig = mviewer.getLayer?.(this.layerId);
+    const layer = layerConfig?.layer;
+
+    if (!layer) {
+      return;
+    }
+
+    if (!layer.getVisible?.()) {
+      if (typeof mviewer.addLayer === "function" && layerConfig.showintoc) {
+        mviewer.addLayer(layerConfig);
+      } else {
+        layer.setVisible(true);
+      }
+    }
+  }
+
+  _clearOtherSearchLayers() {
+    const currentLayerInstance = this.getLayerInstance();
+
+    this.constructor.SEARCH_LAYER_IDS.forEach((layerId) => {
+      if (layerId === this.layerId) {
+        return;
+      }
+
+      const layerInstance = mviewer.customLayers?.[layerId]?._instance;
+      if (!layerInstance || layerInstance === currentLayerInstance) {
+        return;
+      }
+
+      layerInstance.clear?.();
+    });
   }
 
   _buildQueryURL(options = {}) {
@@ -94,6 +151,37 @@ class SinpBaseCustom {
     return params;
   }
 
+  _shouldFetchMainFeatures() {
+    return !this.getLayerInstance()?.serverRenderOnly;
+  }
+
+  init() {
+    const layerInstance = this.getLayerInstance();
+    if (!layerInstance?.serverRenderOnly) {
+      return;
+    }
+
+    layerInstance._ensureServerRenderLayer?.();
+
+    const map = mviewer.getMap();
+    if (!map || this._mapClickHandlerRegistered) {
+      return;
+    }
+
+    map.on("singleclick", this._boundMapClickHandler);
+    this._mapClickHandlerRegistered = true;
+  }
+
+  destroy() {
+    const map = mviewer.getMap();
+    if (map && this._mapClickHandlerRegistered) {
+      map.un("singleclick", this._boundMapClickHandler);
+    }
+
+    this._mapClickHandlerRegistered = false;
+    this._lastResultFeatures = [];
+  }
+
   _resolveRequestTypeName(primaryTypeName, fallbackTypeName = null) {
     if (typeof primaryTypeName === "string" && primaryTypeName.trim() !== "") {
       return primaryTypeName.trim();
@@ -104,6 +192,20 @@ class SinpBaseCustom {
     }
 
     return primaryTypeName;
+  }
+
+  async _handleMapClick(evt) {
+    if (this._searchRequestInFlight) {
+      return;
+    }
+
+    if (!Array.isArray(evt?.coordinate)) {
+      return;
+    }
+
+    window.setTimeout(() => {
+      this._querySelectedFeature(evt.coordinate);
+    }, 0);
   }
 
   _deferFeatureInfoRender(layerInstance, features = []) {
@@ -120,6 +222,95 @@ class SinpBaseCustom {
   _resetDataCache() {
     this._dataCache.clear();
     this._dataRequests.clear();
+  }
+
+  _normalizeCacheValue(value) {
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => this._normalizeCacheValue(item))
+        .sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right)));
+    }
+
+    if (value && typeof value === "object") {
+      return Object.keys(value)
+        .sort()
+        .reduce((accumulator, key) => {
+          if (key === "forceRefresh" || key === "__forceRefresh") {
+            return accumulator;
+          }
+
+          accumulator[key] = this._normalizeCacheValue(value[key]);
+          return accumulator;
+        }, {});
+    }
+
+    return value;
+  }
+
+  _getSearchResultCacheKey(params = {}, mainOptions = {}) {
+    return JSON.stringify({
+      layerId: this.layerId,
+      typeName: mainOptions?.TYPENAME || this.mainTypeName || "",
+      viewParams: mainOptions?.VIEWPARAMS || "",
+      cqlFilter: mainOptions?.CQL_FILTER || "",
+      params: this._normalizeCacheValue(params),
+    });
+  }
+
+  _shouldForceSearchRefresh(params = {}, options = {}) {
+    return (
+      options.forceRefresh === true ||
+      params.forceRefresh === true ||
+      params.__forceRefresh === true
+    );
+  }
+
+  _getCachedSearchResult(cacheKey, forceRefresh = false) {
+    if (!cacheKey || forceRefresh) {
+      return null;
+    }
+
+    return this.constructor.SEARCH_RESULT_CACHE.get(cacheKey) || null;
+  }
+
+  _setCachedSearchResult(cacheKey, result) {
+    if (!cacheKey) {
+      return;
+    }
+
+    this.constructor.SEARCH_RESULT_CACHE.set(cacheKey, result);
+  }
+
+  _getSearchResultRequest(cacheKey, forceRefresh = false) {
+    if (!cacheKey || forceRefresh) {
+      return null;
+    }
+
+    return this.constructor.SEARCH_RESULT_REQUESTS.get(cacheKey) || null;
+  }
+
+  _setSearchResultRequest(cacheKey, request) {
+    if (!cacheKey) {
+      return;
+    }
+
+    this.constructor.SEARCH_RESULT_REQUESTS.set(cacheKey, request);
+  }
+
+  _clearSearchResultRequest(cacheKey) {
+    if (!cacheKey) {
+      return;
+    }
+
+    this.constructor.SEARCH_RESULT_REQUESTS.delete(cacheKey);
+  }
+
+  _setLastResultFeatures(features = []) {
+    this._lastResultFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
+  }
+
+  _getLastResultFeatures() {
+    return this._lastResultFeatures;
   }
 
   _getDataRequestCacheKey(params = {}, typeName) {
@@ -176,54 +367,27 @@ class SinpBaseCustom {
     return request;
   }
 
-  _ensureBlockingSearchOverlay() {
-    let overlay = document.getElementById("mv-search-blocking-overlay");
-    if (overlay) {
-      return overlay;
-    }
-
-    overlay = document.createElement("div");
-    overlay.id = "mv-search-blocking-overlay";
-    overlay.setAttribute("aria-hidden", "true");
-    Object.assign(overlay.style, {
-      position: "fixed",
-      inset: "0",
-      zIndex: "100000",
-      display: "none",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "rgba(15, 23, 42, 0.45)",
-      backdropFilter: "blur(1px)",
-      pointerEvents: "all",
-    });
-
-    overlay.innerHTML =
-      '<div style="display:flex;flex-direction:column;align-items:center;gap:12px;max-width:420px;padding:24px 28px;border-radius:12px;background:#ffffff;box-shadow:0 18px 40px rgba(15,23,42,.25);text-align:center;color:#0f172a;">' +
-      '<i class="fas fa-spinner fa-spin" aria-hidden="true" style="font-size:32px;color:#0b3a6e;"></i>' +
-      '<div id="mv-search-blocking-overlay-title" style="font-size:16px;font-weight:700;">Recherche en cours</div>' +
-      '<div id="mv-search-blocking-overlay-message" style="font-size:13px;line-height:1.45;color:#475569;">Merci de patienter, le volume de données à remonter peut nécessiter quelques instants.</div>' +
-      "</div>";
-
-    document.body.appendChild(overlay);
-    return overlay;
-  }
-
   _setBlockingSearchOverlayVisible(visible, options = {}) {
-    const overlay = this._ensureBlockingSearchOverlay();
-    const titleElement = overlay.querySelector("#mv-search-blocking-overlay-title");
-    const messageElement = overlay.querySelector("#mv-search-blocking-overlay-message");
-
-    if (titleElement) {
-      titleElement.textContent = options.title || "Recherche en cours";
-    }
-    if (messageElement) {
-      messageElement.textContent =
-        options.message ||
-        "Merci de patienter, le volume de données à remonter peut nécessiter quelques instants.";
+    const loader = mviewer.customLayers?.SinpBaseLayer;
+    if (!loader) {
+      return;
     }
 
-    overlay.style.display = visible ? "flex" : "none";
-    overlay.setAttribute("aria-hidden", visible ? "false" : "true");
+    const message = options.message || "Chargement des données de recherche…";
+
+    if (visible) {
+      this._activeSearchLoaderMessages.push(message);
+      loader._startServerRenderLoad({
+        blockMap: true,
+        message,
+      });
+      return;
+    }
+
+    loader._finishServerRenderLoad({
+      blockMap: true,
+      message: this._activeSearchLoaderMessages.pop() || message,
+    });
   }
 
   _normalizeStandardFilters(params = {}) {
@@ -383,6 +547,22 @@ class SinpBaseCustom {
     return variants;
   }
 
+  _getEntityJoinValues(source, candidates, accessor, params = {}) {
+    const candidateList = Array.isArray(candidates) ? candidates : [candidates];
+    const values = [];
+
+    for (const candidate of candidateList) {
+      const value = accessor(source, candidate);
+      this._expandEntityKeyVariants(value, params).forEach((normalizedValue) => {
+        if (!values.includes(normalizedValue)) {
+          values.push(normalizedValue);
+        }
+      });
+    }
+
+    return values;
+  }
+
   _getDetailRequestScopeConfig(params = {}) {
     const resolvedTargetLocCode = this._getResolvedTargetLocCode(params);
 
@@ -412,18 +592,179 @@ class SinpBaseCustom {
     return null;
   }
 
-  _buildDetailRequestParams(features = [], params = {}) {
+  _normalizeSelectedFeature(feature, params = this._lastSearchParams || {}) {
+    if (!feature?.getProperties || !feature?.getGeometry) {
+      return feature;
+    }
+
+    const scopeConfig = this._getDetailRequestScopeConfig(params);
+    const properties = feature.getProperties();
+    const normalizedFeature = new ol.Feature({
+      ...properties,
+      geometry: feature.getGeometry()?.clone?.() || feature.getGeometry(),
+    });
+
+    if (!scopeConfig) {
+      return normalizedFeature;
+    }
+
+    const selectedCode = this._extractSelectedEntityCode(feature, params);
+    if (!selectedCode) {
+      return normalizedFeature;
+    }
+
+    if (scopeConfig.paramName === "communes") {
+      normalizedFeature.set("code_insee", selectedCode);
+      normalizedFeature.set("code", selectedCode);
+      return normalizedFeature;
+    }
+
+    if (scopeConfig.paramName === "mailles") {
+      normalizedFeature.set("code_maille", selectedCode);
+      normalizedFeature.set("maille", selectedCode);
+      normalizedFeature.set("code", selectedCode);
+    }
+
+    return normalizedFeature;
+  }
+
+  _extractSelectedEntityCode(feature, params = this._lastSearchParams || {}) {
+    if (!feature?.get) {
+      return null;
+    }
+
+    const scopeConfig = this._getDetailRequestScopeConfig(params);
+    if (!scopeConfig) {
+      return null;
+    }
+
+    for (const key of this.entityCodeKeys) {
+      const normalizedValue = scopeConfig.normalizeValue(feature.get(key));
+      if (normalizedValue) {
+        return normalizedValue;
+      }
+    }
+
+    return null;
+  }
+
+  async _fetchSelectionFeatures(coordinate) {
+    const layerInstance = this.getLayerInstance();
+    if (!layerInstance?.fetchServerRenderFeatures) {
+      return [];
+    }
+
+    return layerInstance.fetchServerRenderFeatures(coordinate);
+  }
+
+  async _querySelectedFeature(coordinate) {
+    const layerInstance = this.getLayerInstance();
+    if (
+      this._searchRequestInFlight ||
+      !layerInstance?._canQueryServerRender() ||
+      !this._lastSearchParams
+    ) {
+      return;
+    }
+
+    try {
+      layerInstance.showFeatureInfoLoading?.();
+      const features = await this._fetchSelectionFeatures(coordinate);
+
+      if (!features.length) {
+        layerInstance.setSelectedFeatures([]);
+        layerInstance.setFeatureInfoFeatures?.([]);
+        layerInstance.showSelectionPromptPanel?.();
+        return;
+      }
+
+      const selectedFeature = this._findCachedResultFeature(
+        this._normalizeSelectedFeature(features[0], this._lastSearchParams),
+        this._lastSearchParams
+      );
+      const detailParams = this._buildDetailRequestParams(
+        [selectedFeature],
+        this._lastSearchParams,
+        {
+          preferFeatureScope: true,
+        }
+      );
+
+      if (detailParams === this._lastSearchParams) {
+        layerInstance.setSelectedFeatures([]);
+        layerInstance.setFeatureInfoFeatures?.([]);
+        layerInstance.showSelectionPromptPanel?.();
+        return;
+      }
+
+      const previousParams = this._lastSearchParams;
+      this._lastSearchParams = detailParams;
+
+      try {
+        await this.handle([selectedFeature]);
+      } finally {
+        this._lastSearchParams = previousParams;
+      }
+    } catch (error) {
+      console.error(`[${this.layerId}] Error during WMS GetFeatureInfo:`, error);
+      if (typeof mviewer.alert === "function") {
+        mviewer.alert(
+          "Impossible d'interroger la couche GeoServer pour cette sélection.",
+          "alert-danger"
+        );
+      }
+    }
+  }
+
+  _findCachedResultFeature(feature, params = this._lastSearchParams || {}) {
+    if (!feature?.get) {
+      return feature;
+    }
+
+    const joinConfig = this._getResultJoinConfig(params);
+    if (!joinConfig) {
+      return feature;
+    }
+
+    const featureKeys = this._getEntityJoinValues(
+      feature,
+      joinConfig.featureKey,
+      (source, candidate) => source?.get(candidate),
+      params
+    );
+    if (!featureKeys.length) {
+      return feature;
+    }
+
+    const featureKeySet = new Set(featureKeys);
+    const cachedFeature =
+      this._getLastResultFeatures().find((candidateFeature) => {
+        const candidateKeys = this._getEntityJoinValues(
+          candidateFeature,
+          joinConfig.featureKey,
+          (source, candidate) => source?.get(candidate),
+          params
+        );
+
+        return candidateKeys.some((candidateKey) => featureKeySet.has(candidateKey));
+      }) || null;
+
+    return cachedFeature || feature;
+  }
+
+  _buildDetailRequestParams(features = [], params = {}, options = {}) {
     const scopeConfig = this._getDetailRequestScopeConfig(params);
     if (!scopeConfig) {
       return params;
     }
 
+    const preferFeatureScope = options.preferFeatureScope === true;
     const explicitScopedValues =
       scopeConfig.paramName === "communes"
         ? this._normalizeCommuneCodes(params.communes || [])
         : this._normalizeGridCodes(params.mailles || []);
 
-    if (explicitScopedValues.length > 0) {
+    if (explicitScopedValues.length > 0 && !preferFeatureScope) {
       const scopedParams =
         scopeConfig.paramName === "mailles"
           ? {
@@ -584,31 +925,34 @@ class SinpBaseCustom {
 
     const properties = await propertiesLoader.call(this, params, typeName);
 
+    return this._attachResolvedPropertiesToFeatures(mainFeatures, properties, params, {
+      mode,
+      featureKey,
+      detailKey,
+      targetProperty,
+    });
+  }
+
+  _attachResolvedPropertiesToFeatures(mainFeatures, properties = [], params, config = {}) {
+    const {
+      mode = "all",
+      featureKey = null,
+      detailKey = null,
+      targetProperty = "details",
+    } = config;
+
     if (!properties.length) {
       return mainFeatures;
     }
 
     if (mode === "match" && featureKey && detailKey) {
-      const getCandidateValues = (source, candidates, accessor) => {
-        const candidateList = Array.isArray(candidates) ? candidates : [candidates];
-        const values = [];
-
-        for (const candidate of candidateList) {
-          const value = accessor(source, candidate);
-          this._expandEntityKeyVariants(value, params).forEach((normalizedValue) => {
-            if (!values.includes(normalizedValue)) {
-              values.push(normalizedValue);
-            }
-          });
-        }
-
-        return values;
-      };
-
       const propertiesByEntityId = properties.reduce((accumulator, item) => {
-        const keys = getCandidateValues(item, detailKey, (source, candidate) => {
-          return source?.[candidate];
-        });
+        const keys = this._getEntityJoinValues(
+          item,
+          detailKey,
+          (source, candidate) => source?.[candidate],
+          params
+        );
 
         if (!keys.length) {
           return accumulator;
@@ -626,9 +970,12 @@ class SinpBaseCustom {
       }, {});
 
       mainFeatures.forEach((feature) => {
-        const keys = getCandidateValues(feature, featureKey, (source, candidate) => {
-          return source?.get(candidate);
-        });
+        const keys = this._getEntityJoinValues(
+          feature,
+          featureKey,
+          (source, candidate) => source?.get(candidate),
+          params
+        );
         const matches = [];
         const seenMatches = new Set();
 
@@ -671,11 +1018,11 @@ class SinpBaseCustom {
   }
 
   _shouldLoadEntityDataImmediately(params = {}) {
-    return (
-      params.targetLocCode === "2" &&
-      Array.isArray(params.communes) &&
-      params.communes.length === 1
-    );
+    return false;
+  }
+
+  _shouldPrefetchEntityDataOnSubmit(params = {}) {
+    return false;
   }
 
   _shouldUseBlockingSearchOverlay(params = {}) {
@@ -750,6 +1097,37 @@ class SinpBaseCustom {
     return normalizedFeatures;
   }
 
+  async _prefetchEntityDataForSearch(
+    features = [],
+    params = this._lastSearchParams || {},
+    prefetchedProperties = null
+  ) {
+    const normalizedFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
+    if (!normalizedFeatures.length || !this._shouldPrefetchEntityDataOnSubmit(params)) {
+      return normalizedFeatures;
+    }
+
+    const joinConfig = this._getResultJoinConfig(params);
+    const properties =
+      prefetchedProperties ??
+      (await this._loadDetailProperties(params, this.detailsTypeName));
+
+    this._attachResolvedPropertiesToFeatures(normalizedFeatures, properties || [], params, {
+      mode: joinConfig ? "match" : "all",
+      featureKey: joinConfig?.featureKey || null,
+      detailKey: joinConfig?.detailKey || null,
+      targetProperty: "details",
+    });
+
+    normalizedFeatures.forEach((feature) => {
+      feature.set("entity_data_loading", false);
+      feature.set("entity_data_error", null);
+      feature.set("entity_data_loaded", true);
+    });
+
+    return normalizedFeatures;
+  }
+
   async ensureMetadataForFeatures(features = [], params = this._lastSearchParams || {}) {
     const normalizedFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
     if (!normalizedFeatures.length || !this.metadataTypeName) {
@@ -805,11 +1183,19 @@ class SinpBaseCustom {
     return normalizedFeatures;
   }
 
-  async _enrichSearchFeatures(mainFeatures, params) {
+  async _enrichSearchFeatures(mainFeatures, params, context = {}) {
     this._initializeFeatureCollections(mainFeatures);
 
     if (!this._shouldLoadEntityDataImmediately(params)) {
-      return mainFeatures;
+      if (!this._shouldPrefetchEntityDataOnSubmit(params)) {
+        return mainFeatures;
+      }
+
+      return this._prefetchEntityDataForSearch(
+        mainFeatures,
+        params,
+        context.prefetchedDetails ?? null
+      );
     }
 
     return this._ensureEntityData(mainFeatures, params);
@@ -828,8 +1214,8 @@ class SinpBaseCustom {
     });
   }
 
-  async _enrichMainFeatures(mainFeatures, params) {
-    return this._enrichSearchFeatures(mainFeatures, params);
+  async _enrichMainFeatures(mainFeatures, params, context = {}) {
+    return this._enrichSearchFeatures(mainFeatures, params, context);
   }
 
   _prefetchMetadataForFeatures(layerInstance, features = []) {
@@ -862,6 +1248,9 @@ class SinpBaseCustom {
     }
 
     layerInstance.setSelectedFeatures?.(normalizedFeatures);
+    if (layerInstance.serverRenderOnly) {
+      layerInstance.setFeatureInfoFeatures?.(normalizedFeatures);
+    }
 
     if (!this._lastSearchParams) {
       this._deferFeatureInfoRender(layerInstance, normalizedFeatures);
@@ -882,13 +1271,7 @@ class SinpBaseCustom {
       return;
     }
 
-    $("#loading-indicator").show();
     this._selectionRequestInFlight = true;
-    this._setBlockingSearchOverlayVisible(true, {
-      title: "Chargement de la selection",
-      message:
-        "Merci de patienter, le detail de l'entite selectionnee est en cours de chargement.",
-    });
 
     try {
       normalizedFeatures.forEach((feature) => {
@@ -915,60 +1298,126 @@ class SinpBaseCustom {
       throw error;
     } finally {
       this._selectionRequestInFlight = false;
-      this._setBlockingSearchOverlayVisible(false);
-      $("#loading-indicator").hide();
     }
   }
 
-  async submit(params = {}) {
+  async _renderSearchResult(layerInstance, features = [], mainOptions = {}, mainData = null) {
+    const normalizedFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
+
+    this._setLastResultFeatures(normalizedFeatures);
+
+    if (normalizedFeatures.length === 0) {
+      layerInstance.clear();
+      return mainData;
+    }
+
+    if (layerInstance.serverRenderOnly) {
+      layerInstance.fitToFeatures?.(normalizedFeatures);
+      await layerInstance.renderServerOnly(mainOptions);
+      return mainData;
+    }
+
+    if (this._shouldLoadEntityDataImmediately(this._lastSearchParams || {})) {
+      await layerInstance.renderFeatures(normalizedFeatures, mainOptions);
+      return mainData;
+    }
+
+    await layerInstance.showSelectionPrompt(normalizedFeatures, mainOptions);
+    return mainData;
+  }
+
+  async _loadSearchResultInMemory(params = {}, options = {}) {
     const layerInstance = this.getLayerInstance();
     if (!layerInstance) {
       throw new Error(`Layer introuvable pour ${this.layerId}`);
     }
 
     const normalizedParams = this._normalizeInputParams(params);
-    const useBlockingOverlay = this._shouldUseBlockingSearchOverlay(normalizedParams);
+    const mainTypeName = this._resolveRequestTypeName(
+      this.mainTypeName,
+      layerInstance?.typeName
+    );
+    const mainOptions = this.buildRequestOptions(normalizedParams, mainTypeName);
+    const forceRefresh = this._shouldForceSearchRefresh(params, options);
+    const cacheKey = this._getSearchResultCacheKey(normalizedParams, mainOptions);
+    const cachedResult = this._getCachedSearchResult(cacheKey, forceRefresh);
 
-    try {
-      this._lastSearchParams = normalizedParams;
-      this._resetDataCache();
-      if (useBlockingOverlay) {
-        this._setBlockingSearchOverlayVisible(true);
-      }
-      layerInstance.beforeLoad();
+    if (cachedResult) {
+      return cachedResult;
+    }
 
-      const mainTypeName = this._resolveRequestTypeName(
-        this.mainTypeName,
-        layerInstance?.typeName
-      );
-      const mainOptions = this.buildRequestOptions(normalizedParams, mainTypeName);
-      const mainData = await this.fetchGeoServerData(mainOptions);
+    const pendingRequest = this._getSearchResultRequest(cacheKey, forceRefresh);
+    if (pendingRequest) {
+      return pendingRequest;
+    }
+
+    const request = (async () => {
+      const mainDataPromise = this.fetchGeoServerData(mainOptions);
+      const mainData = await mainDataPromise;
       const mainFeatures = this.format.readFeatures(
         mainData || { type: "FeatureCollection", features: [] }
       );
+      const enrichedFeatures =
+        mainFeatures.length > 0
+          ? await this._enrichMainFeatures(mainFeatures, normalizedParams)
+          : [];
+      const result = {
+        mainData,
+        features: enrichedFeatures,
+      };
 
-      if (mainFeatures.length === 0) {
-        layerInstance.clear();
-        return mainData;
-      }
+      this._setCachedSearchResult(cacheKey, result);
+      return result;
+    })()
+      .catch((error) => {
+        this._clearSearchResultRequest(cacheKey);
+        throw error;
+      })
+      .finally(() => {
+        this._clearSearchResultRequest(cacheKey);
+      });
 
-      const enrichedFeatures = await this._enrichMainFeatures(
-        mainFeatures,
-        normalizedParams
+    this._setSearchResultRequest(cacheKey, request);
+    return request;
+  }
+
+  async submit(params = {}, options = {}) {
+    const layerInstance = this.getLayerInstance();
+    if (!layerInstance) {
+      throw new Error(`Layer introuvable pour ${this.layerId}`);
+    }
+
+    const normalizedParams = this._normalizeInputParams(params);
+    const mainTypeName = this._resolveRequestTypeName(
+      this.mainTypeName,
+      layerInstance?.typeName
+    );
+    const mainOptions = this.buildRequestOptions(normalizedParams, mainTypeName);
+    const useSearchLoader = true;
+
+    try {
+      this._searchRequestInFlight = true;
+      this._lastSearchParams = normalizedParams;
+      this._setLastResultFeatures([]);
+      this._setBlockingSearchOverlayVisible(useSearchLoader);
+      this._activateSearchLayer();
+      this._clearOtherSearchLayers();
+      layerInstance.beforeLoad();
+
+      const result = await this._loadSearchResultInMemory(normalizedParams, options);
+      return this._renderSearchResult(
+        layerInstance,
+        result.features,
+        mainOptions,
+        result.mainData
       );
-      if (this._shouldLoadEntityDataImmediately(normalizedParams)) {
-        await layerInstance.renderFeatures(enrichedFeatures, mainOptions);
-      } else {
-        await layerInstance.showSelectionPrompt(enrichedFeatures, mainOptions);
-      }
-
-      return mainData;
     } catch (error) {
       console.error(`[${this.layerId}] Error during search:`, error);
       layerInstance.clear();
       throw error;
     } finally {
-      if (useBlockingOverlay) {
+      this._searchRequestInFlight = false;
+      if (useSearchLoader) {
         this._setBlockingSearchOverlayVisible(false);
       }
     }

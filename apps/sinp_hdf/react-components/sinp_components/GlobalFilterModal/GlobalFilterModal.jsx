@@ -23,13 +23,13 @@ const GlobalFilterModal = ({
   const [appliedFilters, setAppliedFilters] = useState(() => initialFilters || null);
   const filtersStateRef = useRef(initialFilters || null); // Pour sauvegarder l'état complet des filtres
 
-  const executeSearch = async (params) => {
+  const executeSearch = async (params, layerId = activeLayerId) => {
     if (typeof onSubmit === "function") {
-      await onSubmit(params);
+      await onSubmit(params, layerId);
       return;
     }
 
-    const targetLayer = getSearchLayer(activeLayerId);
+    const targetLayer = getSearchLayer(layerId);
 
     if (targetLayer?.get_datas) {
       await targetLayer.get_datas(params);
@@ -39,13 +39,13 @@ const GlobalFilterModal = ({
     throw new Error("Service de recherche non disponible.");
   };
 
-  const getActiveLayerFeatures = () => {
-    const targetLayer = getSearchLayer(activeLayerId);
+  const getActiveLayerFeatures = (layerId = activeLayerId) => {
+    const targetLayer = getSearchLayer(layerId);
 
     return targetLayer?.layer?.getSource?.().getFeatures?.() || null;
   };
 
-  const handleSubmit = async (params, filtersState) => {
+  const handleSubmit = async (params, filtersState, layerId) => {
     console.log("===== 🎯 HANDLESUBMIT DANS LA MODALE =====");
     console.log("Paramètres reçus depuis le composant enfant (params):", params);
     console.log("État des filtres reçus (filtersState):", filtersState);
@@ -87,10 +87,10 @@ const GlobalFilterModal = ({
 
     try {
       // 1. Appel au code mviewer / callback configuré
-      await executeSearch(finalParams);
+      await executeSearch(finalParams, layerId);
 
       // Vérifier si des données ont été retournées quand la couche expose bien sa source
-      const features = getActiveLayerFeatures();
+      const features = getActiveLayerFeatures(layerId);
 
       if (Array.isArray(features) && features.length === 0) {
         pushFilterError("Aucune donnée trouvée avec les filtres appliqués.");

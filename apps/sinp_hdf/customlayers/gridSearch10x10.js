@@ -1,12 +1,7 @@
 /**
  * LAYER GRILLE 10x10: GridSearch 10x10
  * ======================================
- * Recherche avancée par grille 10x10 avec détails d'observations
- * Hérite de SinpBaseLayer (classe abstraite)
- *
- * Configuration GeoServer:
- * - Fonction PostgreSQL: fn_get_stats
- * - Détails: fn_get_obs_detaillee
+ * Recherche avancée par grille 10x10 en rendu WMS GeoServer uniquement.
  */
 
 mviewer.customLayers.grid10x10search = (function () {
@@ -16,7 +11,8 @@ mviewer.customLayers.grid10x10search = (function () {
   class GridSearch10x10Layer extends mviewer.customLayers.SinpBaseLayer {
     constructor() {
       super("grid10x10search", "fn_get_stats", {
-        maxZoom: 10, // Zoom moins agressif pour grilles larges
+        maxZoom: 10,
+        serverRenderOnly: true,
         serverStyle: {
           enabled: true,
         },
@@ -38,8 +34,8 @@ mviewer.customLayers.grid10x10search = (function () {
   const api = {
     layer: instance.getLayer(),
     handle: false,
-    get_datas: function (params) {
-      return mviewer.customControls.grid10x10search.submit(params);
+    get_datas: function (params, options) {
+      return mviewer.customControls.grid10x10search.submit(params, options);
     },
     _instance: instance,
   };

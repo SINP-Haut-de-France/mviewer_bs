@@ -16,8 +16,12 @@ class SinpBaseLayer {
     this.style = config.style || this._getDefaultStyle();
     this.format = new ol.format.GeoJSON();
     this.serverStyle = config.serverStyle || null;
+    this.serverRenderOnly = config.serverRenderOnly === true;
+    this.serverRenderRatio = config.serverRenderRatio || 1.5;
     this._serverStyleActive = false;
     this._pendingServerRenderPromise = Promise.resolve();
+    this._serverInfoFormat = config.serverInfoFormat || "application/vnd.ogc.gml";
+    this._serverInfoFeatureCount = config.serverInfoFeatureCount || 10;
     this._selectionHighlightStyle = this._createSelectionHighlightStyle();
     this._selectionLayer = this._createSelectionLayer();
 
@@ -31,6 +35,169 @@ class SinpBaseLayer {
       this.layer.on("change:visible", () => this._syncServerRenderLayerState());
       this.layer.on("change:opacity", () => this._syncServerRenderLayerState());
     }
+  }
+
+  static _getServerRenderLoaderState() {
+    const stateKey = "__sinpServerRenderLoader";
+    window[stateKey] = window[stateKey] || {
+      pendingCount: 0,
+      mapBlockCount: 0,
+      hideTimer: null,
+      messages: [],
+    };
+
+    return window[stateKey];
+  }
+
+  static _ensureServerRenderLoaderElement() {
+    let loader = document.getElementById("sinp-server-render-loader");
+
+    if (loader) {
+      return loader;
+    }
+
+    loader = document.createElement("div");
+    loader.id = "sinp-server-render-loader";
+    loader.setAttribute("role", "status");
+    loader.setAttribute("aria-live", "polite");
+    loader.setAttribute("aria-hidden", "true");
+    Object.assign(loader.style, {
+      position: "fixed",
+      right: "24px",
+      bottom: "24px",
+      zIndex: "99999",
+      display: "none",
+      alignItems: "center",
+      gap: "10px",
+      maxWidth: "360px",
+      padding: "10px 14px",
+      borderRadius: "999px",
+      background: "rgba(15, 23, 42, 0.92)",
+      color: "#ffffff",
+      boxShadow: "0 10px 28px rgba(15, 23, 42, 0.28)",
+      fontSize: "13px",
+      fontWeight: "600",
+      pointerEvents: "none",
+    });
+
+    loader.innerHTML =
+      '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>' +
+      '<span class="sinp-server-render-loader-message">Rafraîchissement des données cartographiques…</span>';
+
+    document.body.appendChild(loader);
+    return loader;
+  }
+
+  static _ensureMapBlockerElement() {
+    let blocker = document.getElementById("sinp-map-loading-blocker");
+
+    if (blocker) {
+      return blocker;
+    }
+
+    blocker = document.createElement("div");
+    blocker.id = "sinp-map-loading-blocker";
+    blocker.setAttribute("aria-hidden", "true");
+    Object.assign(blocker.style, {
+      position: "fixed",
+      display: "none",
+      zIndex: "99998",
+      background: "transparent",
+      cursor: "progress",
+      pointerEvents: "all",
+    });
+
+    document.body.appendChild(blocker);
+    return blocker;
+  }
+
+  static _syncMapBlocker() {
+    const state = this._getServerRenderLoaderState();
+    const blocker = this._ensureMapBlockerElement();
+    const mapElement = document.getElementById("map");
+    const shouldBlock = state.mapBlockCount > 0 && mapElement;
+
+    blocker.style.display = shouldBlock ? "block" : "none";
+    blocker.setAttribute("aria-hidden", shouldBlock ? "false" : "true");
+
+    if (!shouldBlock) {
+      return;
+    }
+
+    const mapBounds = mapElement.getBoundingClientRect();
+    Object.assign(blocker.style, {
+      left: `${mapBounds.left}px`,
+      top: `${mapBounds.top}px`,
+      width: `${mapBounds.width}px`,
+      height: `${mapBounds.height}px`,
+    });
+  }
+
+  static _syncServerRenderLoader() {
+    const state = this._getServerRenderLoaderState();
+    const loader = this._ensureServerRenderLoaderElement();
+    const shouldDisplay = state.pendingCount > 0;
+    const messageElement = loader.querySelector(".sinp-server-render-loader-message");
+
+    if (messageElement) {
+      messageElement.textContent =
+        state.messages[state.messages.length - 1] ||
+        "Rafraîchissement des données cartographiques…";
+    }
+
+    loader.style.display = shouldDisplay ? "flex" : "none";
+    loader.setAttribute("aria-hidden", shouldDisplay ? "false" : "true");
+    this._syncMapBlocker();
+  }
+
+  static _startServerRenderLoad(options = {}) {
+    const state = this._getServerRenderLoaderState();
+
+    if (state.hideTimer) {
+      window.clearTimeout(state.hideTimer);
+      state.hideTimer = null;
+    }
+
+    state.pendingCount += 1;
+    if (options.blockMap === true) {
+      state.mapBlockCount += 1;
+    }
+    state.messages.push(
+      options.message || "Rafraîchissement des données cartographiques…"
+    );
+    this._syncServerRenderLoader();
+  }
+
+  static _finishServerRenderLoad(options = {}) {
+    const state = this._getServerRenderLoaderState();
+
+    state.pendingCount = Math.max(0, state.pendingCount - 1);
+    if (options.blockMap === true) {
+      state.mapBlockCount = Math.max(0, state.mapBlockCount - 1);
+    }
+
+    if (options.message && state.messages.length > 0) {
+      const messageIndex = state.messages.lastIndexOf(options.message);
+      if (messageIndex >= 0) {
+        state.messages.splice(messageIndex, 1);
+      } else {
+        state.messages.pop();
+      }
+    } else if (state.messages.length > 0) {
+      state.messages.pop();
+    }
+
+    if (state.pendingCount === 0) {
+      state.mapBlockCount = 0;
+      state.messages = [];
+      state.hideTimer = window.setTimeout(() => {
+        state.hideTimer = null;
+        this._syncServerRenderLoader();
+      }, 150);
+      return;
+    }
+
+    this._syncServerRenderLoader();
   }
 
   _getDefaultStyle() {
@@ -101,6 +268,22 @@ class SinpBaseLayer {
     });
   }
 
+  setFeatureInfoFeatures(features = []) {
+    const source = this.layer?.getSource?.();
+    if (!source) {
+      return;
+    }
+
+    source.clear();
+
+    const normalizedFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
+    if (!normalizedFeatures.length) {
+      return;
+    }
+
+    source.addFeatures(normalizedFeatures);
+  }
+
   _createServerRenderLayer() {
     const geoserverBaseUrl = mviewer.env?.[mviewer.env?.CURRENT_ENV]?.GEOSERVER_BASE_URL;
     const workspace = this.serverStyle?.workspace || "sinp_diffusion";
@@ -112,9 +295,11 @@ class SinpBaseLayer {
         FORMAT: "image/png",
         TRANSPARENT: true,
       },
-      ratio: 1,
+      ratio: this.serverRenderRatio,
       serverType: "geoserver",
     });
+
+    this._attachServerRenderLoader(source);
 
     if (this.serverStyle?.styleName) {
       source.updateParams({
@@ -130,6 +315,23 @@ class SinpBaseLayer {
     renderLayer.set("name", `${this.layerId}-server-render`);
     renderLayer.set("queryable", false);
     return renderLayer;
+  }
+
+  _attachServerRenderLoader(source) {
+    if (!source?.on || source.get?.("sinpServerRenderLoaderAttached")) {
+      return;
+    }
+
+    source.set?.("sinpServerRenderLoaderAttached", true);
+    source.on("imageloadstart", () => {
+      SinpBaseLayer._startServerRenderLoad();
+    });
+    source.on("imageloadend", () => {
+      SinpBaseLayer._finishServerRenderLoad();
+    });
+    source.on("imageloaderror", () => {
+      SinpBaseLayer._finishServerRenderLoad();
+    });
   }
 
   _getServerStyleContext() {
@@ -198,6 +400,17 @@ class SinpBaseLayer {
       url: serverStyleContext.url,
     };
 
+    if (this.serverRenderOnly) {
+      Object.assign(legendConfig, {
+        infoformat: config.infoformat || this._serverInfoFormat,
+        featurecount: config.featurecount || this._serverInfoFeatureCount,
+        tooltip: false,
+        tooltipenabled: false,
+        tooltipcontent: "",
+        nohighlight: true,
+      });
+    }
+
     Object.assign(config, legendConfig);
     this._refreshLegacyLegend(config);
     return config;
@@ -244,6 +457,74 @@ class SinpBaseLayer {
 
     this._serverRenderLayer.setVisible(this.layer.getVisible() && this._serverStyleActive);
     this._serverRenderLayer.setOpacity(this.layer.getOpacity());
+  }
+
+  _canQueryServerRender() {
+    return Boolean(
+      this.serverRenderOnly &&
+        this._serverStyleActive &&
+        this.layer?.getVisible?.() &&
+        this._serverRenderLayer?.getVisible?.()
+    );
+  }
+
+  _buildServerFeatureInfoUrl(coordinate, params = {}) {
+    if (!this._canQueryServerRender()) {
+      return "";
+    }
+
+    const map = mviewer.getMap();
+    const source = this._serverRenderLayer?.getSource?.();
+    if (!map || !source || !Array.isArray(coordinate)) {
+      return "";
+    }
+
+    return (
+      source.getFeatureInfoUrl(
+        coordinate,
+        map.getView().getResolution(),
+        map.getView().getProjection(),
+        {
+          INFO_FORMAT: params.infoFormat || "application/vnd.ogc.gml",
+          FEATURE_COUNT: params.featureCount || this._serverInfoFeatureCount,
+        }
+      ) || ""
+    );
+  }
+
+  _parseServerFeatureInfoResponse(body, contentType = "") {
+    const responseBody = typeof body === "string" ? body.trim() : "";
+    if (!responseBody) {
+      return [];
+    }
+
+    const normalizedContentType = String(contentType).toLowerCase();
+
+    if (
+      normalizedContentType.includes("json") ||
+      responseBody.startsWith("{") ||
+      responseBody.startsWith("[")
+    ) {
+      return new ol.format.GeoJSON().readFeatures(JSON.parse(responseBody));
+    }
+
+    return new ol.format.WMSGetFeatureInfo().readFeatures($.parseXML(responseBody));
+  }
+
+  async fetchServerRenderFeatures(coordinate, params = {}) {
+    const url = this._buildServerFeatureInfoUrl(coordinate, params);
+    if (!url) {
+      return [];
+    }
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const body = await response.text();
+    const contentType = response.headers?.get?.("content-type") || "";
+    return this._parseServerFeatureInfoResponse(body, contentType);
   }
 
   _waitForServerRender(source, triggerRefresh) {
@@ -514,6 +795,16 @@ class SinpBaseLayer {
     return this._displayResults(normalizedFeatures, viewData, queryOptions);
   }
 
+  renderServerOnly(queryOptions = null) {
+    this._clearSelectedFeatures();
+    this.layer?.getSource()?.clear();
+    return this._updateServerRenderLayer(queryOptions, true);
+  }
+
+  fitToFeatures(features = []) {
+    this._fitMapToFeatures(features);
+  }
+
   showFeatureInfo(features) {
     const normalizedFeatures = Array.isArray(features) ? features : [];
 
@@ -523,6 +814,38 @@ class SinpBaseLayer {
 
     const viewData = this._renderHTML(normalizedFeatures);
     this._showResultsPanel(viewData);
+  }
+
+  showFeatureInfoLoading() {
+    const loadingFeature = new ol.Feature({
+      details: [],
+      jdd_details: [],
+      entity_data_loading: true,
+      entity_data_loaded: false,
+      entity_data_error: null,
+      jdd_data_loading: false,
+      jdd_data_loaded: false,
+      jdd_data_error: null,
+    });
+
+    if (!loadingFeature.ol_uid) {
+      loadingFeature.ol_uid =
+        typeof ol.getUid === "function"
+          ? ol.getUid(loadingFeature)
+          : `sinp-loading-${Date.now()}`;
+    }
+
+    this.setFeatureInfoFeatures([loadingFeature]);
+    this.showFeatureInfo([loadingFeature]);
+  }
+
+  showSelectionPromptPanel() {
+    this._showResultsPanel({
+      html: `<mv-feature-search-results data-layer-id="${this.layerId}" data-selection-prompt="true"></mv-feature-search-results>`,
+      panelType: configuration.getConfiguration().mobile
+        ? "modal-panel"
+        : mviewer.getLayer(this.layerId)?.infospanel || "right-panel",
+    });
   }
 
   showSelectionPrompt(features, queryOptions = null) {

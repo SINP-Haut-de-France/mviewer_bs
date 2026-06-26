@@ -95,6 +95,105 @@ describe("SinpBaseLayer - Classe abstraite", () => {
     mviewer.env = previousEnv;
     mviewer.getLegendUrl = previousGetLegendUrl;
   });
+
+  test("Désactive les tooltips legacy pour un layer en rendu WMS seul", () => {
+    const layer = new mviewer.customLayers.SinpBaseLayer("testLayer", "fn_get_stats", {
+      serverRenderOnly: true,
+      serverStyle: {
+        enabled: true,
+      },
+    });
+    const config = {
+      id: "testLayer",
+      queryable: true,
+      tooltip: true,
+      tooltipenabled: true,
+      tooltipcontent: "test",
+      nohighlight: false,
+    };
+
+    layer.attachLegacyConfig(config);
+
+    expect(config.queryable).toBe(true);
+    expect(config.infoformat).toBe("application/vnd.ogc.gml");
+    expect(config.featurecount).toBe(10);
+    expect(config.tooltip).toBe(false);
+    expect(config.tooltipenabled).toBe(false);
+    expect(config.tooltipcontent).toBe("");
+    expect(config.nohighlight).toBe(true);
+  });
+
+  test("Interroge la couche WMS rendue avec GetFeatureInfo", async () => {
+    const previousFetch = global.fetch;
+    const previousGetMap = mviewer.getMap;
+    const mockGetFeatureInfoUrl = jest.fn(() => "https://example.test/geoserver/wms?TEST=1");
+    const mockSource = {
+      getFeatureInfoUrl: mockGetFeatureInfoUrl,
+    };
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify({
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: [1, 2],
+              },
+              properties: {
+                code_insee: "62225",
+              },
+            },
+          ],
+        }),
+      headers: {
+        get: () => "application/json",
+      },
+    });
+
+    mviewer.getMap = jest.fn(() => ({
+      getView: () => ({
+        getResolution: () => 42,
+        getProjection: () => "EPSG:2154",
+      }),
+    }));
+
+    const layer = new mviewer.customLayers.SinpBaseLayer("testLayer", "fn_get_stats", {
+      serverRenderOnly: true,
+      serverStyle: {
+        enabled: true,
+      },
+    });
+    layer.layer.setVisible(true);
+    layer._serverStyleActive = true;
+    layer._serverRenderLayer = {
+      getVisible: () => true,
+      getSource: () => mockSource,
+    };
+
+    const features = await layer.fetchServerRenderFeatures([10, 20]);
+
+    expect(mockGetFeatureInfoUrl).toHaveBeenCalledWith(
+      [10, 20],
+      42,
+      "EPSG:2154",
+      expect.objectContaining({
+        INFO_FORMAT: "application/vnd.ogc.gml",
+        FEATURE_COUNT: 10,
+      })
+    );
+    expect(global.fetch).toHaveBeenCalledWith(
+      "https://example.test/geoserver/wms?TEST=1"
+    );
+    expect(features).toHaveLength(1);
+    expect(features[0].get("code_insee")).toBe("62225");
+
+    global.fetch = previousFetch;
+    mviewer.getMap = previousGetMap;
+  });
 });
 
 describe("SinpBaseCustom - Scopage des détails", () => {
@@ -167,6 +266,36 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     expect(control._buildDetailRequestParams(features, params)).toEqual(params);
   });
 
+  test("Utilise la commune cliquée pour les détails hors scope de recherche", () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      targetLocCode: "2",
+    });
+    const params = {
+      departements: ["62"],
+      communes: ["62225"],
+      dateDeb: "2020-01-01",
+      dateFin: "2025-12-10",
+      targetLocCode: "2",
+    };
+    const features = [
+      {
+        get(key) {
+          return { code_insee: "59350" }[key];
+        },
+      },
+    ];
+
+    expect(
+      control._buildDetailRequestParams(features, params, {
+        preferFeatureScope: true,
+      })
+    ).toEqual({
+      ...params,
+      communes: ["59350"],
+    });
+  });
+
   test("normalise les filtres géographiques et limite les communes à 5", () => {
     const control = new SinpBaseCustom({
       layerId: "testControl",
@@ -201,6 +330,76 @@ describe("SinpBaseCustom - Scopage des détails", () => {
       dateFin: null,
       targetLocCode: "2",
     });
+  });
+
+  test("Active la couche de restitution ciblée avant une recherche", () => {
+    const previousGetLayer = mviewer.getLayer;
+    const previousAddLayer = mviewer.addLayer;
+    const layer = {
+      getVisible: jest.fn(() => false),
+      setVisible: jest.fn(),
+    };
+    const layerConfig = {
+      layer,
+      showintoc: true,
+    };
+    const control = new SinpBaseCustom({
+      layerId: "gridSearch5x5",
+    });
+
+    mviewer.getLayer = jest.fn(() => layerConfig);
+    mviewer.addLayer = jest.fn();
+
+    control._activateSearchLayer();
+
+    expect(mviewer.addLayer).toHaveBeenCalledWith(layerConfig);
+    expect(layer.setVisible).not.toHaveBeenCalled();
+
+    mviewer.getLayer = previousGetLayer;
+    mviewer.addLayer = previousAddLayer;
+  });
+
+  test("Ignore les clics carte pendant une nouvelle recherche", async () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+    });
+    const querySelectedFeatureSpy = jest
+      .spyOn(control, "_querySelectedFeature")
+      .mockResolvedValue(undefined);
+
+    control._searchRequestInFlight = true;
+    await control._handleMapClick({ coordinate: [10, 20] });
+
+    expect(querySelectedFeatureSpy).not.toHaveBeenCalled();
+    querySelectedFeatureSpy.mockRestore();
+  });
+
+  test("Nettoie les autres restitutions sans vider l'alias de la couche courante", () => {
+    const control = new SinpBaseCustom({
+      layerId: "grid10x10search",
+    });
+    const communeClearSpy = jest.spyOn(
+      mviewer.customLayers.communeSearch._instance,
+      "clear"
+    );
+    const grid5ClearSpy = jest.spyOn(
+      mviewer.customLayers.gridSearch5x5._instance,
+      "clear"
+    );
+    const currentClearSpy = jest.spyOn(
+      mviewer.customLayers.grid10x10search._instance,
+      "clear"
+    );
+
+    control._clearOtherSearchLayers();
+
+    expect(communeClearSpy).toHaveBeenCalled();
+    expect(grid5ClearSpy).toHaveBeenCalled();
+    expect(currentClearSpy).not.toHaveBeenCalled();
+
+    communeClearSpy.mockRestore();
+    grid5ClearSpy.mockRestore();
+    currentClearSpy.mockRestore();
   });
 
   test("Ignore les UUID quand il construit CODE_INSEES", () => {
@@ -297,7 +496,7 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     });
   });
 
-  test("Charge immédiatement les détails seulement si une commune est explicitement filtrée", () => {
+  test("Ne charge jamais les détails pendant la recherche initiale", () => {
     const control = new SinpBaseCustom({
       layerId: "testControl",
       targetLocCode: "2",
@@ -309,7 +508,7 @@ describe("SinpBaseCustom - Scopage des détails", () => {
         communes: ["62225"],
         targetLocCode: "2",
       })
-    ).toBe(true);
+    ).toBe(false);
 
     expect(
       control._shouldLoadEntityDataImmediately({
@@ -364,6 +563,60 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     expect(result.detailKey).toContain("code_maille");
     expect(result.featureKey).toContain("codeLocali");
     expect(result.detailKey).toContain("cd_sig");
+  });
+
+  test("Met en cache les détails chargés à la demande pour une même entité", async () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      mainTypeName: "fn_get_stats",
+      detailsTypeName: "fn_get_obs_detaillee",
+      targetLocCode: "2",
+    });
+    const params = {
+      departements: ["62"],
+      dateDeb: "2021-01-01",
+      dateFin: "2026-03-10",
+      targetLocCode: "2",
+    };
+    const firstFeature = new ol.Feature({ code_insee: "62001" });
+    const secondFeature = new ol.Feature({ code_insee: "62001" });
+    const fetchGeoServerDataSpy = jest
+      .spyOn(control, "fetchGeoServerData")
+      .mockResolvedValue({
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            properties: {
+              code_insee: "62001",
+              id_origine: "obs-cache",
+            },
+          },
+        ],
+      });
+
+    await control._ensureEntityData([firstFeature], params);
+    await control._ensureEntityData([secondFeature], params);
+
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        TYPENAME: "sinp_diffusion:fn_get_obs_detaillee",
+        VIEWPARAMS: expect.stringContaining("CODE_INSEES:62001"),
+      })
+    );
+    expect(firstFeature.get("details")).toEqual([
+      expect.objectContaining({
+        id_origine: "obs-cache",
+      }),
+    ]);
+    expect(secondFeature.get("details")).toEqual([
+      expect.objectContaining({
+        id_origine: "obs-cache",
+      }),
+    ]);
+
+    fetchGeoServerDataSpy.mockRestore();
   });
 
   test("Les variantes de clés de maille reconnaissent le suffixe cd_sig", () => {
@@ -511,6 +764,7 @@ describe("GridSearch5x5Layer", () => {
   test("Utilise le rendu GeoServer pour la grille 5x5", () => {
     const instance = mviewer.customLayers.gridSearch5x5._instance;
     expect(instance.serverStyle?.enabled).toBe(true);
+    expect(instance.serverRenderOnly).toBe(true);
     expect(instance._serverRenderLayer).toBeDefined();
   });
 });
@@ -533,7 +787,845 @@ describe("GridSearch10x10Layer", () => {
   test("Utilise le rendu GeoServer pour la grille 10x10", () => {
     const instance = mviewer.customLayers.gridSearch10x10._instance;
     expect(instance.serverStyle?.enabled).toBe(true);
+    expect(instance.serverRenderOnly).toBe(true);
     expect(instance._serverRenderLayer).toBeDefined();
+  });
+});
+
+describe("Grid server-render controls", () => {
+  test("Le contrôle gridSearch5x5 charge les détails seulement au clic", async () => {
+    const controlApi = mviewer.customControls.gridSearch5x5;
+    const layerInstance = mviewer.customLayers.gridSearch5x5._instance;
+    const previousGetMap = mviewer.getMap;
+    const previousGetLayers = mviewer.getLayers;
+    const referenceSource = {
+      getFeatureInfoUrl: jest.fn(() => "https://example.test/grids5x5?TEST=1"),
+    };
+    const ensureEntityDataSpy = jest
+      .spyOn(SinpBaseCustom.prototype, "_ensureEntityData")
+      .mockResolvedValue([]);
+    const fetchGeoServerDataSpy = jest.spyOn(
+      SinpBaseCustom.prototype,
+      "fetchGeoServerData"
+    ).mockImplementation(async (options) => {
+      if (options.TYPENAME === "sinp_diffusion:fn_get_stats") {
+        return {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: [1, 2],
+              },
+              properties: {
+                code: "5kmL93E069N692",
+              },
+            },
+          ],
+        };
+      }
+
+      if (options.TYPENAME === "sinp_diffusion:fn_get_obs_detaillee") {
+        return {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: {
+                code: "5kmL93E069N692",
+                id_origine: "obs-grid-5",
+              },
+            },
+          ],
+        };
+      }
+
+      return { type: "FeatureCollection", features: [] };
+    });
+    const fetchServerRenderFeaturesSpy = jest.spyOn(layerInstance, "fetchServerRenderFeatures");
+    const onSpy = jest.fn();
+    const unSpy = jest.fn();
+    const previousFetch = global.fetch;
+
+    await controlApi.submit({
+      filteredDepartments: ["62"],
+      dateDeb: "2020-01-01",
+      dateFin: "2026-03-10",
+    });
+
+    layerInstance._serverStyleActive = true;
+    layerInstance.layer.setVisible(true);
+    layerInstance._serverRenderLayer = {
+      getVisible: () => true,
+    };
+
+    mviewer.getLayers = jest.fn(() => ({
+      grid5x5Reference: {
+        layer: {
+          getSource: () => referenceSource,
+        },
+        layername: "dev_sinp:v_grille_5x5",
+      },
+    }));
+    mviewer.getMap = jest.fn(() => ({
+      on: onSpy,
+      un: unSpy,
+      getView: () => ({
+        getResolution: () => 42,
+        getProjection: () => "EPSG:2154",
+      }),
+      getLayers: () => ({
+        getArray: () => [],
+      }),
+      addLayer: jest.fn(),
+    }));
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [1, 2],
+            },
+            properties: {
+              code: "5kmL93E069N692",
+            },
+          },
+        ],
+      }),
+    });
+
+    const previousSetTimeout = window.setTimeout;
+    window.setTimeout = (callback) => {
+      callback();
+      return 0;
+    };
+
+    controlApi.init();
+    const clickHandler = onSpy.mock.calls[0][1];
+    await clickHandler({ coordinate: [10, 20] });
+    controlApi.destroy();
+
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
+    expect(fetchServerRenderFeaturesSpy).not.toHaveBeenCalled();
+    expect(referenceSource.getFeatureInfoUrl).toHaveBeenCalledWith(
+      [10, 20],
+      42,
+      "EPSG:2154",
+      expect.objectContaining({
+        INFO_FORMAT: "application/json",
+        FEATURE_COUNT: 1,
+      })
+    );
+    expect(ensureEntityDataSpy).toHaveBeenCalled();
+    expect(unSpy).toHaveBeenCalledWith("singleclick", clickHandler);
+
+    mviewer.getMap = previousGetMap;
+    mviewer.getLayers = previousGetLayers;
+    window.setTimeout = previousSetTimeout;
+    global.fetch = previousFetch;
+    ensureEntityDataSpy.mockRestore();
+    fetchGeoServerDataSpy.mockRestore();
+    fetchServerRenderFeaturesSpy.mockRestore();
+  });
+
+  test("Le contrôle grid10x10search charge les détails seulement au clic", async () => {
+    const controlApi = mviewer.customControls.grid10x10search;
+    const layerInstance = mviewer.customLayers.grid10x10search._instance;
+    const previousGetMap = mviewer.getMap;
+    const previousGetLayers = mviewer.getLayers;
+    const referenceSource = {
+      getFeatureInfoUrl: jest.fn(() => "https://example.test/grids10x10?TEST=1"),
+    };
+    const ensureEntityDataSpy = jest
+      .spyOn(SinpBaseCustom.prototype, "_ensureEntityData")
+      .mockResolvedValue([]);
+    const fetchGeoServerDataSpy = jest.spyOn(
+      SinpBaseCustom.prototype,
+      "fetchGeoServerData"
+    ).mockImplementation(async (options) => {
+      if (options.TYPENAME === "sinp_diffusion:fn_get_stats") {
+        return {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: [1, 2],
+              },
+              properties: {
+                code: "10kmL93E070N693",
+              },
+            },
+          ],
+        };
+      }
+
+      if (options.TYPENAME === "sinp_diffusion:fn_get_obs_detaillee") {
+        return {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: {
+                code: "10kmL93E070N693",
+                id_origine: "obs-grid-10",
+              },
+            },
+          ],
+        };
+      }
+
+      return { type: "FeatureCollection", features: [] };
+    });
+    const fetchServerRenderFeaturesSpy = jest.spyOn(layerInstance, "fetchServerRenderFeatures");
+    const onSpy = jest.fn();
+    const unSpy = jest.fn();
+    const previousFetch = global.fetch;
+
+    await controlApi.submit({
+      filteredDepartments: ["62"],
+      dateDeb: "2020-01-01",
+      dateFin: "2026-03-10",
+    });
+
+    layerInstance._serverStyleActive = true;
+    layerInstance.layer.setVisible(true);
+    layerInstance._serverRenderLayer = {
+      getVisible: () => true,
+    };
+
+    mviewer.getLayers = jest.fn(() => ({
+      grid10x10Reference: {
+        layer: {
+          getSource: () => referenceSource,
+        },
+        layername: "dev_sinp:v_grille_10x10",
+      },
+    }));
+    mviewer.getMap = jest.fn(() => ({
+      on: onSpy,
+      un: unSpy,
+      getView: () => ({
+        getResolution: () => 42,
+        getProjection: () => "EPSG:2154",
+      }),
+      getLayers: () => ({
+        getArray: () => [],
+      }),
+      addLayer: jest.fn(),
+    }));
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [1, 2],
+            },
+            properties: {
+              code: "10kmL93E070N693",
+            },
+          },
+        ],
+      }),
+    });
+
+    const previousSetTimeout = window.setTimeout;
+    window.setTimeout = (callback) => {
+      callback();
+      return 0;
+    };
+
+    controlApi.init();
+    const clickHandler = onSpy.mock.calls[0][1];
+    await clickHandler({ coordinate: [10, 20] });
+    controlApi.destroy();
+
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
+    expect(fetchServerRenderFeaturesSpy).not.toHaveBeenCalled();
+    expect(referenceSource.getFeatureInfoUrl).toHaveBeenCalledWith(
+      [10, 20],
+      42,
+      "EPSG:2154",
+      expect.objectContaining({
+        INFO_FORMAT: "application/json",
+        FEATURE_COUNT: 1,
+      })
+    );
+    expect(ensureEntityDataSpy).toHaveBeenCalled();
+    expect(unSpy).toHaveBeenCalledWith("singleclick", clickHandler);
+
+    mviewer.getMap = previousGetMap;
+    mviewer.getLayers = previousGetLayers;
+    window.setTimeout = previousSetTimeout;
+    global.fetch = previousFetch;
+    ensureEntityDataSpy.mockRestore();
+    fetchGeoServerDataSpy.mockRestore();
+    fetchServerRenderFeaturesSpy.mockRestore();
+  });
+
+  test.each([
+    {
+      label: "gridSearch5x5",
+      controlKey: "gridSearch5x5",
+      layerKey: "gridSearch5x5",
+      selectedFeatureProperties: {
+        code: "5kmL93E069N692",
+      },
+      mainFeatureProperties: {
+        code: "5kmL93E069N692",
+      },
+      detailFeatureProperties: {
+        code: "5kmL93E069N692",
+        id_origine: "obs-grid-5",
+      },
+    },
+    {
+      label: "grid10x10search",
+      controlKey: "grid10x10search",
+      layerKey: "grid10x10search",
+      selectedFeatureProperties: {
+        cd_sig: "10kmL93E070N693",
+      },
+      mainFeatureProperties: {
+        code: "10kmL93E070N693",
+      },
+      detailFeatureProperties: {
+        code: "10kmL93E070N693",
+        id_origine: "obs-grid-10",
+      },
+    },
+  ])(
+    "Le contrôle $label charge les détails au clic via le flux WMS-only",
+    async ({
+      controlKey,
+      layerKey,
+      selectedFeatureProperties,
+      mainFeatureProperties,
+      detailFeatureProperties,
+    }) => {
+      const controlApi = mviewer.customControls[controlKey];
+      const layerInstance = mviewer.customLayers[layerKey]._instance;
+      const previousGetMap = mviewer.getMap;
+      const feature = new ol.Feature(selectedFeatureProperties);
+      feature.setGeometry(new ol.geom.Point([1, 2]));
+      const fetchServerRenderFeaturesSpy = jest
+        .spyOn(layerInstance, "fetchServerRenderFeatures")
+        .mockResolvedValueOnce([feature]);
+      const ensureEntityDataSpy = jest
+        .spyOn(SinpBaseCustom.prototype, "_ensureEntityData")
+        .mockResolvedValue([feature]);
+      const fetchGeoServerDataSpy = jest.spyOn(
+        SinpBaseCustom.prototype,
+        "fetchGeoServerData"
+      ).mockImplementation(async (options) => {
+        if (options.TYPENAME === "sinp_diffusion:fn_get_stats") {
+          return {
+            type: "FeatureCollection",
+            features: [
+              {
+                type: "Feature",
+                geometry: {
+                  type: "Point",
+                  coordinates: [1, 2],
+                },
+                properties: mainFeatureProperties,
+              },
+            ],
+          };
+        }
+
+        if (options.TYPENAME === "sinp_diffusion:fn_get_obs_detaillee") {
+          return {
+            type: "FeatureCollection",
+            features: [
+              {
+                type: "Feature",
+                properties: detailFeatureProperties,
+              },
+            ],
+          };
+        }
+
+        return { type: "FeatureCollection", features: [] };
+      });
+      const onSpy = jest.fn();
+      const unSpy = jest.fn();
+
+      await controlApi.submit({
+        filteredDepartments: ["62"],
+        dateDeb: "2020-01-01",
+        dateFin: "2026-03-10",
+      });
+
+      layerInstance._serverStyleActive = true;
+      layerInstance.layer.setVisible(true);
+      layerInstance._serverRenderLayer = {
+        getVisible: () => true,
+      };
+
+      mviewer.getMap = jest.fn(() => ({
+        on: onSpy,
+        un: unSpy,
+        getLayers: () => ({
+          getArray: () => [],
+        }),
+        addLayer: jest.fn(),
+      }));
+
+      const previousSetTimeout = window.setTimeout;
+      window.setTimeout = (callback) => {
+        callback();
+        return 0;
+      };
+
+      controlApi.init();
+      const clickHandler = onSpy.mock.calls[0][1];
+      await clickHandler({ coordinate: [10, 20] });
+      controlApi.destroy();
+
+      expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
+      expect(fetchServerRenderFeaturesSpy).toHaveBeenCalledWith([10, 20]);
+      expect(ensureEntityDataSpy).toHaveBeenCalled();
+      expect(unSpy).toHaveBeenCalledWith("singleclick", clickHandler);
+
+      mviewer.getMap = previousGetMap;
+      window.setTimeout = previousSetTimeout;
+      fetchServerRenderFeaturesSpy.mockRestore();
+      ensureEntityDataSpy.mockRestore();
+      fetchGeoServerDataSpy.mockRestore();
+    }
+  );
+});
+
+describe("CommuneSearchLayer", () => {
+  test("Utilise un rendu GeoServer WMS seul", () => {
+    const instance = mviewer.customLayers.communeSearch._instance;
+    expect(instance.serverStyle?.enabled).toBe(true);
+    expect(instance.serverRenderOnly).toBe(true);
+    expect(instance.serverRenderRatio).toBe(1.5);
+    expect(instance._serverRenderLayer).toBeDefined();
+  });
+
+  test("Le contrôle communeSearch ne précharge pas fn_get_obs_detaillee avec fn_get_stats", async () => {
+    const control = mviewer.customControls.communeSearch;
+    const layerInstance = mviewer.customLayers.communeSearch._instance;
+    const renderServerOnlySpy = jest
+      .spyOn(layerInstance, "renderServerOnly")
+      .mockResolvedValue(undefined);
+    const fitToFeaturesSpy = jest
+      .spyOn(layerInstance, "fitToFeatures")
+      .mockImplementation(() => {});
+    const fetchGeoServerDataSpy = jest.spyOn(
+      SinpBaseCustom.prototype,
+      "fetchGeoServerData"
+    ).mockImplementation(async (options) => {
+      if (options.TYPENAME === "sinp_diffusion:fn_get_stats") {
+        return {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: [1, 2],
+              },
+              properties: {
+                code_insee: "62225",
+              },
+            },
+          ],
+        };
+      }
+
+      if (options.TYPENAME === "sinp_diffusion:fn_get_obs_detaillee") {
+        return {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: {
+                code_insee: "62225",
+                id_origine: "obs-1",
+              },
+            },
+          ],
+        };
+      }
+
+      return { type: "FeatureCollection", features: [] };
+    });
+
+    await control.submit({
+      filteredDepartments: ["62"],
+      dateDeb: "2020-01-01",
+      dateFin: "2026-03-10",
+    });
+
+    expect(renderServerOnlySpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        TYPENAME: "sinp_diffusion:fn_get_stats",
+      })
+    );
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
+    expect(fitToFeaturesSpy).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          getGeometry: expect.any(Function),
+        }),
+      ])
+    );
+    expect(fitToFeaturesSpy.mock.invocationCallOrder[0]).toBeLessThan(
+      renderServerOnlySpy.mock.invocationCallOrder[0]
+    );
+    expect(fetchGeoServerDataSpy).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        TYPENAME: "sinp_diffusion:fn_get_stats",
+      })
+    );
+    expect(fetchGeoServerDataSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        TYPENAME: "sinp_diffusion:fn_get_obs_detaillee",
+      })
+    );
+
+    renderServerOnlySpy.mockRestore();
+    fitToFeaturesSpy.mockRestore();
+    fetchGeoServerDataSpy.mockRestore();
+  });
+
+  test("Le contrôle communeSearch accroche un listener de clic carte", () => {
+    const controlApi = mviewer.customControls.communeSearch;
+    const previousGetMap = mviewer.getMap;
+    const onSpy = jest.fn();
+    const unSpy = jest.fn();
+
+    mviewer.getMap = jest.fn(() => ({
+      on: onSpy,
+      un: unSpy,
+      getLayers: () => ({
+        getArray: () => [],
+      }),
+      addLayer: jest.fn(),
+    }));
+
+    controlApi.init();
+
+    expect(onSpy).toHaveBeenCalledWith("singleclick", expect.any(Function));
+
+    controlApi.destroy();
+    expect(unSpy).toHaveBeenCalledWith("singleclick", onSpy.mock.calls[0][1]);
+    mviewer.getMap = previousGetMap;
+  });
+
+  test("Le contrôle communeSearch charge les détails après GetFeatureInfo", async () => {
+    const controlApi = mviewer.customControls.communeSearch;
+    const layerInstance = mviewer.customLayers.communeSearch._instance;
+    const previousGetMap = mviewer.getMap;
+    const feature = new ol.Feature({ code_insee: "62225" });
+    feature.setGeometry(new ol.geom.Point([1, 2]));
+    const fetchServerRenderFeaturesSpy = jest.spyOn(layerInstance, "fetchServerRenderFeatures");
+    const ensureEntityDataSpy = jest
+      .spyOn(SinpBaseCustom.prototype, "_ensureEntityData")
+      .mockResolvedValue([feature]);
+    const fetchGeoServerDataSpy = jest.spyOn(
+      SinpBaseCustom.prototype,
+      "fetchGeoServerData"
+    ).mockImplementation(async (options) => {
+      if (options.TYPENAME === "sinp_diffusion:fn_get_stats") {
+        return {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: [1, 2],
+              },
+              properties: {
+                code_insee: "62225",
+              },
+            },
+          ],
+        };
+      }
+
+      if (options.TYPENAME === "sinp_diffusion:fn_get_obs_detaillee") {
+        return {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: {
+                code_insee: "62225",
+                id_origine: "obs-1",
+              },
+            },
+          ],
+        };
+      }
+
+      return { type: "FeatureCollection", features: [] };
+    });
+    const onSpy = jest.fn();
+    const unSpy = jest.fn();
+    const previousFetch = global.fetch;
+
+    await controlApi.submit({
+      filteredDepartments: ["62"],
+      dateDeb: "2020-01-01",
+      dateFin: "2026-03-10",
+    });
+
+    layerInstance._serverStyleActive = true;
+    layerInstance.layer.setVisible(true);
+    layerInstance._serverRenderLayer = {
+      getVisible: () => true,
+    };
+
+    mviewer.getMap = jest.fn(() => ({
+      on: onSpy,
+      un: unSpy,
+      getView: () => ({
+        getResolution: () => 42,
+        getProjection: () => "EPSG:2154",
+      }),
+      getLayers: () => ({
+        getArray: () => [],
+      }),
+      addLayer: jest.fn(),
+    }));
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [1, 2],
+            },
+            properties: {
+              insee_com: "62225",
+            },
+          },
+        ],
+      }),
+    });
+
+    const previousSetTimeout = window.setTimeout;
+    window.setTimeout = (callback) => {
+      callback();
+      return 0;
+    };
+
+    const previousAlert = mviewer.alert;
+    mviewer.alert = jest.fn();
+
+    controlApi.init();
+    const clickHandler = onSpy.mock.calls[0][1];
+    await clickHandler({ coordinate: [10, 20] });
+    controlApi.destroy();
+
+    expect(fetchServerRenderFeaturesSpy).not.toHaveBeenCalled();
+    expect(global.fetch).toHaveBeenCalled();
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
+    expect(ensureEntityDataSpy).toHaveBeenCalled();
+    expect(unSpy).toHaveBeenCalledWith("singleclick", clickHandler);
+
+    mviewer.getMap = previousGetMap;
+    window.setTimeout = previousSetTimeout;
+    mviewer.alert = previousAlert;
+    global.fetch = previousFetch;
+    fetchServerRenderFeaturesSpy.mockRestore();
+    ensureEntityDataSpy.mockRestore();
+    fetchGeoServerDataSpy.mockRestore();
+  });
+
+  test("Le clic sur une commune adjacente recharge les détails de cette commune", async () => {
+    const controlApi = mviewer.customControls.communeSearch;
+    const layerInstance = mviewer.customLayers.communeSearch._instance;
+    const previousGetMap = mviewer.getMap;
+    const previousFetch = global.fetch;
+    const fetchGeoServerDataSpy = jest.spyOn(
+      SinpBaseCustom.prototype,
+      "fetchGeoServerData"
+    ).mockImplementation(async (options) => {
+      if (options.TYPENAME === "sinp_diffusion:fn_get_stats") {
+        return {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: [1, 2],
+              },
+              properties: {
+                code_insee: "62225",
+              },
+            },
+          ],
+        };
+      }
+
+      if (options.TYPENAME === "sinp_diffusion:fn_get_obs_detaillee") {
+        const codeInsee = options.VIEWPARAMS.includes("CODE_INSEES:59350")
+          ? "59350"
+          : "62225";
+
+        return {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: {
+                code_insee: codeInsee,
+                id_origine: `obs-${codeInsee}`,
+              },
+            },
+          ],
+        };
+      }
+
+      return { type: "FeatureCollection", features: [] };
+    });
+    const onSpy = jest.fn();
+    const unSpy = jest.fn();
+
+    await controlApi.submit({
+      filteredDepartments: ["62"],
+      filteredCommunes: ["62225"],
+      dateDeb: "2020-01-01",
+      dateFin: "2026-03-10",
+    });
+
+    layerInstance._serverStyleActive = true;
+    layerInstance.layer.setVisible(true);
+    layerInstance._serverRenderLayer = {
+      getVisible: () => true,
+    };
+
+    mviewer.getMap = jest.fn(() => ({
+      on: onSpy,
+      un: unSpy,
+      getView: () => ({
+        getResolution: () => 42,
+        getProjection: () => "EPSG:2154",
+      }),
+      getLayers: () => ({
+        getArray: () => [],
+      }),
+      addLayer: jest.fn(),
+    }));
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [3, 4],
+            },
+            properties: {
+              insee_com: "59350",
+            },
+          },
+        ],
+      }),
+    });
+
+    const previousSetTimeout = window.setTimeout;
+    window.setTimeout = (callback) => {
+      callback();
+      return 0;
+    };
+
+    controlApi.init();
+    const clickHandler = onSpy.mock.calls[0][1];
+    await clickHandler({ coordinate: [10, 20] });
+    controlApi.destroy();
+
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        TYPENAME: "sinp_diffusion:fn_get_obs_detaillee",
+        VIEWPARAMS: expect.stringContaining("CODE_INSEES:59350"),
+      })
+    );
+    expect(unSpy).toHaveBeenCalledWith("singleclick", clickHandler);
+
+    mviewer.getMap = previousGetMap;
+    window.setTimeout = previousSetTimeout;
+    global.fetch = previousFetch;
+    fetchGeoServerDataSpy.mockRestore();
+  });
+
+  test("Le clic WMS synchronise la feature sélectionnée dans la source du layer", async () => {
+    const controlApi = mviewer.customControls.communeSearch;
+    const layerInstance = mviewer.customLayers.communeSearch._instance;
+    const previousGetMap = mviewer.getMap;
+    const feature = new ol.Feature({ code_insee: "62225" });
+    feature.setGeometry(new ol.geom.Point([1, 2]));
+    const fetchServerRenderFeaturesSpy = jest
+      .spyOn(layerInstance, "fetchServerRenderFeatures")
+      .mockResolvedValueOnce([feature]);
+    const onSpy = jest.fn();
+    const unSpy = jest.fn();
+    const ensureEntityDataSpy = jest
+      .spyOn(SinpBaseCustom.prototype, "_ensureEntityData")
+      .mockResolvedValue([feature]);
+
+    await controlApi.submit({
+      filteredDepartments: ["62"],
+      dateDeb: "2020-01-01",
+      dateFin: "2026-03-10",
+    });
+
+    layerInstance._serverStyleActive = true;
+    layerInstance.layer.setVisible(true);
+    layerInstance._serverRenderLayer = {
+      getVisible: () => true,
+    };
+
+    mviewer.getMap = jest.fn(() => ({
+      on: onSpy,
+      un: unSpy,
+      getLayers: () => ({
+        getArray: () => [],
+      }),
+      addLayer: jest.fn(),
+    }));
+
+    const previousSetTimeout = window.setTimeout;
+    window.setTimeout = (callback) => {
+      callback();
+      return 0;
+    };
+
+    controlApi.init();
+    const clickHandler = onSpy.mock.calls[0][1];
+    await clickHandler({ coordinate: [10, 20] });
+
+    expect(layerInstance.layer.getSource().getFeatures()).toContain(feature);
+
+    controlApi.destroy();
+    mviewer.getMap = previousGetMap;
+    window.setTimeout = previousSetTimeout;
+    fetchServerRenderFeaturesSpy.mockRestore();
+    ensureEntityDataSpy.mockRestore();
   });
 });
 

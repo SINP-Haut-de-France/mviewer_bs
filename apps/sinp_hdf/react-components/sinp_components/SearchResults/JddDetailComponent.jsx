@@ -85,7 +85,7 @@ const JddDetailComponent = ({
                 <td colSpan="2" className="mv-sr-loading-row">
                   <div className="mv-sr-table-loading" role="status" aria-live="polite">
                     <i className="fas fa-spinner fa-spin" aria-hidden="true"></i>
-                    <span>Chargement des jeux de données...</span>
+                    <span>Chargement des données en cours...</span>
                   </div>
                 </td>
               </tr>

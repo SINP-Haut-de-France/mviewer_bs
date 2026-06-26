@@ -132,11 +132,28 @@ export const LAYER_FILTER_PROFILES = {
   // Ajouter d'autres mappings selon vos couches
 };
 
+export const SEARCH_RESTITUTION_LAYERS = [
+  {
+    id: 'communeSearch',
+    label: 'Communes',
+    targetLocCode: '2',
+  },
+  {
+    id: 'gridSearch5x5',
+    label: 'Grille 5x5',
+    targetLocCode: '7',
+  },
+  {
+    id: 'grid10x10search',
+    label: 'Grille 10x10',
+    targetLocCode: '6',
+  },
+];
+
 const SEARCH_LAYER_PRIORITY = [
+  'communeSearch',
   'gridSearch5x5',
   'grid10x10search',
-  'gridSearch10x10',
-  'communeSearch',
   'advancedSearch',
 ];
 

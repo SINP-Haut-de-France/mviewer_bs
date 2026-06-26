@@ -22,26 +22,157 @@
         <baselayer  type="WMS" id="osm" label="OpenStreetMap" title="Plan OSM Géobretagne" thumbgallery="img/basemap/osm.png"
             url="https://osm.geo2france.fr/mapcache/" layers="naturaliste" format="image/png" visible="true"
             attribution="GéoBretagne. Données : les contributeurs d'&lt;a href='https://www.openstreetmap.org/' target='_blank'>OpenStreetMap &lt;/a>,  &lt;a href='https://www.openstreetmap.org/copyright' target='_blank'>ODbL &lt;/a>" />
-		<baselayer type="WMS" id="ortho" label="Photo aérienne" title="Géo2france" thumbgallery="img/basemap/ortho.jpg"
+		<baselayer type="WMS" id="ortho" label="Photo aérienne" title="Géo2france" opacity="0.8" thumbgallery="img/basemap/ortho.jpg"
 				   url="https://www.geo2france.fr/geoserver/ign/ows?service=WMS" layers="2024_R32_Ortho_0m20_RVB_COG" format="image/png" visible="false"
-				   attribution="gdgsdg"/>
-
+				   attribution="Géo2France"/>
+		<baselayer type="WMS" id="scan25" label="Scan 25 IGN/Géo2france" title="Scan 25" opacity="0.8" thumbgallery="img/basemap/scan25.jpg"
+				   url="https://www.geo2france.fr/geoserver/ign/ows?service=WMS" layers="2025_R32_SCAN25_TOUR_COG" format="image/png" visible="false"
+				   attribution="SCAN 25 sur les Hauts-de-France optimisé par Géo2France"/>
 
 	</baselayers>
 	<olscompletion url="https://data.geopf.fr/geocodage/search/" type="ban" attribution="La recherche d'adresse est un service proposé par la geoplateforme IGN"/>
     <proxy url=""/>
     <searchparameters bbox="false" localities="true" features="false" />
     <themes>
-		<theme 
-			name="Couches SINP"
-			collapsed="true" 
+		<theme
+			name="Limites administrative"
+			collapsed="false"
+			id="limiteAdm"
+			icon="fa fa-layer-group"
+		>
+			<layer
+				id="communes"
+				name="Communes"
+				visible="false"
+				queryable="false"
+				url="https://www.geo2france.fr/geoserver/spld/ows"
+			>
+			</layer>
+			<layer
+				id="epci"
+				name="EPCI"
+				visible="false"
+				queryable="false"
+				url="https://www.geo2france.fr/geoserver/spld/ows"
+			>
+			</layer>
+			<layer
+				id="DEPARTEMENT"
+				name="Départements"
+				visible="false"
+				queryable="false"
+				url="https://www.geo2france.fr/geoserver/spld/ows"
+			>
+			</layer>
+			<layer
+				id="bassinversanttopographique_fxx"
+				visible="false"
+				name="Bassins versants Topage 2025"
+				queryable="false"
+				url="https://www.geo2france.fr/geoserver/sandre/ows"
+			>
+			</layer>
+		</theme>
+		<theme
+			name="Environnement"
+			collapsed="false"
+			id="environnement"
+			icon="fa fa-leaf"
+		>
+			<layer
+				id="Patrinat_RAMSAR_France"
+				visible="false"
+				name="APB"
+				queryable="false"
+				url="https://data.geopf.fr/wms-v/wms"
+			>
+			</layer>
+			<layer
+				id="Patrinat_RAMSAR_France"
+				visible="false"
+				name="RAMSAR"
+				queryable="false"
+				url="https://data.geopf.fr/wms-v/wms"
+			>
+			</layer>
+			<layer
+				id="Patrinat_RNN_France"
+				visible="false"
+				name="RNN"
+				queryable="false"
+				url="https://data.geopf.fr/wms-v/wms"
+			>
+			</layer>
+			<layer
+				id="Patrinat_RNR_France"
+				visible="false"
+				name="RNN"
+				queryable="false"
+				url="https://data.geopf.fr/wms-v/wms"
+			>
+			</layer>
+			<layer
+				id="Patrinat_ZNIEFF1_France"
+				visible="false"
+				name="ZNIEFF 1 Terrestre"
+				queryable="false"
+				url="https://data.geopf.fr/wms-v/wms"
+			>
+			</layer>
+			<layer
+				id="Patrinat_ZNIEFF1_MER_France"
+				visible="false"
+				name="ZNIEFF 1 Maritime"
+				queryable="false"
+				url="https://data.geopf.fr/wms-v/wms"
+			>
+			</layer>
+			<layer
+				id="Patrinat_ZNIEFF2_France"
+				visible="false"
+				name="ZNIEFF 2 Terrestre"
+				queryable="false"
+				url="https://data.geopf.fr/wms-v/wms"
+			>
+			</layer>
+			<layer
+				id="Patrinat_ZNIEFF2_MER_France"
+				visible="false"
+				name="ZNIEFF 2 Maritime"
+				queryable="false"
+				url="https://data.geopf.fr/wms-v/wms"
+			>
+			</layer>
+			<layer
+				id="Patrinat_ZPR_France"
+				visible="false"
+				name="ZPR"
+				queryable="false"
+				url="https://data.geopf.fr/wms-v/wms"
+			>
+			</layer>
+			<layer
+				id="Patrinat_ZPS_France"
+				visible="false"
+				name="ZPS"
+				queryable="false"
+				url="https://data.geopf.fr/wms-v/wms"
+			>
+			</layer>
+		</theme>
+		<theme
+			name="Couches de restitution"
+			visible="false"
+			collapsed="true"
 			id="searchTheme"
 			icon="fa fa-search-minus">
 			<layer
 				id="communeSearch"
 				name="Communes"
 				visible="true"
-				queryable="true"
+				opacity="0.7"
+				queryable="false"
+				tiled="true"
 				exclusive="true"
 				type="customlayer"
 				url="apps/sinp_hdf/customlayers/communeSearch.js"
@@ -49,56 +180,53 @@
 				customcontrolpath="apps/sinp_hdf/customcontrols/communeSearch"
 				expanded="true"
 				fields=""
-				tooltip="true"
-				tooltipenabled="true"
-				tooltipcontent="{{libelle}} : {{nb_observations}} Evènement(s)."
 				attribution="Source: SINP Hauts-de-France. Synthèse des observations naturalistes par commune."
 				nohighlight="false"
 				jsonfields="details"
 				infopanel="right-panel"
 				metadata=""
 				metadata-csw=""
+				tooltip="true" tooltipenabled="true" tooltipcontent="{{code_insee}} ({{nb_observations}})"
 				>
 				<template url="apps/sinp_hdf/customlayers/communeSearch.mst"/>
 			</layer>
-			<layer 
+			<layer
 				id="gridSearch5x5"
 				name="Grille 5x5"
 				visible="true"
-				queryable="true"
+				opacity="0.7"
+				queryable="false"
+				tiled="true"
 				exclusive="true"
-				type="customlayer" 
+				type="customlayer"
 				url="apps/sinp_hdf/customlayers/grid5x5search.js"
 				customcontrol="true"
 				customcontrolpath="apps/sinp_hdf/customcontrols/grid5x5search"
 				fields=""
-				tooltip="true"
-				tooltipenabled="true"
-				tooltipcontent="{{code}} : {{nb_observations}} Evènement(s)."
 				attribution="Source: SINP Hauts-de-France. Synthèse des observations naturalistes par commune."
 				nohighlight="false"
 				jsonfields="details"
 				infopanel="right-panel"
 				metadata=""
 				metadata-csw=""
+				minzoom="10"
 				>
 				<template url="apps/sinp_hdf/customlayers/grid5x5search.mst"/>
 			</layer>
-			<layer 
+			<layer
 				id="grid10x10search"
 				name="Grille 10x10"
 				visible="true"
-				queryable="true"
+				opacity="0.7"
+				queryable="false"
+				tiled="true"
 				exclusive="true"
-				type="customlayer" 
+				type="customlayer"
 				url="apps/sinp_hdf/customlayers/gridSearch10x10.js"
 				expanded="true"
 				customcontrol="true"
 				customcontrolpath="apps/sinp_hdf/customcontrols/grid10x10search"
 				fields=""
-				tooltip="true"
-				tooltipenabled="true"
-				tooltipcontent="{{code}} : {{nb_observations}} Evènement(s)."
 				nohighlight="false"
 				jsonfields="details"
 				infopanel="right-panel"

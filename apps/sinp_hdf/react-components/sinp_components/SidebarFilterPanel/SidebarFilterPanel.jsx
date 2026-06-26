@@ -14,14 +14,14 @@ const SidebarFilterPanel = ({
 }) => {
   const { pushFilterError } = useFilters();
 
-  const executeSearch = async (params) => {
+  const executeSearch = async (params, layerId = activeLayerId) => {
     if (typeof onSubmit === "function") {
-      await onSubmit(params);
+      await onSubmit(params, layerId);
       return;
     }
 
-    const resolvedLayerId = resolveSearchLayerId(activeLayerId);
-    const targetLayer = getSearchLayer(activeLayerId);
+    const resolvedLayerId = resolveSearchLayerId(layerId);
+    const targetLayer = getSearchLayer(layerId);
 
     if (targetLayer?.get_datas) {
       console.log("🎯 [SIDEBAR] Appel de get_datas sur la couche:", resolvedLayerId);
@@ -32,12 +32,12 @@ const SidebarFilterPanel = ({
     console.error("❌ [SIDEBAR] Aucune recherche de couche disponible");
   };
 
-  const handleSubmit = async (params, currentFilters) => {
+  const handleSubmit = async (params, currentFilters, layerId) => {
     console.log("🎯 [SIDEBAR] handleSubmit APPELÉ !");
     console.log("🎯 [SIDEBAR] Filtres soumis depuis le sidebar:", params);
     console.log("🎯 [SIDEBAR] État complet des filtres:", currentFilters);
 
-    await executeSearch(params);
+    await executeSearch(params, layerId);
   };
 
   const handleReset = () => {

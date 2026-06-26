@@ -9,8 +9,12 @@
     "GEONETWORK_METADATA_BASE_URL": "http://localhost:8081/geonetwork/srv/fre/catalog.search#/metadata"
   },
   "PREPROD": {
-    "GEOSERVER_BASE_URL": "https://www.geo2france.fr/geoserver/sinp",
-    "GEONETWORK_METADATA_BASE_URL": "https://www.geo2france.fr/geonetwork/srv/fre/catalog.search#/metadata"
+    "GEOSERVER_BASE_URL": "https://dev.geo2france.fr/geoserver/sinp",
+    "GEONETWORK_METADATA_BASE_URL": "https://dev.geo2france.fr/geonetwork/srv/fre/catalog.search#/metadata"
+  },
+  "PREPROD_DEV": {
+    "GEOSERVER_BASE_URL": "http://localhost:8080/geoserver/preprod_sinp/wms",
+    "GEONETWORK_METADATA_BASE_URL": "https://dev.geo2france.fr/geonetwork/srv/fre/catalog.search#/metadata"
   },
   "PROD": {
     "GEOSERVER_BASE_URL": "https://www.geo2france.fr/geoserver/sinp",

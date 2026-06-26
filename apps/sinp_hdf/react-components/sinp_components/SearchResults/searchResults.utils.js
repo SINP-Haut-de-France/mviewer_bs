@@ -76,7 +76,10 @@ export const getFeatureByUid = (layerId, featureUid) => {
   const features = source?.getFeatures?.() || [];
 
   return (
-    features.find((feature) => String(feature?.ol_uid) === String(featureUid)) || null
+    features.find((feature) => {
+      const uid = feature?.ol_uid || feature?.get?.("feature_ol_uid");
+      return String(uid) === String(featureUid);
+    }) || null
   );
 };
 
