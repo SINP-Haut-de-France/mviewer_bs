@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { FilterProvider } from "./providers/FilterProvider";
 import GlobalFilterManager from "./sinp_components/GlobalFilterManager/GlobalFilterManager";
+import TutorialManager from "./tutorials/TutorialManager";
 import * as Sentry from "@sentry/react";
 import "./sinp_components/SearchResults/registerSearchResultsElement";
 
@@ -32,6 +33,7 @@ const initGlobalRoot = () => {
     <React.StrictMode>
       <FilterProvider>
         <GlobalFilterManager />
+        <TutorialManager />
       </FilterProvider>
     </React.StrictMode>
   );
