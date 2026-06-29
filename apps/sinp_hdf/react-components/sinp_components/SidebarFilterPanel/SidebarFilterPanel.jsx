@@ -55,7 +55,9 @@ const SidebarFilterPanel = ({
   console.log("🔍 [SIDEBAR] Render - handleSubmit défini:", typeof handleSubmit);
 
   return (
-    <div className={`sidebar-filter-panel-wrapper ${density || ""}`.trim()}>
+    <div
+      className={`sidebar-filter-panel-wrapper ${density || ""}`.trim()}
+      data-tour="advanced-filters-panel">
       <GlobalFilters
         onSubmit={handleSubmit}
         onReset={handleReset}

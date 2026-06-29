@@ -40,6 +40,7 @@ var reactInjector = (function () {
         const filterTheme = document.createElement("li");
         filterTheme.className = "";
         filterTheme.id = "theme-react-filters";
+        filterTheme.setAttribute("data-tour", "advanced-filters-menu");
 
         // Créer le header cliquable
         const header = document.createElement("a");
@@ -74,6 +75,7 @@ var reactInjector = (function () {
         const reactContainer = document.createElement("div");
         reactContainer.id = "react-sidebar-filter-panel";
         reactContainer.className = "react-filter-container";
+        reactContainer.setAttribute("data-tour", "advanced-filters-panel");
         reactContainer.style.width = "100%";
         reactContainer.style.maxWidth = "100%";
         reactContainer.style.boxSizing = "border-box";

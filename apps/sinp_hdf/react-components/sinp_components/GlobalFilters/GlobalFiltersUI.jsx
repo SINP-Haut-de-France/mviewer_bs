@@ -38,7 +38,8 @@ const GlobalFiltersUI = ({
         <CollapsibleFilterSection
           title="Couche de restitution"
           icon="fa-layer-group"
-          defaultExpanded={true}>
+          defaultExpanded={true}
+          dataTour="filter-restitution-layer">
           <div className="btn-group btn-group-sm mv-restitution-switch" role="group">
             {restitutionLayers.map((restitutionLayer) => {
               const isSelected = restitutionLayer.id === selectedRestitutionLayerId;
@@ -65,7 +66,8 @@ const GlobalFiltersUI = ({
           title="Classification des espèces"
           icon="fa-sitemap"
           defaultExpanded={false}
-          badge={filters.filteredGroupes?.length || null}>
+          badge={filters.filteredGroupes?.length || null}
+          dataTour="filter-taxonomic-group">
           <Datasource
             name="groupesDatasource"
             datatype="json"
@@ -95,7 +97,8 @@ const GlobalFiltersUI = ({
         <CollapsibleFilterSection
           title="Recherche d'espèce"
           icon="fa-leaf"
-          defaultExpanded={true}>
+          defaultExpanded={true}
+          dataTour="filter-taxon">
           <Datasource
             name="taxonsDatasource"
             datatype="wfs"
@@ -143,7 +146,8 @@ const GlobalFiltersUI = ({
         <CollapsibleFilterSection
           title="Période d'observation"
           icon="fa-calendar"
-          defaultExpanded={true}>
+          defaultExpanded={true}
+          dataTour="filter-date">
           <DateFilter
             dateDeb={filters.dateDeb}
             dateFin={filters.dateFin}
@@ -164,7 +168,8 @@ const GlobalFiltersUI = ({
             filters.filteredCommunes?.length ||
             filters.filteredDepartments?.length ||
             null
-          }>
+          }
+          dataTour="filter-location">
           <Datasource
             name="departmentsDatasource"
             datatype="json"
@@ -176,17 +181,19 @@ const GlobalFiltersUI = ({
               return (
                 <>
                   {filterVisibility.showDepartment && (
-                    <MultiSelectSearchComponent
-                      datasource={departments || []}
-                      selectedValues={filters.filteredDepartments || []}
-                      returnValueKey="code_dpt"
-                      title="Département"
-                      label={(item) => `${item.code_dpt} - ${item.libelle}`}
-                      minCharacters={1}
-                      maxResults={10}
-                      multiselect={false}
-                      onChange={handleDptChange}
-                    />
+                    <div data-tour="filter-department">
+                      <MultiSelectSearchComponent
+                        datasource={departments || []}
+                        selectedValues={filters.filteredDepartments || []}
+                        returnValueKey="code_dpt"
+                        title="Département"
+                        label={(item) => `${item.code_dpt} - ${item.libelle}`}
+                        minCharacters={1}
+                        maxResults={10}
+                        multiselect={false}
+                        onChange={handleDptChange}
+                      />
+                    </div>
                   )}
 
                   {filterVisibility.showCommune && (
@@ -204,23 +211,25 @@ const GlobalFiltersUI = ({
                         if (errorCommunes) return <p className="error-message">Erreur</p>;
 
                         return (
-                          <MultiSelectSearchComponent
-                            datasource={communes || []}
-                            selectedValues={filters.filteredCommunes || []}
-                            parentDatasource={filters.filteredDepartments}
-                            parentDatasourceKey="code_dpt"
-                            searchKey="code_dpt"
-                            returnValueKey="code_insee"
-                            minCharacters={1}
-                            maxResults={10}
-                            maxSelections={5}
-                            title="Commune (5 max.)"
-                            label={(item) =>
-                              `${item.code_insee} - ${item.libelle_commune}`
-                            }
-                            multiselect={true}
-                            onChange={handleComChange}
-                          />
+                          <div data-tour="filter-commune">
+                            <MultiSelectSearchComponent
+                              datasource={communes || []}
+                              selectedValues={filters.filteredCommunes || []}
+                              parentDatasource={filters.filteredDepartments}
+                              parentDatasourceKey="code_dpt"
+                              searchKey="code_dpt"
+                              returnValueKey="code_insee"
+                              minCharacters={1}
+                              maxResults={10}
+                              maxSelections={5}
+                              title="Commune (5 max.)"
+                              label={(item) =>
+                                `${item.code_insee} - ${item.libelle_commune}`
+                              }
+                              multiselect={true}
+                              onChange={handleComChange}
+                            />
+                          </div>
                         );
                       }}
                     </Datasource>
@@ -234,7 +243,7 @@ const GlobalFiltersUI = ({
 
       {/* Actions */}
       {showActions && (
-        <div className="filter-actions">
+        <div className="filter-actions" data-tour="filter-actions">
           <button className="btn btn-reset" onClick={onReset} disabled={isLoading}>
             <i className="fas fa-undo"></i> {actionLabels.reset}
           </button>

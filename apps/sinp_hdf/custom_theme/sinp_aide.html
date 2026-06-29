@@ -15,13 +15,13 @@
     <li class="nav-item" role="presentation">
       <a
         class="nav-link"
-        id="sinp-aides-tab"
-        href="#sinp-aides"
-        aria-controls="sinp-aides"
+        id="sinp-tutoriels-tab"
+        href="#sinp-tutoriels"
+        aria-controls="sinp-tutoriels"
         aria-selected="false"
         role="tab"
         data-bs-toggle="tab"
-        >Aides</a
+        >Tutoriels</a
       >
     </li>
     <li class="nav-item" role="presentation">
@@ -73,34 +73,36 @@
 
     <div
       class="tab-pane fade"
-      id="sinp-aides"
-      aria-labelledby="sinp-aides-tab"
+      id="sinp-tutoriels"
+      aria-labelledby="sinp-tutoriels-tab"
       role="tabpanel">
-      <h4>Aides et ressources</h4>
+      <h4>Tutoriels et prise en main</h4>
       <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris non congue lacus.
-        Duis finibus, mi in tincidunt facilisis, risus lorem faucibus nibh, sit amet
-        interdum justo nibh quis justo.
+        Souhaitez-vous activer le tutoriel de prise en main ? Il vous guidera sur les
+        principaux menus de l'application. Vous pourrez l'interrompre à tout moment.
       </p>
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <button id="sinp-tutorial-start" type="button" class="btn btn-primary">
+          Lancer le tutoriel
+        </button>
+        <button id="sinp-tutorial-disable" type="button" class="btn btn-outline-secondary">
+          Ne plus afficher au démarrage
+        </button>
+        <button id="sinp-tutorial-reset" type="button" class="btn btn-link">
+          Réinitialiser le tutoriel
+        </button>
+      </div>
       <ul class="sinp-help-links">
         <li>
           <a
             href="https://www.youtube.com/results?search_query=SINP+Hauts+de+France+prise+en+main"
             target="_blank"
             rel="noopener noreferrer"
-            >Videos de prise en main</a
+            >Videos de prise en main (à venir)</a
           >
         </li>
         <li>
-          <a
-            href="https://www.youtube.com/results?search_query=SINP+Hauts+de+France+recherche+donnees"
-            target="_blank"
-            rel="noopener noreferrer"
-            >Videos de recherche et consultation des donnees</a
-          >
-        </li>
-        <li>
-          <a href="https://www.geo2france.fr/" target="_blank" rel="noopener noreferrer"
+          <a href="https://www.geo2france.fr/portal/s/49" target="_blank" rel="noopener noreferrer"
             >Plateforme collaborative SINP Hauts de France - Geo2France</a
           >
         </li>
@@ -127,33 +129,45 @@
         </div>
         <div class="sinp-help-credit-card">
           <img
-            src="apps/sinp_hdf/custom_theme/img/logo/logo-observatoire-biodiversite-hauts-de-france.svg"
-            alt="Logo de l'Observatoire de la biodiversite des Hauts-de-France" />
-          <span>Observatoire de la biodiversite des Hauts-de-France</span>
-        </div>
-        <div class="sinp-help-credit-card">
-          <img
-            src="apps/sinp_hdf/custom_theme/img/logo/logo-irpn.png"
-            alt="Logo de l'IRPN" />
-          <span>IRPN</span>
-        </div>
-        <div class="sinp-help-credit-card">
-          <img
-            src="apps/sinp_hdf/custom_theme/img/logo/logo-obsbiodiv-hdf.png"
+            src="apps/sinp_hdf/custom_theme/img/logo/sinp.png"
             alt="Logo du SINP Hauts-de-France" />
           <span>SINP Hauts-de-France</span>
         </div>
-        <div class="sinp-help-credit-card sinp-help-credit-card--placeholder">
-          <span>DREAL Hauts-de-France<br />Logo a integrer</span>
+        <div class="sinp-help-credit-card">
+         <img
+            src="apps/sinp_hdf/custom_theme/img/logo/dreal-hdf.jpg"
+            alt="Logo de la DREAL Hauts-de-France" />
+          <span>DREAL Hauts-de-France</span>
         </div>
-        <div class="sinp-help-credit-card sinp-help-credit-card--placeholder">
-          <span>Geo2France<br />Logo a integrer</span>
+        <div class="sinp-help-credit-card">
+          <img
+            src="apps/sinp_hdf/custom_theme/img/logo/g2f.png"
+            alt="Logo Géo2france" />
+          <span>Géo2France</span>
         </div>
-        <div class="sinp-help-credit-card sinp-help-credit-card--placeholder">
-          <span>Partenaire 7<br />Logo a integrer</span>
+        <div class="sinp-help-credit-card">
+          <img
+            src="apps/sinp_hdf/custom_theme/img/logo/cbn-hdf.png"
+            alt="Logo du CBN HDF Hauts-de-France" />
+          <span>Conservatoire Botanique National des Hauts-de-France</span>
         </div>
-        <div class="sinp-help-credit-card sinp-help-credit-card--placeholder">
-          <span>Partenaire 8<br />Logo a integrer</span>
+        <div class="sinp-help-credit-card">
+          <img
+            src="apps/sinp_hdf/custom_theme/img/logo/gon.png"
+            alt="Logo du GON Hauts-de-France" />
+          <span>Groupe ornithologique et naturaliste</span>
+        </div>
+        <div class="sinp-help-credit-card">
+          <img
+            src="apps/sinp_hdf/custom_theme/img/logo/picardie-nature.png"
+            alt="Logo de Picardie Nature" />
+          <span>Picardie Nature</span>
+        </div>
+                <div class="sinp-help-credit-card">
+          <img
+            src="apps/sinp_hdf/custom_theme/img/logo/smnf.png"
+            alt="Logo de la société mycologique du Nord de la France" />
+          <span>Société mycologique du Nord de la France</span>
         </div>
       </div>
     </div>
