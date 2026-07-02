@@ -268,25 +268,30 @@
 
 .mv-sr-loading-row {
   padding: 0 !important;
+  height: 38px !important;
+  max-height: 38px !important;
   background: #f8fbff !important;
   color: #1f2937 !important;
   text-align: center;
   vertical-align: middle !important;
+  overflow: hidden !important;
 }
 
 .mv-sr-table-loading {
   display: flex !important;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  min-height: 80px;
-  padding: 18px 12px;
+  min-height: 36px;
+  max-height: 38px;
+  padding: 6px 10px;
+  overflow: hidden;
   color: #1f2937 !important;
   background: #f8fbff !important;
   font-weight: 600;
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 12px;
+  line-height: 1.2;
   visibility: visible !important;
   opacity: 1 !important;
 }

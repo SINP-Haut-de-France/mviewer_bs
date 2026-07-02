@@ -3,7 +3,7 @@
 	<application
 		id="sinp_hdf"
 		title="SINP Hauts-de-France"
-		logo='apps/sinp_hdf/custom_theme/img/logo/logo-obsbiodiv-hdf.png'
+		logo='apps/sinp_hdf/custom_theme/img/logo/logo-obsbiodiv-hdf.svg'
 		help="apps/sinp_hdf/custom_theme/sinp_aide.html"
 		showhelp="true"
 		titlehelp="SINP Hauts de France"
@@ -82,15 +82,7 @@
 			<layer
 				id="Patrinat_RAMSAR_France"
 				visible="false"
-				name="APB"
-				queryable="false"
-				url="https://data.geopf.fr/wms-v/wms"
-			>
-			</layer>
-			<layer
-				id="Patrinat_RAMSAR_France"
-				visible="false"
-				name="RAMSAR"
+				name="APPB"
 				queryable="false"
 				url="https://data.geopf.fr/wms-v/wms"
 			>
@@ -106,7 +98,31 @@
 			<layer
 				id="Patrinat_RNR_France"
 				visible="false"
-				name="RNN"
+				name="RNR"
+				queryable="false"
+				url="https://data.geopf.fr/wms-v/wms"
+			>
+			</layer>
+			<layer
+				id="Patrinat_SIC_France"
+				visible="false"
+				name="Natura 2000 - ZSC"
+				queryable="false"
+				url="https://data.geopf.fr/wms-v/wms"
+			>
+			</layer>
+			<layer
+				id="Patrinat_ZPS_France"
+				visible="false"
+				name="Natura 2000 - ZPS"
+				queryable="false"
+				url="https://data.geopf.fr/wms-v/wms"
+			>
+			</layer>
+			<layer
+				id="Patrinat_RAMSAR_France"
+				visible="false"
+				name="RAMSAR"
 				queryable="false"
 				url="https://data.geopf.fr/wms-v/wms"
 			>
@@ -120,41 +136,9 @@
 			>
 			</layer>
 			<layer
-				id="Patrinat_ZNIEFF1_MER_France"
-				visible="false"
-				name="ZNIEFF 1 Maritime"
-				queryable="false"
-				url="https://data.geopf.fr/wms-v/wms"
-			>
-			</layer>
-			<layer
 				id="Patrinat_ZNIEFF2_France"
 				visible="false"
 				name="ZNIEFF 2 Terrestre"
-				queryable="false"
-				url="https://data.geopf.fr/wms-v/wms"
-			>
-			</layer>
-			<layer
-				id="Patrinat_ZNIEFF2_MER_France"
-				visible="false"
-				name="ZNIEFF 2 Maritime"
-				queryable="false"
-				url="https://data.geopf.fr/wms-v/wms"
-			>
-			</layer>
-			<layer
-				id="Patrinat_ZPR_France"
-				visible="false"
-				name="ZPR"
-				queryable="false"
-				url="https://data.geopf.fr/wms-v/wms"
-			>
-			</layer>
-			<layer
-				id="Patrinat_ZPS_France"
-				visible="false"
-				name="ZPS"
 				queryable="false"
 				url="https://data.geopf.fr/wms-v/wms"
 			>
