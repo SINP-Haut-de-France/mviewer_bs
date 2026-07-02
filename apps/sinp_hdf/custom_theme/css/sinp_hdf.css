@@ -544,10 +544,13 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  min-height: 42px;
   padding: 0.7em 0.85em !important;
   text-decoration: none;
   border-radius: 0;
+  border-left: 0 !important;
   box-sizing: border-box;
+  box-shadow: none !important;
 }
 
 /* Conteneur du titre avec icône (comme .menu-theme-layers-name) */
@@ -562,6 +565,7 @@
   font-weight: 500;
   gap: 0;
   min-width: 0;
+  margin: 0;
 }
 
 /* Neutraliser les classes Bootstrap qui interfèrent */
@@ -582,7 +586,7 @@
 }
 
 #theme-react-filters > a .menu-theme-layers-name > span:last-child {
-  margin-left: 0.1rem;
+  margin-left: 0;
 }
 
 #theme-react-filters > a .react-filters-header-actions {
@@ -592,6 +596,18 @@
   flex: 0 0 auto;
   margin-left: 0.75rem;
   margin-right: 0.25rem;
+}
+
+#theme-react-filters > a .menu-theme-layers-name > .fa-stack {
+  flex: 0 0 2em;
+  width: 2em;
+  height: 2em;
+  margin: 0;
+  text-align: center;
+}
+
+#theme-react-filters > a .menu-theme-layers-name > .fa-stack .fa-stack-1x {
+  line-height: 2em;
 }
 
 #theme-react-filters > a .react-filters-toggle-button {
@@ -632,9 +648,22 @@
 
 /* Effet hover */
 #theme-react-filters > a:hover {
-  background-color: color-mix(in srgb, var(--mv-theme-bicolore, #007bff) 20%, white);
+  background-color: color-mix(in srgb, var(--mv-theme-bicolore, #007bff) 12%, white);
   color: var(--mv-theme-bicolore, #007bff) !important;
   text-decoration: none;
+  border-left: 0 !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+#theme-react-filters:hover,
+#theme-react-filters.active,
+#theme-react-filters.opened,
+#theme-react-filters > a:hover,
+#theme-react-filters > a:focus {
+  border-left: 0 !important;
+  box-shadow: none !important;
+  outline: 0 !important;
 }
 
 /* Réinitialiser les styles des colonnes Bootstrap qui pourraient interférer */
@@ -725,12 +754,117 @@
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
-.sinp-help .tab-content {
-  min-height: 24rem;
+/* ========================================
+   Compatibilite Bootstrap 3 / Bootstrap 5
+   Scopage strict SINP pour ne pas impacter mviewer.
+   ======================================== */
+
+.sinp-help {
+  --sinp-help-active-color: var(--sinp-secondary, #0d6efd);
+}
+
+.sinp-help *,
+.sinp-help *::before,
+.sinp-help *::after {
+  box-sizing: border-box;
+}
+
+.sinp-help .p-3 {
+  padding: 1rem !important;
+}
+
+.sinp-help .mb-3 {
+  margin-bottom: 1rem !important;
+}
+
+.sinp-help .d-flex {
+  display: flex !important;
+}
+
+.sinp-help .flex-wrap {
+  flex-wrap: wrap !important;
+}
+
+.sinp-help .gap-2 {
+  gap: 0.5rem;
 }
 
 .sinp-help-tabs {
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.25rem;
+  border-bottom: 1px solid var(--sinp-border-color, #dee2e6);
+}
+
+.sinp-help-tabs > li {
+  margin-bottom: -1px;
+}
+
+.sinp-help-tabs > li > a,
+.sinp-help-tabs .nav-link {
+  display: block;
+  padding: 0.5rem 1rem;
+  color: var(--sinp-help-active-color);
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: var(--sinp-border-radius, 4px) var(--sinp-border-radius, 4px) 0 0;
+}
+
+.sinp-help-tabs > li > a:hover,
+.sinp-help-tabs > li > a:focus,
+.sinp-help-tabs .nav-link:hover,
+.sinp-help-tabs .nav-link:focus {
+  color: #0a58ca;
+  text-decoration: none;
+  background-color: var(--sinp-bg-light, #f8f9fa);
+  border-color: #e9ecef #e9ecef var(--sinp-border-color, #dee2e6);
+}
+
+.sinp-help-tabs > li.active > a,
+.sinp-help-tabs > li.active > a:hover,
+.sinp-help-tabs > li.active > a:focus,
+.sinp-help-tabs .nav-link.active,
+.sinp-help-tabs .nav-link.active:hover,
+.sinp-help-tabs .nav-link.active:focus {
+  color: #495057;
+  cursor: default;
+  background-color: #fff;
+  border-color: var(--sinp-border-color, #dee2e6) var(--sinp-border-color, #dee2e6) #fff;
+}
+
+.sinp-help .tab-content > .tab-pane {
+  display: none;
+}
+
+.sinp-help .tab-content > .active {
+  display: block;
+}
+
+.sinp-help .tab-content > .fade {
+  opacity: 0;
+}
+
+.sinp-help .tab-content > .fade.active,
+.sinp-help .tab-content > .fade.show,
+.sinp-help .tab-content > .fade.in {
+  opacity: 1;
+}
+
+.sinp-help .btn-outline-secondary {
+  color: #6c757d;
+  background-color: transparent;
+  border-color: #6c757d;
+}
+
+.sinp-help .btn-outline-secondary:hover,
+.sinp-help .btn-outline-secondary:focus {
+  color: #fff;
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.sinp-help .tab-content {
+  min-height: 24rem;
 }
 
 .sinp-help-links {
@@ -812,4 +946,189 @@
   #wrapper {
     padding-left: 0 !important;
   }
+}
+
+/* ========================================
+   Correctifs compat Bootstrap 3 / preprod
+   Ces surcharges sont volontairement en fin de fichier.
+   ======================================== */
+
+#mv-navbar {
+  background-color: var(--sinp-primary, #191c36) !important;
+  color: #fff !important;
+  min-height: var(--sinp-navbar-height, 80px) !important;
+}
+
+#mv-navbar .navbar-header a,
+#mv-navbar .navbar-brand,
+#mv-navbar .mv-title,
+#mv-navbar .menu-toggle,
+#mv-navbar #iconhelp,
+#mv-navbar #iconhelp i,
+#mv-navbar #iconhelp.btn,
+#mv-navbar #iconhelp.btn-light,
+#mv-navbar .mv-navbar-btn,
+#mv-navbar .navbar-right,
+#mv-navbar .navbar-right a,
+#mv-navbar .navbar-right .btn {
+  color: #fff !important;
+}
+
+#mv-navbar #iconhelp,
+#mv-navbar #iconhelp.btn,
+#mv-navbar #iconhelp.btn-light,
+#mv-navbar .mv-navbar-btn {
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+#mv-navbar #iconhelp:hover,
+#mv-navbar #iconhelp:focus,
+#mv-navbar .mv-navbar-btn:hover,
+#mv-navbar .mv-navbar-btn:focus {
+  color: rgba(255, 255, 255, 0.85) !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  border-color: transparent !important;
+}
+
+#mv-navbar .navbar-header a:hover,
+#mv-navbar .navbar-header a:focus,
+#mv-navbar .navbar-brand:hover,
+#mv-navbar .navbar-brand:focus,
+#mv-navbar .mv-title:hover,
+#mv-navbar .mv-title:focus {
+  color: rgba(255, 255, 255, 0.8) !important;
+  text-decoration: none !important;
+}
+
+#searchtool_nav,
+#searchtool,
+#mv-navbar .navbar-form,
+#mv-navbar #searchtool.navbar-form {
+  display: none !important;
+}
+
+@media (min-width: 992px) {
+  #wrapper #sidebar-wrapper {
+    width: var(--sinp-sidebar-width, 350px) !important;
+    max-width: var(--sinp-sidebar-width, 350px) !important;
+    overflow-x: hidden !important;
+  }
+
+  #wrapper #sidebar-wrapper .sidebar-nav,
+  #wrapper #sidebar-wrapper #react-filters-menu {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  #wrapper.toggled-2 #sidebar-wrapper,
+  #wrapper.toggled-2 #sidebar-wrapper .sidebar-nav,
+  #wrapper.toggled-2 #sidebar-wrapper #react-filters-menu {
+    width: 50px !important;
+    max-width: 50px !important;
+  }
+}
+
+#wrapper.toggled-2 #sidebar-wrapper {
+  overflow: hidden !important;
+}
+
+#wrapper.toggled-2 #sidebar-wrapper .sidebar-nav > li > a,
+#wrapper.toggled-2 #theme-react-filters > a {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 50px !important;
+  min-height: 42px !important;
+  padding: 0 !important;
+  text-align: center !important;
+}
+
+#wrapper.toggled-2 #sidebar-wrapper .menu-theme-layers-name {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 50px !important;
+  min-width: 50px !important;
+  margin: 0 !important;
+}
+
+#wrapper.toggled-2 #sidebar-wrapper .menu-theme-layers-name > span:not(.fa-stack),
+#wrapper.toggled-2 #sidebar-wrapper .toggle-theme-layers,
+#wrapper.toggled-2 #sidebar-wrapper .mv-nav-item,
+#wrapper.toggled-2 #sidebar-wrapper .level-2,
+#wrapper.toggled-2 #sidebar-wrapper #react-filters-menu > li > a span:not(.fa-stack),
+#wrapper.toggled-2 #sidebar-wrapper #react-filters-menu > li > ul {
+  display: none !important;
+}
+
+#wrapper.toggled-2 #sidebar-wrapper .fa-stack,
+#wrapper.toggled-2 #sidebar-wrapper .fa-stack-1x {
+  display: inline-block !important;
+  float: none !important;
+  margin: 0 !important;
+  text-align: center !important;
+}
+
+#react-sidebar-filter-panel,
+#react-sidebar-filter-panel *,
+#react-filters-menu,
+#react-filters-menu * {
+  box-sizing: border-box !important;
+}
+
+#react-sidebar-filter-panel {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  padding: 0.5rem !important;
+  overflow-x: hidden !important;
+}
+
+#react-sidebar-filter-panel .sidebar-filter-panel-wrapper,
+#react-sidebar-filter-panel .legacy-compact,
+#react-sidebar-filter-panel .global-filters-container,
+#react-sidebar-filter-panel .collapsible-filter-section,
+#react-sidebar-filter-panel .section-content,
+#react-sidebar-filter-panel .multi-select-container,
+#react-sidebar-filter-panel .date-filter-container,
+#react-sidebar-filter-panel .tree-view-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+#react-sidebar-filter-panel .legacy-compact {
+  font-size: var(--sinp-react-compact-font-size, 12px) !important;
+  line-height: 1.25 !important;
+}
+
+#react-sidebar-filter-panel .section-header {
+  padding: 0.45rem 0.55rem !important;
+}
+
+#react-sidebar-filter-panel .section-content {
+  padding: 0.5rem !important;
+}
+
+#react-sidebar-filter-panel .multi-select-results {
+  max-width: 100% !important;
+}
+
+#react-sidebar-filter-panel .mv-restitution-switch,
+#react-sidebar-filter-panel .btn-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+#react-sidebar-filter-panel .mv-restitution-switch .btn,
+#react-sidebar-filter-panel .filter-actions .btn {
+  flex: 1 1 100% !important;
+  max-width: 100% !important;
+  white-space: normal !important;
 }
