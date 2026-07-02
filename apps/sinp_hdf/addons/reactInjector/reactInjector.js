@@ -2,6 +2,42 @@ var reactInjector = (function () {
   return {
     // Addon Init
     init: function () {
+      const initSinpHelpTabs = () => {
+        document.addEventListener("click", function (event) {
+          const tab = event.target.closest(".sinp-help-tabs a[href^='#']");
+
+          if (!tab) {
+            return;
+          }
+
+          const help = tab.closest(".sinp-help");
+          const target = help?.querySelector(tab.getAttribute("href"));
+
+          if (!help || !target) {
+            return;
+          }
+
+          event.preventDefault();
+
+          help.querySelectorAll(".sinp-help-tabs a").forEach((item) => {
+            item.classList.remove("active");
+            item.parentElement?.classList.remove("active");
+            item.setAttribute("aria-selected", "false");
+          });
+
+          help.querySelectorAll(".tab-pane").forEach((pane) => {
+            pane.classList.remove("active", "show", "in");
+          });
+
+          tab.classList.add("active");
+          tab.parentElement?.classList.add("active");
+          tab.setAttribute("aria-selected", "true");
+          target.classList.add("active", "show", "in");
+        });
+      };
+
+      initSinpHelpTabs();
+
       // Fonction pour injecter le conteneur React dans le sidebar
       const injectSidebarFilterContainer = () => {
         const sidebarWrapper = document.getElementById("sidebar-wrapper");
@@ -31,14 +67,11 @@ var reactInjector = (function () {
         const filtersWrapper = document.createElement("ul");
         filtersWrapper.className = "sidebar-nav nav-pills nav-stacked";
         filtersWrapper.id = "react-filters-menu";
-        filtersWrapper.style.marginTop = "10px";
-        filtersWrapper.style.paddingTop = "10px";
         filtersWrapper.style.paddingLeft = "0px";
-        filtersWrapper.style.borderTop = "1px solid #ddd";
 
         // Créer le <li> du thème de filtres
         const filterTheme = document.createElement("li");
-        filterTheme.className = "";
+        filterTheme.className = "level-1";
         filterTheme.id = "theme-react-filters";
         filterTheme.setAttribute("data-tour", "advanced-filters-menu");
 
@@ -104,6 +137,16 @@ var reactInjector = (function () {
         // Ajouter le comportement de toggle au clic sur le header
         header.addEventListener("click", function (e) {
           e.preventDefault();
+
+          const wrapper = document.getElementById("wrapper");
+          if (wrapper?.classList.contains("toggled-2")) {
+            if (typeof mviewer !== "undefined" && typeof mviewer.toggleMenu === "function") {
+              mviewer.toggleMenu(true);
+            } else {
+              wrapper.classList.remove("toggled-2");
+            }
+          }
+
           const isHidden = filtersContainer.style.display === "none";
           filtersContainer.style.display = isHidden ? "block" : "none";
           filterTheme.classList.toggle("active", isHidden);
@@ -120,7 +163,7 @@ var reactInjector = (function () {
 
         // Injecter le CSS pour le sidebar
         const cssHref =
-          "apps/sinp_hdf/react-components/sinp_components/GlobalFilters/GlobalFiltersSidebar.css";
+          "apps/sinp_hdf/addons/reactInjector/dist/GlobalFiltersSidebar.css";
         if (!document.querySelector(`link[href='${cssHref}']`)) {
           const link = document.createElement("link");
           link.rel = "stylesheet";

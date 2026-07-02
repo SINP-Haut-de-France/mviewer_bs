@@ -29,7 +29,7 @@
       "required": false,
       "waitForTarget": true,
       "title": "Limites administratives",
-      "text": "Cette rubrique regroupe les couches de repérage administratif : communes, EPCI, départements, bassins versants. Elles permettent de se superposer si nécessaire aux couches de restituions."
+      "text": "Cette rubrique rassemble les couches de référentiel administratif :bassins versants, départements, EPCI, communes, etc."
     },
     {
       "id": "menu-environnement",
@@ -41,7 +41,7 @@
       "required": false,
       "waitForTarget": true,
       "title": "Environnement",
-      "text": "Cette rubrique regroupe les couches de contexte environnemental, par exemple les zonages de protection ou d'inventaire. Une réflexion est en cours pour remplacer ce menu par une fonctionnalité mviewer existante permettant à l'utilisateur d'ajouter des services de contexte dynamiquement."
+      "text": "Cette rubrique rassemble les zonages environnementaux: espaces protégés et inventaires. Elle n'est pas exhaustive. Une réflexion est en cours pour remplacer ce menu par une fonctionnalité mviewer existante permettant à l'utilisateur d'ajouter des couches dynamiquement."
     },
     {
       "id": "filtres-avances",
@@ -96,7 +96,7 @@
       "waitForTarget": true,
       "beforeShowAction": "openAdvancedFilters",
       "title": "Recherche d'espèce",
-      "text": "Ce filtre sert à rechercher une espèce par nom scientifique ou vernaculaire. Plusieurs taxons peuvent être sélectionnés."
+      "text": "Ce filtre sert à rechercher une espèce par son nom scientifique ou vernaculaire. Plusieurs taxons peuvent être sélectionnés."
     },
     {
       "id": "filtre-periode",
@@ -109,7 +109,7 @@
       "waitForTarget": true,
       "beforeShowAction": "openAdvancedFilters",
       "title": "Période d'observation",
-      "text": "Ce filtre définit la période temporelle interrogée. Par défaut, la recherche couvre les dernières années configurées (le paramètre actuel étant positionné sur 20 ans)."
+      "text": "Ce filtre permet de définir la période temporelle souhaitée. Par défaut, la recherche couvre les 20 dernières années."
     },
     {
       "id": "filtre-localisation",
