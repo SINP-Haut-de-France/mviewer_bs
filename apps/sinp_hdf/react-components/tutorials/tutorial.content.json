@@ -1,0 +1,167 @@
+{
+  "version": "0.1.0",
+  "status": "validated",
+  "steps": [
+    {
+      "id": "menu-fonds-carte",
+      "tag": "menus",
+      "status": "validated",
+      "enabled": true,
+      "target": [
+        "#backgroundlayerstoolbar-gallery",
+        "#backgroundlayerstoolbar",
+        ".baselayers",
+        ".mv-baselayers"
+      ],
+      "placement": "left",
+      "required": false,
+      "waitForTarget": true,
+      "title": "Fonds de carte",
+      "text": "Ce menu permet de choisir le fond de carte utilisé comme support de lecture : plan, photographie aérienne ou scan cartographique selon la configuration. D'autres fonds de cartes pourront être ajoutés à cette configuration."
+    },
+    {
+      "id": "limites-administratives",
+      "tag": "menus",
+      "status": "validated",
+      "enabled": true,
+      "target": ["#theme-layers-limiteAdm"],
+      "placement": "right",
+      "required": false,
+      "waitForTarget": true,
+      "title": "Limites administratives",
+      "text": "Cette rubrique rassemble les couches de référentiel administratif :bassins versants, départements, EPCI, communes, etc."
+    },
+    {
+      "id": "menu-environnement",
+      "tag": "menus",
+      "status": "validated",
+      "enabled": true,
+      "target": ["#theme-layers-environnement"],
+      "placement": "right",
+      "required": false,
+      "waitForTarget": true,
+      "title": "Environnement",
+      "text": "Cette rubrique rassemble les zonages environnementaux: espaces protégés et inventaires. Elle n'est pas exhaustive. Une réflexion est en cours pour remplacer ce menu par une fonctionnalité mviewer existante permettant à l'utilisateur d'ajouter des couches dynamiquement."
+    },
+    {
+      "id": "filtres-avances",
+      "tag": "menus",
+      "status": "validated",
+      "enabled": true,
+      "target": [
+        "[data-tour='advanced-filters-menu']",
+        "#theme-react-filters",
+        "#react-filters-menu"
+      ],
+      "placement": "right",
+      "required": false,
+      "waitForTarget": true,
+      "title": "Filtres avancés",
+      "text": "Ce menu donne accès aux filtres de recherche avancée. Il peut être utilisé dans la barre latérale ou ouvert dans une fenêtre dédiée."
+    },
+    {
+      "id": "filtre-couche-restitution",
+      "tag": "filtres-avances",
+      "status": "validated",
+      "enabled": true,
+      "target": ["[data-tour='filter-restitution-layer']"],
+      "placement": "right",
+      "required": false,
+      "waitForTarget": true,
+      "beforeShowAction": "openAdvancedFilters",
+      "title": "Couche de restitution",
+      "text": "Ce filtre permet de choisir le niveau de restitution de la recherche, par exemple les communes ou les grilles disponibles. La recherche s'effectuent dans ce cas en calculant et en rattachant les données au niveau de restitution souhaité."
+    },
+    {
+      "id": "filtre-groupe-taxonomique",
+      "tag": "filtres-avances",
+      "status": "validated",
+      "enabled": true,
+      "target": ["[data-tour='filter-taxonomic-group']"],
+      "placement": "right",
+      "required": false,
+      "waitForTarget": true,
+      "beforeShowAction": "openTaxonomicGroupFilter",
+      "title": "Classification des espèces",
+      "text": "Ce filtre permet de restreindre la recherche à un ou plusieurs groupes taxonomiques."
+    },
+    {
+      "id": "filtre-taxon",
+      "tag": "filtres-avances",
+      "status": "validated",
+      "enabled": true,
+      "target": ["[data-tour='filter-taxon']"],
+      "placement": "right",
+      "required": false,
+      "waitForTarget": true,
+      "beforeShowAction": "openAdvancedFilters",
+      "title": "Recherche d'espèce",
+      "text": "Ce filtre sert à rechercher une espèce par son nom scientifique ou vernaculaire. Plusieurs taxons peuvent être sélectionnés."
+    },
+    {
+      "id": "filtre-periode",
+      "tag": "filtres-avances",
+      "status": "validated",
+      "enabled": true,
+      "target": ["[data-tour='filter-date']"],
+      "placement": "right",
+      "required": false,
+      "waitForTarget": true,
+      "beforeShowAction": "openAdvancedFilters",
+      "title": "Période d'observation",
+      "text": "Ce filtre peremet de définir la période temporelle souhaitée. Par défaut, la recherche couvre les 20 dernières années."
+    },
+    {
+      "id": "filtre-localisation",
+      "tag": "filtres-avances",
+      "status": "validated",
+      "enabled": true,
+      "target": ["[data-tour='filter-location']"],
+      "placement": "right",
+      "required": false,
+      "waitForTarget": true,
+      "beforeShowAction": "openAdvancedFilters",
+      "title": "Localisation géographique",
+      "text": "Cette section regroupe les filtres géographiques. Elle permet de limiter la recherche à un département et/ou à des communes. Elle sera enrichie avec d'autres couches de repérage administratif (EPCI, bassins versants, PNR, etc.)."
+    },
+    {
+      "id": "filtre-departement",
+      "tag": "filtres-avances",
+      "status": "validated",
+      "enabled": true,
+      "target": ["[data-tour='filter-department']"],
+      "placement": "right",
+      "required": false,
+      "waitForTarget": true,
+      "beforeShowAction": "openAdvancedFilters",
+      "title": "Département",
+      "text": "Ce filtre sélectionne un département des Hauts-de-France. La sélection peut aussi servir à restreindre la liste des communes."
+    },
+    {
+      "id": "filtre-commune",
+      "tag": "filtres-avances",
+      "status": "validated",
+      "enabled": true,
+      "target": ["[data-tour='filter-commune']"],
+      "placement": "right",
+      "required": false,
+      "waitForTarget": true,
+      "beforeShowAction": "openAdvancedFilters",
+      "title": "Commune",
+      "text": "Ce filtre permet de sélectionner une ou plusieurs communes, avec une limite de sélection afin de conserver des recherches lisibles."
+    },
+    {
+      "id": "actions-filtres",
+      "tag": "filtres-avances",
+      "status": "validated",
+      "enabled": true,
+      "target": ["[data-tour='filter-actions']"],
+      "placement": "right",
+      "required": false,
+      "waitForTarget": true,
+      "beforeShowAction": "openAdvancedFilters",
+      "title": "Appliquer ou réinitialiser",
+      "text": "Ces boutons permettent d'appliquer les critères choisis ou de réinitialiser les filtres avant une nouvelle recherche."
+    }
+  ]
+}
