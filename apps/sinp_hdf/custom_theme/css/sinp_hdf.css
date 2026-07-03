@@ -539,6 +539,12 @@
    ======================================== */
 
 /* Style du lien "Filtres avancés" pour correspondre au legacy */
+#react-filters-menu > li,
+#theme-react-filters > a,
+#theme-react-filters > a .menu-theme-layers-name {
+  text-indent: 0;
+}
+
 #theme-react-filters > a {
   display: flex;
   align-items: center;
