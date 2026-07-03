@@ -823,7 +823,7 @@ class SinpBaseLayer {
       entity_data_loading: true,
       entity_data_loaded: false,
       entity_data_error: null,
-      jdd_data_loading: false,
+      jdd_data_loading: true,
       jdd_data_loaded: false,
       jdd_data_error: null,
     });

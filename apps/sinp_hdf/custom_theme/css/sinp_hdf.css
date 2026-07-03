@@ -592,7 +592,7 @@
 }
 
 #theme-react-filters > a .menu-theme-layers-name > span:last-child {
-  margin-left: 0;
+  margin-left: 1.75rem;
 }
 
 #theme-react-filters > a .react-filters-header-actions {

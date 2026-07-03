@@ -20,6 +20,7 @@ const MultiSelectSearchComponent = ({
   onSearch = () => {},
   loading = false,
   error = null,
+  disabled = false,
 }) => {
   const [availableData, setAvailableData] = useState([]);
   const [filteredResults, setFilteredResults] = useState([]);
@@ -37,6 +38,8 @@ const MultiSelectSearchComponent = ({
 
   // Modifie l'état local `search` lors d'une saisie utilisateur
   const handleSearchChange = (value) => {
+    if (disabled) return;
+
     setSearch(value);
     setShowResults(value.length > 0);
     onSearch(value);
@@ -216,6 +219,8 @@ const MultiSelectSearchComponent = ({
 
   // Gestion de la sélection d'éléments
   const handleSelect = (item) => {
+    if (disabled) return;
+
     isSelectingRef.current = true; // Indiquer qu'on est en train de sélectionner
 
     let newSelected;
@@ -318,6 +323,7 @@ const MultiSelectSearchComponent = ({
       error={error}
       maxSelections={maxSelections}
       isSelectionLimitReached={isSelectionLimitReached}
+      disabled={disabled}
     />
   );
 };

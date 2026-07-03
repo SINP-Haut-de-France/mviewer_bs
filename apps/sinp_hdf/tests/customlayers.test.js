@@ -530,7 +530,7 @@ describe("SinpBaseCustom - Scopage des détails", () => {
       layerId: "testControl",
       mainTypeName: "fn_get_stats",
       detailsTypeName: "fn_get_obs_detaillee",
-      metadataTypeName: "fn_get_metadatas",
+      metadataTypeName: "fn_get_metadonnees",
       targetLocCode: "2",
     });
 
@@ -549,7 +549,7 @@ describe("SinpBaseCustom - Scopage des détails", () => {
       layerId: "testControl",
       mainTypeName: "fn_get_stats",
       detailsTypeName: "fn_get_obs_detaillee",
-      metadataTypeName: "fn_get_metadatas",
+      metadataTypeName: "fn_get_metadonnees",
       targetLocCode: "7",
     });
 
@@ -1655,16 +1655,28 @@ describe("sinpQueryBuilder - Configurations nouvelles", () => {
     expect(options.VIEWPARAMS).toContain("TARGET_LOC_CODE:7");
   });
 
-  test("Configuration fn_get_metadatas existe", () => {
+  test("Configuration fn_get_metadonnees existe", () => {
     const options = sinpQueryBuilder.buildRequestOptions(
       {
-        jddIds: ["123", "456"],
+        dateDeb: "2020-01-01",
+        dateFin: "2026-03-10",
+        departements: ["62"],
+        communes: ["62225"],
+        groupes: [13],
+        taxons: [2440],
+        targetLocCode: "2",
       },
-      "fn_get_metadatas"
+      "fn_get_metadonnees"
     );
 
-    expect(options.TYPENAME).toBe("sinp_diffusion:fn_get_metadatas");
-    expect(options.VIEWPARAMS).toBe("ID_JDDS:123,456");
+    expect(options.TYPENAME).toBe("sinp_diffusion:fn_get_metadonnees");
+    expect(options.VIEWPARAMS).toContain("DATE_DEB:2020-01-01");
+    expect(options.VIEWPARAMS).toContain("DATE_FIN:2026-03-10");
+    expect(options.VIEWPARAMS).toContain("DEPT_IDS:62");
+    expect(options.VIEWPARAMS).toContain("CODE_INSEES:62225");
+    expect(options.VIEWPARAMS).toContain("GRP_IDS:13");
+    expect(options.VIEWPARAMS).toContain("CD_REF:2440");
+    expect(options.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
   });
 });
 
@@ -1765,15 +1777,13 @@ describe("Intégration - Flux complet", () => {
     expect(grid10x10.typeName).toBe("fn_get_stats");
   });
 
-  test("ensureMetadataForFeatures charge les métadonnées à partir de jdd_ids", async () => {
+  test("ensureMetadataForFeatures charge les métadonnées avec les filtres courants", async () => {
     const control = new SinpBaseCustom({
       layerId: "testControl",
-      metadataTypeName: "fn_get_metadatas",
+      metadataTypeName: "fn_get_metadonnees",
     });
     const feature = {
-      properties: {
-        jdd_ids: "11|22|11",
-      },
+      properties: {},
       get(key) {
         return this.properties[key];
       },
@@ -1787,14 +1797,21 @@ describe("Intégration - Flux complet", () => {
       .mockResolvedValue([
         { idJdd: 11, libelJdd: "Jeu 11" },
         { idJdd: 22, libelJdd: "Jeu 22" },
-        { idJdd: 99, libelJdd: "Jeu 99" },
       ]);
 
-    await control.ensureMetadataForFeatures([feature]);
+    const params = {
+      dateDeb: "2020-01-01",
+      dateFin: "2026-03-10",
+      departements: ["62"],
+      communes: ["62225"],
+      targetLocCode: "2",
+    };
+
+    await control.ensureMetadataForFeatures([feature], params);
 
     expect(loadMetadataSpy).toHaveBeenCalledWith(
-      { jddIds: ["11", "22"] },
-      "fn_get_metadatas"
+      params,
+      "fn_get_metadonnees"
     );
     expect(feature.properties.jdd_details).toEqual([
       { idJdd: 11, libelJdd: "Jeu 11" },
@@ -1805,15 +1822,13 @@ describe("Intégration - Flux complet", () => {
     expect(feature.properties.jdd_data_error).toBeNull();
   });
 
-  test("ensureMetadataForFeatures accepte aussi les jdd_ids séparés par underscore", async () => {
+  test("ensureMetadataForFeatures rattache toutes les métadonnées retournées", async () => {
     const control = new SinpBaseCustom({
       layerId: "testControl",
-      metadataTypeName: "fn_get_metadatas",
+      metadataTypeName: "fn_get_metadonnees",
     });
     const feature = {
-      properties: {
-        jdd_ids: "11_22_11",
-      },
+      properties: {},
       get(key) {
         return this.properties[key];
       },
@@ -1829,11 +1844,14 @@ describe("Intégration - Flux complet", () => {
         { idJdd: 22, libelJdd: "Jeu 22" },
       ]);
 
-    await control.ensureMetadataForFeatures([feature]);
+    await control.ensureMetadataForFeatures([feature], {
+      dateDeb: "2020-01-01",
+      dateFin: "2026-03-10",
+    });
 
     expect(loadMetadataSpy).toHaveBeenCalledWith(
-      { jddIds: ["11", "22"] },
-      "fn_get_metadatas"
+      { dateDeb: "2020-01-01", dateFin: "2026-03-10" },
+      "fn_get_metadonnees"
     );
     expect(feature.properties.jdd_details).toEqual([
       { idJdd: 11, libelJdd: "Jeu 11" },

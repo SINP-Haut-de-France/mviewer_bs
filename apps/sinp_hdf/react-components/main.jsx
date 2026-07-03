@@ -14,9 +14,9 @@ console.log("🚀 Chargement de main.jsx...");
 // === MONTAGE DU ROOT GLOBAL ===
 
 const initGlobalRoot = () => {
-  Sentry.init({    dsn: "https://dc7d9408662735efba1598edbbc7b0ed@o4511188751155200.ingest.de.sentry.io/4511188755677264",
-    sendDefaultPii: true,
-  });
+  // Sentry.init({    dsn: "https://dc7d9408662735efba1598edbbc7b0ed@o4511188751155200.ingest.de.sentry.io/4511188755677264",
+  //   sendDefaultPii: true,
+  // });
 
   const globalRootElement = document.getElementById("react-global-root");
 

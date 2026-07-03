@@ -5,7 +5,7 @@ mviewer.customControls.communeSearch = (function () {
         layerId: "communeSearch",
         mainTypeName: "fn_get_stats",
         detailsTypeName: "fn_get_obs_detaillee",
-        metadataTypeName: "fn_get_metadatas",
+        metadataTypeName: "fn_get_metadonnees",
         targetLocCode: "2",
         entityCodeKeys: [
           "code_insee",

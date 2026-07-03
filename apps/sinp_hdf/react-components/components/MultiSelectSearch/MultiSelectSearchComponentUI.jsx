@@ -19,6 +19,7 @@ const MultiSelectSearchUI = ({
   error,
   maxSelections,
   isSelectionLimitReached,
+  disabled = false,
 }) => {
   const showSearchInput = multiselect || selected.length === 0;
   const dropdownRef = useRef(null);
@@ -66,7 +67,7 @@ const MultiSelectSearchUI = ({
             ref={inputRef}
             type="text"
             placeholder="Rechercher..."
-            disabled={isSelectionLimitReached}
+            disabled={disabled || isSelectionLimitReached}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -110,7 +111,10 @@ const MultiSelectSearchUI = ({
               <div
                 key={item[selectedKey]}
                 className="result-item"
-                onClick={() => handleSelect(item)}>
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  handleSelect(item);
+                }}>
                 {typeof label === "function" ? label(item) : label}
               </div>
             ))

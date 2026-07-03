@@ -10,6 +10,8 @@ import {
   TAB_IDS,
 } from "./searchResults.utils";
 
+const FEATURE_INFO_DATA_CHANGED_EVENT = "sinp:feature-info-data-changed";
+
 const SearchResultsComponent = ({
   layerId,
   featureUid,
@@ -17,11 +19,45 @@ const SearchResultsComponent = ({
 }) => {
   const [activeTab, setActiveTab] = useState(TAB_IDS.OBSERVATIONS);
   const [feature, setFeature] = useState(() => getFeatureByUid(layerId, featureUid));
+  const [isResolvingFeature, setIsResolvingFeature] = useState(false);
   const [, setFeatureRevision] = useState(0);
 
   useEffect(() => {
-    setFeature(getFeatureByUid(layerId, featureUid));
-  }, [layerId, featureUid]);
+    let retryCount = 0;
+    let retryTimer = null;
+    let isCancelled = false;
+
+    const resolveFeature = () => {
+      const resolvedFeature = getFeatureByUid(layerId, featureUid);
+
+      if (isCancelled) {
+        return;
+      }
+
+      if (resolvedFeature || promptOnly) {
+        setFeature(resolvedFeature);
+        setIsResolvingFeature(false);
+        return;
+      }
+
+      retryCount += 1;
+      if (retryCount === 1) {
+        setFeature(null);
+      }
+
+      setIsResolvingFeature(true);
+      retryTimer = window.setTimeout(resolveFeature, retryCount < 50 ? 100 : 500);
+    };
+
+    resolveFeature();
+
+    return () => {
+      isCancelled = true;
+      if (retryTimer) {
+        window.clearTimeout(retryTimer);
+      }
+    };
+  }, [layerId, featureUid, promptOnly]);
 
   useEffect(() => {
     if (!feature?.on || !feature?.un) {
@@ -39,12 +75,49 @@ const SearchResultsComponent = ({
     };
   }, [feature]);
 
-  if (!feature && !promptOnly) {
-    return <p className="mv-sr-empty">Impossible de retrouver la feature demandée.</p>;
-  }
+  useEffect(() => {
+    const handleFeatureInfoDataChanged = (event) => {
+      const eventLayerId = event?.detail?.layerId;
+      const featureUids = Array.isArray(event?.detail?.featureUids)
+        ? event.detail.featureUids.map((uid) => String(uid))
+        : [];
+
+      if (eventLayerId !== layerId) {
+        return;
+      }
+
+      if (featureUid && featureUids.length > 0 && !featureUids.includes(String(featureUid))) {
+        return;
+      }
+
+      const resolvedFeature = getFeatureByUid(layerId, featureUid);
+      if (resolvedFeature) {
+        setFeature(resolvedFeature);
+      }
+      setFeatureRevision((revision) => revision + 1);
+    };
+
+    window.addEventListener(FEATURE_INFO_DATA_CHANGED_EVENT, handleFeatureInfoDataChanged);
+
+    return () => {
+      window.removeEventListener(FEATURE_INFO_DATA_CHANGED_EVENT, handleFeatureInfoDataChanged);
+    };
+  }, [layerId, featureUid]);
 
   const layerConfig = getLayerConfig(layerId);
-  const properties = feature ? getFeatureProperties(feature) : {};
+  const properties = feature
+    ? getFeatureProperties(feature)
+    : !promptOnly
+      ? {
+          code: "--",
+          code_insee: "--",
+          code_maille: "--",
+          nb_observations: "-",
+          entity_data_loading: true,
+          entity_data_error: null,
+          jdd_data_loading: true,
+        }
+      : {};
   const details = Array.isArray(properties.details) ? properties.details : [];
   const jddDetails = Array.isArray(properties.jdd_details) ? properties.jdd_details : [];
   const selectionSummary = getSelectedEntitySummary(layerId, properties, layerConfig);
@@ -55,51 +128,6 @@ const SearchResultsComponent = ({
   const datasetErrorMessage =
     typeof properties.jdd_data_error === "string" ? properties.jdd_data_error : "";
   const selectionPrompt = promptOnly === true;
-
-  useEffect(() => {
-    if (
-      promptOnly ||
-      activeTab !== TAB_IDS.DATASETS ||
-      !feature ||
-      datasetLoadingState ||
-      properties.jdd_data_loaded === true
-    ) {
-      return;
-    }
-
-    let isCancelled = false;
-    const refreshFeatureState = () => {
-      if (isCancelled) {
-        return;
-      }
-
-      setFeature(getFeatureByUid(layerId, featureUid) || feature);
-      setFeatureRevision((revision) => revision + 1);
-    };
-
-    const request = window.mviewer?.customControls?.[layerId]?.ensureMetadataForFeatures?.([
-      feature,
-    ]);
-
-    refreshFeatureState();
-
-    Promise.resolve(request)
-      .catch(() => undefined)
-      .finally(() => {
-        refreshFeatureState();
-      });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [
-    activeTab,
-    feature,
-    featureUid,
-    layerId,
-    promptOnly,
-    properties.jdd_data_loaded,
-  ]);
 
   return (
     <div className="mv-sr-root">

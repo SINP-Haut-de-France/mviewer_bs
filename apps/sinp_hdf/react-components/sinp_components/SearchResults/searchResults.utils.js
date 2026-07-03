@@ -172,11 +172,6 @@ export const getLayerConfig = (layerId) => {
   return LAYER_CONFIG[layerId] || LAYER_CONFIG.communeSearch;
 };
 
-export const normalizeManager = (item = {}) => {
-  const manager = getFirstDefinedValue(item.organisme, item.identite);
-  return manager ? String(manager) : "-";
-};
-
 export const getMetadataBaseUrl = () => {
   return (
     window.mviewer?.env?.[window.mviewer?.env?.CURRENT_ENV]
@@ -366,6 +361,12 @@ export const groupJddDetails = (details = []) => {
       detail.libelJdd,
       "Jeu de données non renseigné"
     );
+    const datasetCreationDate = getFirstDefinedValue(
+      detail.datCreaJdd,
+      detail.dat_crea_jdd,
+      detail.dateCreationJdd,
+      detail.date_creation_jdd
+    );
 
     if (!groups.has(caKey)) {
       groups.set(caKey, {
@@ -376,37 +377,20 @@ export const groupJddDetails = (details = []) => {
           detail,
           ACQUISITION_FRAME_METADATA_IDENTIFIER_KEYS
         ),
-        identites: new Set(),
-        organismes: new Set(),
         datasets: new Map(),
       });
     }
 
     const group = groups.get(caKey);
-    if (detail.identite) {
-      group.identites.add(String(detail.identite));
-    }
-    if (detail.organisme) {
-      group.organismes.add(String(detail.organisme));
-    }
 
     if (!group.datasets.has(datasetKey)) {
       group.datasets.set(datasetKey, {
         key: datasetKey,
         idJdd: datasetSourceId ? String(datasetSourceId) : null,
         libelJdd: String(datasetLabel),
+        datCreaJdd: datasetCreationDate,
         metadataId: getMetadataIdentifier(detail, DATASET_METADATA_IDENTIFIER_KEYS),
-        identites: new Set(),
-        organismes: new Set(),
       });
-    }
-
-    const dataset = group.datasets.get(datasetKey);
-    if (detail.identite) {
-      dataset.identites.add(String(detail.identite));
-    }
-    if (detail.organisme) {
-      dataset.organismes.add(String(detail.organisme));
     }
   });
 
@@ -415,15 +399,12 @@ export const groupJddDetails = (details = []) => {
     idCA: group.idCA,
     libelCA: group.libelCA,
     metadataId: group.metadataId,
-    identite: group.identites.size ? Array.from(group.identites).join(" / ") : "",
-    organisme: group.organismes.size ? Array.from(group.organismes).join(" / ") : "",
     datasets: Array.from(group.datasets.values()).map((dataset) => ({
       key: dataset.key,
       idJdd: dataset.idJdd,
       libelJdd: dataset.libelJdd,
+      datCreaJdd: dataset.datCreaJdd,
       metadataId: dataset.metadataId,
-      identite: dataset.identites.size ? Array.from(dataset.identites).join(" / ") : "",
-      organisme: dataset.organismes.size ? Array.from(dataset.organismes).join(" / ") : "",
     })),
   }));
 };
