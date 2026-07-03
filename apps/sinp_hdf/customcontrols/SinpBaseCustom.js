@@ -1404,6 +1404,10 @@ class SinpBaseCustom {
       this._clearOtherSearchLayers();
       layerInstance.beforeLoad();
 
+      if (layerInstance.serverRenderOnly) {
+        return layerInstance.renderServerOnly(mainOptions);
+      }
+
       const result = await this._loadSearchResultInMemory(normalizedParams, options);
       return this._renderSearchResult(
         layerInstance,

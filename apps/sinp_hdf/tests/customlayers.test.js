@@ -910,7 +910,7 @@ describe("Grid server-render controls", () => {
     await clickHandler({ coordinate: [10, 20] });
     controlApi.destroy();
 
-    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
+    expect(fetchGeoServerDataSpy).not.toHaveBeenCalled();
     expect(fetchServerRenderFeaturesSpy).not.toHaveBeenCalled();
     expect(referenceSource.getFeatureInfoUrl).toHaveBeenCalledWith(
       [10, 20],
@@ -1050,7 +1050,7 @@ describe("Grid server-render controls", () => {
     await clickHandler({ coordinate: [10, 20] });
     controlApi.destroy();
 
-    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
+    expect(fetchGeoServerDataSpy).not.toHaveBeenCalled();
     expect(fetchServerRenderFeaturesSpy).not.toHaveBeenCalled();
     expect(referenceSource.getFeatureInfoUrl).toHaveBeenCalledWith(
       [10, 20],
@@ -1193,7 +1193,7 @@ describe("Grid server-render controls", () => {
       await clickHandler({ coordinate: [10, 20] });
       controlApi.destroy();
 
-      expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
+      expect(fetchGeoServerDataSpy).not.toHaveBeenCalled();
       expect(fetchServerRenderFeaturesSpy).toHaveBeenCalledWith([10, 20]);
       expect(ensureEntityDataSpy).toHaveBeenCalled();
       expect(unSpy).toHaveBeenCalledWith("singleclick", clickHandler);
@@ -1216,54 +1216,16 @@ describe("CommuneSearchLayer", () => {
     expect(instance._serverRenderLayer).toBeDefined();
   });
 
-  test("Le contrôle communeSearch ne précharge pas fn_get_obs_detaillee avec fn_get_stats", async () => {
+  test("Le contrôle communeSearch lance directement le WMS sans WFS fn_get_stats", async () => {
     const control = mviewer.customControls.communeSearch;
     const layerInstance = mviewer.customLayers.communeSearch._instance;
     const renderServerOnlySpy = jest
       .spyOn(layerInstance, "renderServerOnly")
       .mockResolvedValue(undefined);
-    const fitToFeaturesSpy = jest
-      .spyOn(layerInstance, "fitToFeatures")
-      .mockImplementation(() => {});
     const fetchGeoServerDataSpy = jest.spyOn(
       SinpBaseCustom.prototype,
       "fetchGeoServerData"
-    ).mockImplementation(async (options) => {
-      if (options.TYPENAME === "sinp_diffusion:fn_get_stats") {
-        return {
-          type: "FeatureCollection",
-          features: [
-            {
-              type: "Feature",
-              geometry: {
-                type: "Point",
-                coordinates: [1, 2],
-              },
-              properties: {
-                code_insee: "62225",
-              },
-            },
-          ],
-        };
-      }
-
-      if (options.TYPENAME === "sinp_diffusion:fn_get_obs_detaillee") {
-        return {
-          type: "FeatureCollection",
-          features: [
-            {
-              type: "Feature",
-              properties: {
-                code_insee: "62225",
-                id_origine: "obs-1",
-              },
-            },
-          ],
-        };
-      }
-
-      return { type: "FeatureCollection", features: [] };
-    });
+    ).mockResolvedValue({ type: "FeatureCollection", features: [] });
 
     await control.submit({
       filteredDepartments: ["62"],
@@ -1276,31 +1238,13 @@ describe("CommuneSearchLayer", () => {
         TYPENAME: "sinp_diffusion:fn_get_stats",
       })
     );
-    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
-    expect(fitToFeaturesSpy).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({
-          getGeometry: expect.any(Function),
-        }),
-      ])
-    );
-    expect(fitToFeaturesSpy.mock.invocationCallOrder[0]).toBeLessThan(
-      renderServerOnlySpy.mock.invocationCallOrder[0]
-    );
-    expect(fetchGeoServerDataSpy).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        TYPENAME: "sinp_diffusion:fn_get_stats",
-      })
-    );
+    expect(fetchGeoServerDataSpy).not.toHaveBeenCalled();
     expect(fetchGeoServerDataSpy).not.toHaveBeenCalledWith(
       expect.objectContaining({
         TYPENAME: "sinp_diffusion:fn_get_obs_detaillee",
       })
     );
-
     renderServerOnlySpy.mockRestore();
-    fitToFeaturesSpy.mockRestore();
     fetchGeoServerDataSpy.mockRestore();
   });
 
@@ -1440,7 +1384,7 @@ describe("CommuneSearchLayer", () => {
 
     expect(fetchServerRenderFeaturesSpy).not.toHaveBeenCalled();
     expect(global.fetch).toHaveBeenCalled();
-    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
+    expect(fetchGeoServerDataSpy).not.toHaveBeenCalled();
     expect(ensureEntityDataSpy).toHaveBeenCalled();
     expect(unSpy).toHaveBeenCalledWith("singleclick", clickHandler);
 
