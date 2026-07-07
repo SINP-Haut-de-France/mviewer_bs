@@ -64,13 +64,16 @@ class SinpBaseCustom {
     return mviewer.customLayers?.[this.layerId]?._instance || null;
   }
 
-  _activateSearchLayer() {
+  _activateSearchLayer(queryOptions = {}) {
     const layerConfig = mviewer.getLayer?.(this.layerId);
     const layer = layerConfig?.layer;
+    const layerInstance = this.getLayerInstance();
 
     if (!layer) {
       return;
     }
+
+    layerInstance?.attachLegacyConfig?.(layerConfig, queryOptions);
 
     if (!layer.getVisible?.()) {
       if (typeof mviewer.addLayer === "function" && layerConfig.showintoc) {
@@ -1359,7 +1362,7 @@ class SinpBaseCustom {
       this._lastSearchParams = normalizedParams;
       this._setLastResultFeatures([]);
       this._setBlockingSearchOverlayVisible(useSearchLoader);
-      this._activateSearchLayer();
+      this._activateSearchLayer(mainOptions);
       this._clearOtherSearchLayers();
       layerInstance.beforeLoad();
 

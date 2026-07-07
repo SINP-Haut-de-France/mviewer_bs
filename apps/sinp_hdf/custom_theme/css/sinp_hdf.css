@@ -6,7 +6,7 @@
 /* Variables personnalisées héritées de mviewer */
 :root {
   /* Utilisation des variables mviewer pour cohérence */
-  --sinp-primary: var(--mvcustom-color-primary, #191c36);
+  --sinp-primary: var(--mvcustom-color-primary, var(--mv-color-primary, #191c36));
   --sinp-secondary: var(--mvcustom-color-secondary, #0d6efd);
   --sinp-navbar-height: var(--mvcustom-navbar-h, 80px);
   --sinp-border-radius: var(--mvcustom-border-radius, 4px);
@@ -19,6 +19,9 @@
   --sinp-text-muted: #6c757d;
   --sinp-bg-light: #f8f9fa;
   --sinp-border-color: #dee2e6;
+  --bs-primary: var(--sinp-primary);
+  --bs-primary-hover: var(--sinp-primary);
+  --bs-primary-border: var(--sinp-primary);
 }
 
 /* Redéfinir la variable en mode toggled-2 */
@@ -64,12 +67,6 @@
 /* Les restitutions restent configurees pour mviewer mais sont pilotees par le switch React. */
 #theme-layers-searchTheme,
 #theme-layers-searchTheme .mv-nav-item,
-#layers-container .mv-layer-details[data-layerid="communeSearch"],
-#layers-container .mv-layer-details[data-layerid="gridSearch5x5"],
-#layers-container .mv-layer-details[data-layerid="grid10x10search"],
-#legend-modal .mv-layer-details[data-layerid="communeSearch"],
-#legend-modal .mv-layer-details[data-layerid="gridSearch5x5"],
-#legend-modal .mv-layer-details[data-layerid="grid10x10search"],
 #thematic-modal #theme-layers-searchTheme {
   display: none !important;
 }
@@ -131,12 +128,12 @@
 #sidebar-wrapper {
   box-sizing: border-box;
   height: 100%;
-  margin-top: 1.875rem; /* 30px */
+  margin-top: var(--sinp-navbar-height, 80px);
 }
 
-/* Légende avec espacement */
+/* La position verticale est portée par #layers-container-box dans mviewer. */
 #legend {
-  margin-top: 1.875rem;
+  margin-top: 0;
 }
 
 /* Logo agrandi */
@@ -1137,4 +1134,90 @@
   flex: 1 1 100% !important;
   max-width: 100% !important;
   white-space: normal !important;
+}
+
+/* ========================================
+   Correctifs compat Bootstrap 3 / 5 - mviewer natif
+   ======================================== */
+
+.btn.btn-primary {
+  --bs-btn-bg: var(--sinp-primary, #191c36);
+  --bs-btn-border-color: var(--sinp-primary, #191c36);
+  --bs-btn-hover-bg: var(--sinp-primary, #191c36);
+  --bs-btn-hover-border-color: var(--sinp-primary, #191c36);
+  --bs-btn-active-bg: var(--sinp-primary, #191c36);
+  --bs-btn-active-border-color: var(--sinp-primary, #191c36);
+  --bs-btn-disabled-bg: var(--sinp-primary, #191c36);
+  --bs-btn-disabled-border-color: var(--sinp-primary, #191c36);
+  color: #fff !important;
+  background-color: #191c36 !important;
+  background-color: var(--sinp-primary, #191c36) !important;
+  border-color: #191c36 !important;
+  border-color: var(--sinp-primary, #191c36) !important;
+  background-image: none !important;
+}
+
+.btn.btn-primary:hover,
+.btn.btn-primary:focus,
+.btn.btn-primary:active,
+.btn.btn-primary.active {
+  color: #fff !important;
+  background-color: #191c36 !important;
+  background-color: var(--sinp-primary, #191c36) !important;
+  border-color: #191c36 !important;
+  border-color: var(--sinp-primary, #191c36) !important;
+}
+
+#layers-container-box-header > a,
+#layers-container-box-header > a:hover,
+#layers-container-box-header > a:focus,
+#layers-container-box-header > a:active {
+  color: #fff !important;
+  background-color: #191c36 !important;
+  background-color: var(--sinp-primary, #191c36) !important;
+  background-image: none !important;
+  border: 1px solid #191c36 !important;
+  border-color: var(--sinp-primary, #191c36) !important;
+}
+
+@media (min-width: 992px) {
+  #layers-container-box {
+    left: var(--sinp-sidebar-width, 350px) !important;
+    margin-top: calc(10px + var(--sinp-navbar-height, 80px)) !important;
+    z-index: 3;
+  }
+
+  #wrapper.toggled-2 #layers-container-box {
+    left: 50px !important;
+  }
+}
+
+#layers-container-box-header {
+  display: inline-flex !important;
+  align-items: stretch;
+  margin-bottom: 0.5em;
+}
+
+#layers-container-box-header > .btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+}
+
+#layers-container-box-header > .btn:first-child {
+  display: inline-flex !important;
+}
+
+#btn-remove-layers,
+#legend.empty #btn-remove-layers {
+  display: none !important;
+}
+
+#legend.active:not(.empty) #btn-remove-layers {
+  display: inline-flex !important;
+}
+
+#legend.active #layers-container {
+  display: block !important;
 }
