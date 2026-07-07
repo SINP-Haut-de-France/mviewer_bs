@@ -24,6 +24,9 @@ const GlobalFiltersUI = ({
   selectedRestitutionLayerId = null,
   onRestitutionChange = null,
 }) => {
+  const hasSelectedTaxons = (filters.filteredTaxons || []).length > 0;
+  const hasSelectedGroupes = (filters.filteredGroupes || []).length > 0;
+
   return (
     <div className="global-filters-container">
       {/*/!* Indicateur du profil actif *!/*/}
@@ -77,6 +80,7 @@ const GlobalFiltersUI = ({
               if (error) return <p className="error-message">Erreur</p>;
 
               return (
+                <>
                 <CheckBoxTreeView
                   datasource={groupes || []}
                   selectedValues={filters.filteredGroupes || []}
@@ -85,8 +89,15 @@ const GlobalFiltersUI = ({
                   label={(node) => node.name}
                   childrenKey="children"
                   title=""
+                  disabled={hasSelectedTaxons}
                   onSelectionChange={handleGrpChange}
                 />
+                {hasSelectedTaxons && (
+                  <small className="text-muted">
+                    Désélectionnez les espèces pour filtrer par groupe taxonomique.
+                  </small>
+                )}
+                </>
               );
             }}
           </Datasource>
@@ -116,26 +127,34 @@ const GlobalFiltersUI = ({
               ).toString()}`;
             }}>
             {({ data: taxons, loading, error, setQuery }) => (
-              <MultiSelectSearchComponent
-                datasource={taxons || []}
-                selectedValues={filters.filteredTaxons || []}
-                returnValueKey="cd_ref"
-                cacheKey="taxons_selected"
-                title="Nom scientifique ou vernaculaire"
-                label={(item) => (
-                  <div className="taxon-label">
-                    <div className="taxon-vernacular">{item.nom_vern || "N/A"}</div>
-                    <div className="taxon-scientific">{item.nom_complet || "N/A"}</div>
-                  </div>
+              <>
+                <MultiSelectSearchComponent
+                  datasource={taxons || []}
+                  selectedValues={filters.filteredTaxons || []}
+                  returnValueKey="cd_ref"
+                  cacheKey="taxons_selected"
+                  title="Nom scientifique ou vernaculaire"
+                  label={(item) => (
+                    <div className="taxon-label">
+                      <div className="taxon-vernacular">{item.nom_vern || "N/A"}</div>
+                      <div className="taxon-scientific">{item.nom_complet || "N/A"}</div>
+                    </div>
+                  )}
+                  minCharacters={3}
+                  maxResults={15}
+                  multiselect={true}
+                  disabled={hasSelectedGroupes}
+                  onChange={handleTaxChange}
+                  onSearch={setQuery}
+                  loading={loading}
+                  error={error}
+                />
+                {hasSelectedGroupes && (
+                  <small className="text-muted">
+                    Désélectionnez les groupes taxonomiques pour rechercher par espèce.
+                  </small>
                 )}
-                minCharacters={3}
-                maxResults={15}
-                multiselect={true}
-                onChange={handleTaxChange}
-                onSearch={setQuery}
-                loading={loading}
-                error={error}
-              />
+              </>
             )}
           </Datasource>
         </CollapsibleFilterSection>

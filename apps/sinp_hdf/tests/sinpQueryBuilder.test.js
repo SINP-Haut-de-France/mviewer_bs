@@ -360,16 +360,28 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
     );
   });
 
-  test("fn_get_metadatas passe la liste des jdd via ID_JDDS", () => {
+  test("fn_get_metadonnees passe les filtres de recherche via VIEWPARAMS", () => {
     const params = {
-      jddIds: ["idJdd1", "idJdd2", "idJdd3"],
+      taxons: [2440, 2442],
+      groupes: [12, 23],
+      dateDeb: "2006-02-27",
+      dateFin: "2026-02-27",
+      departements: ["62"],
+      communes: ["62225"],
+      targetLocCode: "2",
     };
 
-    const result = sinpQueryBuilder.buildRequestOptions(params, "fn_get_metadatas");
+    const result = sinpQueryBuilder.buildRequestOptions(params, "fn_get_metadonnees");
 
-    expect(result.TYPENAME).toBe("sinp_diffusion:fn_get_metadatas");
+    expect(result.TYPENAME).toBe("sinp_diffusion:fn_get_metadonnees");
     expect(result.CQL_FILTER).toBeUndefined();
-    expect(result.VIEWPARAMS).toBe("ID_JDDS:idJdd1,idJdd2,idJdd3");
+    expect(result.VIEWPARAMS).toContain("DATE_DEB:2006-02-27");
+    expect(result.VIEWPARAMS).toContain("DATE_FIN:2026-02-27");
+    expect(result.VIEWPARAMS).toContain("DEPT_IDS:62");
+    expect(result.VIEWPARAMS).toContain("CODE_INSEES:62225");
+    expect(result.VIEWPARAMS).toContain("CD_REF:2440,2442");
+    expect(result.VIEWPARAMS).toContain("GRP_IDS:12,23");
+    expect(result.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
   });
 
   test("CD_REF utilise des virgules comme les autres listes", () => {

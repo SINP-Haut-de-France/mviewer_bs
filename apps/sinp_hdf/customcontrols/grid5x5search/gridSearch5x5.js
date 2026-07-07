@@ -5,7 +5,7 @@ mviewer.customControls.gridSearch5x5 = (function () {
         layerId: "gridSearch5x5",
         mainTypeName: "fn_get_stats",
         detailsTypeName: "fn_get_obs_detaillee",
-        metadataTypeName: "fn_get_metadatas",
+        metadataTypeName: "fn_get_metadonnees",
         targetLocCode: "7",
         entityCodeKeys: ["code_maille", "id_maille", "maille", "code"],
       });

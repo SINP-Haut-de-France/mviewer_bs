@@ -5,7 +5,7 @@ mviewer.customControls.grid10x10search = (function () {
         layerId: "grid10x10search",
         mainTypeName: "fn_get_stats",
         detailsTypeName: "fn_get_obs_detaillee",
-        metadataTypeName: "fn_get_metadatas",
+        metadataTypeName: "fn_get_metadonnees",
         targetLocCode: "6",
         entityCodeKeys: ["code_maille", "id_maille", "maille", "code"],
       });

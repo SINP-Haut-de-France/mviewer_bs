@@ -564,13 +564,11 @@ window.sinpQueryBuilder = (function () {
       }),
     },
 
-    fn_get_metadatas: {
+    fn_get_metadonnees: {
       cql_filters: {},
-      view_params: {
-        ID_JDDS: _buildListSeparatedViewParamConfig("jddIds", {
-          omitEmpty: true,
-        }),
-      },
+      view_params: _buildSharedSearchViewParams({
+        targetLocCodeSource: "targetLocCode",
+      }),
     },
   };
 

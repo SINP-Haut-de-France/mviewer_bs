@@ -64,13 +64,16 @@ class SinpBaseCustom {
     return mviewer.customLayers?.[this.layerId]?._instance || null;
   }
 
-  _activateSearchLayer() {
+  _activateSearchLayer(queryOptions = {}) {
     const layerConfig = mviewer.getLayer?.(this.layerId);
     const layer = layerConfig?.layer;
+    const layerInstance = this.getLayerInstance();
 
     if (!layer) {
       return;
     }
+
+    layerInstance?.attachLegacyConfig?.(layerConfig, queryOptions);
 
     if (!layer.getVisible?.()) {
       if (typeof mviewer.addLayer === "function" && layerConfig.showintoc) {
@@ -825,87 +828,12 @@ class SinpBaseCustom {
     return this._fetchPropertiesWithCache(params, typeName);
   }
 
-  _normalizeJddIds(value) {
-    if (Array.isArray(value)) {
-      return value
-        .flatMap((item) => this._normalizeJddIds(item))
-        .filter((item, index, values) => values.indexOf(item) === index);
-    }
-
-    if (value === undefined || value === null) {
-      return [];
-    }
-
-    return String(value)
-      .split(/[|_,]/)
-      .map((item) => item.trim())
-      .filter((item) => item !== "");
-  }
-
-  _getFeatureJddIds(feature) {
-    if (!feature?.get) {
-      return [];
-    }
-
-    const rawValue =
-      feature.get("jdd_ids") ??
-      feature.get("jddIds") ??
-      feature.get("idJdds") ??
-      feature.get("id_jdds");
-
-    return Array.from(new Set(this._normalizeJddIds(rawValue)));
-  }
-
-  _buildMetadataRequestParams(features = []) {
-    const jddIds = [];
-    const seenIds = new Set();
-
-    features.forEach((feature) => {
-      this._getFeatureJddIds(feature).forEach((jddId) => {
-        if (!seenIds.has(jddId)) {
-          seenIds.add(jddId);
-          jddIds.push(jddId);
-        }
-      });
-    });
-
-    return { jddIds };
+  _buildMetadataRequestParams(features = [], params = this._lastSearchParams || {}) {
+    return params;
   }
 
   _attachMetadataPropertiesToFeatures(features = [], metadataProperties = []) {
-    const propertiesByJddId = metadataProperties.reduce((accumulator, item) => {
-      const jddId =
-        item?.idJdd === undefined || item?.idJdd === null
-          ? null
-          : String(item.idJdd).trim();
-
-      if (!jddId) {
-        return accumulator;
-      }
-
-      if (!accumulator[jddId]) {
-        accumulator[jddId] = [];
-      }
-
-      accumulator[jddId].push(item);
-      return accumulator;
-    }, {});
-
-    features.forEach((feature) => {
-      const matches = [];
-      const seenMatches = new Set();
-
-      this._getFeatureJddIds(feature).forEach((jddId) => {
-        (propertiesByJddId[jddId] || []).forEach((item) => {
-          if (!seenMatches.has(item)) {
-            seenMatches.add(item);
-            matches.push(item);
-          }
-        });
-      });
-
-      feature.set("jdd_details", matches);
-    });
+    features.forEach((feature) => feature.set("jdd_details", metadataProperties));
 
     return features;
   }
@@ -1154,10 +1082,10 @@ class SinpBaseCustom {
 
     try {
       const metadataParams = this._buildMetadataRequestParams(pendingFeatures, params);
-      const metadataProperties =
-        metadataParams.jddIds.length > 0
-          ? await this._loadMetadataProperties(metadataParams, this.metadataTypeName)
-          : [];
+      const metadataProperties = await this._loadMetadataProperties(
+        metadataParams,
+        this.metadataTypeName
+      );
 
       if (metadataProperties.length > 0) {
         this._attachMetadataPropertiesToFeatures(pendingFeatures, metadataProperties);
@@ -1218,18 +1146,24 @@ class SinpBaseCustom {
     return this._enrichSearchFeatures(mainFeatures, params, context);
   }
 
-  _prefetchMetadataForFeatures(layerInstance, features = []) {
-    if (!this.metadataTypeName) {
+  _notifyFeatureInfoDataChanged(features = []) {
+    if (typeof window === "undefined" || typeof window.dispatchEvent !== "function") {
       return;
     }
 
-    Promise.resolve(this.ensureMetadataForFeatures(features, this._lastSearchParams))
-      .catch((error) => {
-        console.error(`[${this.layerId}] Error during metadata loading:`, error);
+    const featureUids = (Array.isArray(features) ? features : [])
+      .map((feature) => feature?.ol_uid || feature?.get?.("feature_ol_uid"))
+      .filter((uid) => uid !== undefined && uid !== null)
+      .map((uid) => String(uid));
+
+    window.dispatchEvent(
+      new CustomEvent("sinp:feature-info-data-changed", {
+        detail: {
+          layerId: this.layerId,
+          featureUids,
+        },
       })
-      .finally(() => {
-        this._deferFeatureInfoRender(layerInstance, features);
-      });
+    );
   }
 
   async handle(features = []) {
@@ -1258,16 +1192,24 @@ class SinpBaseCustom {
     }
 
     const alreadyLoaded = normalizedFeatures.every((feature) => {
-      return (
+      const entityLoaded =
         feature.get("entity_data_loaded") === true &&
         feature.get("entity_data_loading") !== true &&
-        !feature.get("entity_data_error")
+        !feature.get("entity_data_error");
+      const metadataLoaded =
+        !this.metadataTypeName ||
+        (feature.get("jdd_data_loaded") === true &&
+          feature.get("jdd_data_loading") !== true &&
+          !feature.get("jdd_data_error"));
+
+      return (
+        entityLoaded &&
+        metadataLoaded
       );
     });
 
     if (alreadyLoaded) {
       this._deferFeatureInfoRender(layerInstance, normalizedFeatures);
-      this._prefetchMetadataForFeatures(layerInstance, normalizedFeatures);
       return;
     }
 
@@ -1280,11 +1222,30 @@ class SinpBaseCustom {
         feature.set("entity_data_error", null);
         feature.set("entity_data_loaded", false);
       });
+      const entityDataPromise = this._ensureEntityData(
+        normalizedFeatures,
+        this._lastSearchParams
+      );
+      const metadataPromise = this.metadataTypeName
+        ? this.ensureMetadataForFeatures(normalizedFeatures, this._lastSearchParams)
+        : Promise.resolve(normalizedFeatures);
+
       this._deferFeatureInfoRender(layerInstance, normalizedFeatures);
 
-      await this._ensureEntityData(normalizedFeatures, this._lastSearchParams);
-      this._deferFeatureInfoRender(layerInstance, normalizedFeatures);
-      this._prefetchMetadataForFeatures(layerInstance, normalizedFeatures);
+      const [entityDataResult, metadataResult] = await Promise.allSettled([
+        entityDataPromise,
+        metadataPromise,
+      ]);
+
+      if (metadataResult.status === "rejected") {
+        console.error(`[${this.layerId}] Error during metadata loading:`, metadataResult.reason);
+      }
+
+      if (entityDataResult.status === "rejected") {
+        throw entityDataResult.reason;
+      }
+
+      this._notifyFeatureInfoDataChanged(normalizedFeatures);
     } catch (error) {
       normalizedFeatures.forEach((feature) => {
         feature.set("entity_data_loading", false);
@@ -1294,6 +1255,7 @@ class SinpBaseCustom {
         );
         feature.set("entity_data_loaded", false);
       });
+      this._notifyFeatureInfoDataChanged(normalizedFeatures);
       this._deferFeatureInfoRender(layerInstance, normalizedFeatures);
       throw error;
     } finally {
@@ -1400,9 +1362,13 @@ class SinpBaseCustom {
       this._lastSearchParams = normalizedParams;
       this._setLastResultFeatures([]);
       this._setBlockingSearchOverlayVisible(useSearchLoader);
-      this._activateSearchLayer();
+      this._activateSearchLayer(mainOptions);
       this._clearOtherSearchLayers();
       layerInstance.beforeLoad();
+
+      if (layerInstance.serverRenderOnly) {
+        return layerInstance.renderServerOnly(mainOptions);
+      }
 
       const result = await this._loadSearchResultInMemory(normalizedParams, options);
       return this._renderSearchResult(

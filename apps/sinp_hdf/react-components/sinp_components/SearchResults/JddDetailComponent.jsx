@@ -7,6 +7,7 @@ import {
   groupJddDetails,
   paginateItems,
 } from "./searchResults.utils";
+import { formatDisplayDate } from "../../utils/date.utils";
 
 const PAGE_SIZE_OPTIONS = [
   { value: 5, label: "5" },
@@ -23,9 +24,6 @@ const JddDetailComponent = ({
 }) => {
   const groupedDetails = useMemo(() => groupJddDetails(details), [details]);
   const metadataBaseUrl = useMemo(() => getMetadataBaseUrl(), []);
-  const getGestionnaireLabel = (item = {}) => {
-    return item.organisme || item.identite || "INCONNU";
-  };
   const [pageSize, setPageSize] = useState(5);
   const [page, setPage] = useState(1);
 
@@ -70,7 +68,7 @@ const JddDetailComponent = ({
           <thead>
             <tr>
               <th>Libellé</th>
-              <th>Gestionnaire</th>
+              <th>Date de création</th>
             </tr>
           </thead>
           <tbody>
@@ -99,8 +97,7 @@ const JddDetailComponent = ({
               visibleGroups.map((group) => (
                 <React.Fragment key={group.key}>
                   <tr className="mv-sr-ca-row">
-                    <td>{group.libelCA}</td>
-                    <td>{getGestionnaireLabel(group)}</td>
+                    <td colSpan="2">{group.libelCA}</td>
                   </tr>
                   {group.datasets.map((dataset) => {
                     const metadataUrl = buildMetadataUrl(
@@ -110,10 +107,9 @@ const JddDetailComponent = ({
 
                     return (
                       <tr key={dataset.key} className="mv-sr-jdd-row">
-                        <td>{dataset.libelJdd}</td>
                         <td>
                           <div className="mv-sr-jdd-manager-cell">
-                            <span>{getGestionnaireLabel(dataset)}</span>
+                            <span>{dataset.libelJdd}</span>
                             {metadataUrl ? (
                               <a
                                 href={metadataUrl}
@@ -129,6 +125,7 @@ const JddDetailComponent = ({
                             ) : null}
                           </div>
                         </td>
+                        <td>{formatDisplayDate(dataset.datCreaJdd)}</td>
                       </tr>
                     );
                   })}

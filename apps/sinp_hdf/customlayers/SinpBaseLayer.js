@@ -353,23 +353,51 @@ class SinpBaseLayer {
     };
   }
 
-  _buildServerLegendUrl() {
+  _appendUrlParams(url, params = {}) {
+    const separator = url.includes("?") ? "&" : "?";
+    const queryString = Object.keys(params)
+      .filter(
+        (key) => params[key] !== undefined && params[key] !== null && params[key] !== ""
+      )
+      .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+      .join("&");
+
+    return queryString ? `${url}${separator}${queryString}` : url;
+  }
+
+  _buildServerLegendUrl(queryOptions = {}) {
     const serverStyleContext = this._getServerStyleContext();
-    if (!serverStyleContext || typeof getLegendGraphicUrl !== "function") {
+    if (!serverStyleContext) {
       return "";
     }
 
     const params = {
+      SERVICE: "WMS",
+      VERSION: "1.3.0",
+      REQUEST: "GetLegendGraphic",
+      SLD_VERSION: "1.1.0",
+      WIDTH: "30",
+      HEIGHT: "20",
       LAYER: serverStyleContext.layerName,
       FORMAT: "image/png",
+      LEGEND_OPTIONS:
+        "fontName:Open Sans;fontAntiAliasing:true;fontColor:0x777777;fontSize:10;dpi:96",
       TRANSPARENT: true,
     };
 
     if (serverStyleContext.styleName) {
-      params.STYLE = encodeURIComponent(serverStyleContext.styleName);
+      params.STYLE = serverStyleContext.styleName;
     }
 
-    return getLegendGraphicUrl(serverStyleContext.url, params);
+    if (queryOptions?.VIEWPARAMS) {
+      params.VIEWPARAMS = queryOptions.VIEWPARAMS;
+    }
+
+    if (queryOptions?.CQL_FILTER) {
+      params.CQL_FILTER = queryOptions.CQL_FILTER;
+    }
+
+    return this._appendUrlParams(serverStyleContext.url, params);
   }
 
   _refreshLegacyLegend(config = {}) {
@@ -382,7 +410,7 @@ class SinpBaseLayer {
     legend.setAttribute("data-legendurl", config.legendurl);
   }
 
-  attachLegacyConfig(config = null) {
+  attachLegacyConfig(config = null, queryOptions = {}) {
     this.config = config;
 
     const serverStyleContext = this._getServerStyleContext();
@@ -390,7 +418,7 @@ class SinpBaseLayer {
       return config;
     }
 
-    const legendUrl = this._buildServerLegendUrl();
+    const legendUrl = this._buildServerLegendUrl(queryOptions);
 
     const legendConfig = {
       ...config,
@@ -564,7 +592,7 @@ class SinpBaseLayer {
     }
 
     this._ensureServerRenderLayer();
-    this.attachLegacyConfig(this.config);
+    this.attachLegacyConfig(this.config, queryOptions);
 
     if (!hasFeatures) {
       this._serverStyleActive = false;
@@ -593,6 +621,9 @@ class SinpBaseLayer {
       params.CQL_FILTER = queryOptions.CQL_FILTER;
     }
 
+    this._refreshLegacyLegend({
+      legendurl: this._buildServerLegendUrl(queryOptions),
+    });
     this._serverStyleActive = true;
     this._syncServerRenderLayerState();
     this._pendingServerRenderPromise = this._waitForServerRender(
@@ -823,7 +854,7 @@ class SinpBaseLayer {
       entity_data_loading: true,
       entity_data_loaded: false,
       entity_data_error: null,
-      jdd_data_loading: false,
+      jdd_data_loading: true,
       jdd_data_loaded: false,
       jdd_data_error: null,
     });

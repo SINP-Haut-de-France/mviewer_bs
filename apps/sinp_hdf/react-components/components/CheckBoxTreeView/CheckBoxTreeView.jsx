@@ -10,6 +10,7 @@ const CheckBoxTreeView = ({
   title = "Tree view",
   onSelectionChange = () => {},
   selectedValues = [],
+  disabled = false,
 }) => {
   const [currentSelection, setCurrentSelection] = useState(new Set());
   const [expandedNodes, setExpandedNodes] = useState([]);
@@ -71,6 +72,8 @@ const CheckBoxTreeView = ({
   // Gestion des changements de sélection d'un nœud
   const handleSelectionChange = useCallback(
     (nodeId) => {
+      if (disabled) return;
+
       const updatedSelection = new Set(currentSelection);
       const node = nodeIndex.get(nodeId);
 
@@ -146,6 +149,7 @@ const CheckBoxTreeView = ({
       toggleNodeExpansion={toggleNodeExpansion}
       onSelectionChange={handleSelectionChange}
       title={title}
+      disabled={disabled}
     />
   );
 };

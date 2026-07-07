@@ -10,6 +10,10 @@
   overflow: visible !important;
 }
 
+.multi-select-container:focus-within {
+  z-index: 100001;
+}
+
 /* Champ de recherche avec style Bootstrap form-control */
 .search-input {
   width: 100%;

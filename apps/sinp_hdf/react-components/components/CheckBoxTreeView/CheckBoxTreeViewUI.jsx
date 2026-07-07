@@ -11,6 +11,7 @@ const CheckBoxTreeViewUI = ({
   toggleNodeExpansion,
   onSelectionChange,
   title,
+  disabled = false,
 }) => {
   // Fonction récursive pour afficher les nœuds d'arbre
   const renderTreeNodes = (nodes) => {
@@ -38,6 +39,7 @@ const CheckBoxTreeViewUI = ({
               <input
                 type="checkbox"
                 checked={isSelected}
+                disabled={disabled}
                 onChange={() => onSelectionChange(nodeId)}
               />
               {label(node)}

@@ -6,8 +6,13 @@
   border: 1px solid var(--bs-border-color, #dee2e6);
   border-radius: var(--bs-border-radius, 0.375rem);
   background-color: white;
+  position: relative;
   /* overflow: hidden supprim\u00e9 pour permettre aux dropdowns d'\u00eatre visibles */
   overflow: visible;
+}
+
+.collapsible-filter-section:focus-within {
+  z-index: 100000;
 }
 
 /* En-tête de section */
