@@ -1,0 +1,51 @@
+name: "Package SINP HDF release"
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to attach the SINP HDF package to"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  package-sinp-hdf:
+    runs-on: ubuntu-latest
+    if: github.repository == 'SINP-Haut-de-France/mviewer_bs'
+
+    defaults:
+      run:
+        working-directory: apps/sinp_hdf
+
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "Setup Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/sinp_hdf/package-lock.json
+
+      - name: "Install dependencies"
+        run: npm ci
+
+      - name: "Build SINP HDF package"
+        run: npm run build
+
+      - name: "Archive SINP HDF package"
+        run: |
+          cd dist/sinp_hdf
+          tar -czf ../sinp_hdf.tar.gz .
+
+      - name: "Upload package to release"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: gh release upload "${RELEASE_TAG}" dist/sinp_hdf.tar.gz --clobber
