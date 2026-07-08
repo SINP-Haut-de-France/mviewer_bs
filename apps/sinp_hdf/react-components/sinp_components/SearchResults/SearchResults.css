@@ -222,6 +222,13 @@
   flex: 0 0 auto;
 }
 
+.mv-sr-action-button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
 .mv-sr-action-link:hover,
 .mv-sr-action-link:focus {
   color: #0f4f94;

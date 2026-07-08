@@ -949,6 +949,55 @@
   #wrapper {
     padding-left: 0 !important;
   }
+
+  #modal-panel.show,
+  #modal-panel.in {
+    display: block !important;
+  }
+
+  #modal-panel .modal-dialog {
+    width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem) !important;
+    height: calc(100dvh - 1rem) !important;
+    max-height: calc(100dvh - 1rem) !important;
+    margin: 0.5rem auto !important;
+  }
+
+  #modal-panel .modal-content {
+    height: 100% !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  #modal-panel .modal-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #modal-panel .popup-content,
+  #modal-panel .mv-sr-root {
+    height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  #modal-panel .mv-sr-panel,
+  #modal-panel .mv-sr-section {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  #modal-panel .mv-sr-table-wrapper {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+  }
 }
 
 /* ========================================
@@ -1134,6 +1183,99 @@
   flex: 1 1 100% !important;
   max-width: 100% !important;
   white-space: normal !important;
+}
+
+/* ========================================
+   Sidebar reduite - correctif legacy Bootstrap 3
+   ======================================== */
+
+#wrapper.toggled-2 #sidebar-wrapper #menu,
+#wrapper.toggled-2 #sidebar-wrapper .sidebar-nav,
+#wrapper.toggled-2 #sidebar-wrapper #react-filters-menu {
+  width: 50px !important;
+  max-width: 50px !important;
+  min-width: 50px !important;
+  overflow: hidden !important;
+}
+
+#wrapper.toggled-2 #sidebar-wrapper #menu > li,
+#wrapper.toggled-2 #sidebar-wrapper .sidebar-nav > li,
+#wrapper.toggled-2 #sidebar-wrapper #react-filters-menu > li {
+  width: 50px !important;
+  max-width: 50px !important;
+  min-width: 50px !important;
+  overflow: hidden !important;
+}
+
+#wrapper.toggled-2 #sidebar-wrapper #menu > li > a,
+#wrapper.toggled-2 #sidebar-wrapper .sidebar-nav > li > a,
+#wrapper.toggled-2 #sidebar-wrapper #react-filters-menu > li > a,
+#wrapper.toggled-2 #theme-react-filters > a {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 50px !important;
+  max-width: 50px !important;
+  min-width: 50px !important;
+  min-height: 42px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  text-align: center !important;
+  text-indent: 0 !important;
+  white-space: nowrap !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
+
+#wrapper.toggled-2 #sidebar-wrapper .menu-theme-layers-name {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 50px !important;
+  max-width: 50px !important;
+  min-width: 50px !important;
+  min-height: 42px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  color: inherit !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  text-indent: 0 !important;
+}
+
+#wrapper.toggled-2 #sidebar-wrapper #menu > li > a > :not(.menu-theme-layers-name):not(.fa-stack),
+#wrapper.toggled-2 #sidebar-wrapper .sidebar-nav > li > a > :not(.menu-theme-layers-name):not(.fa-stack),
+#wrapper.toggled-2 #sidebar-wrapper .menu-theme-layers-name > :not(.fa-stack):not(i):not(.glyphicon),
+#wrapper.toggled-2 #sidebar-wrapper .toggle-theme-layers,
+#wrapper.toggled-2 #sidebar-wrapper .badge,
+#wrapper.toggled-2 #sidebar-wrapper .mv-nav-item,
+#wrapper.toggled-2 #sidebar-wrapper .level-2,
+#wrapper.toggled-2 #sidebar-wrapper #menu > li > ul,
+#wrapper.toggled-2 #sidebar-wrapper .sidebar-nav > li > ul,
+#wrapper.toggled-2 #sidebar-wrapper #react-filters-menu > li > ul {
+  display: none !important;
+}
+
+#wrapper.toggled-2 #sidebar-wrapper .fa-stack,
+#wrapper.toggled-2 #sidebar-wrapper .fa-stack-1x,
+#wrapper.toggled-2 #sidebar-wrapper .menu-theme-layers-name > i,
+#wrapper.toggled-2 #sidebar-wrapper .menu-theme-layers-name > .glyphicon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  float: none !important;
+  width: 50px !important;
+  max-width: 50px !important;
+  min-width: 50px !important;
+  height: 42px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 16px !important;
+  line-height: 42px !important;
+  text-align: center !important;
+  text-indent: 0 !important;
 }
 
 /* ========================================

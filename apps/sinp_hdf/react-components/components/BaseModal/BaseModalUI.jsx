@@ -15,6 +15,8 @@ const BaseModalUI = ({
   headerActions = [],
   closeButton = { visible: true, enabled: true },
   contentClassName = "",
+  showMinimize = true,
+  draggable = true,
 }) => {
   const modalRef = useRef(null);
   const isCloseButtonVisible = closeButton?.visible !== false;
@@ -50,7 +52,9 @@ const BaseModalUI = ({
         },
       }}>
       <div className="base-modal-header" ref={modalRef}>
-        <div className="base-modal-drag-handle" onMouseDown={onMouseDown}>
+        <div
+          className={`base-modal-drag-handle ${draggable ? "" : "not-draggable"}`.trim()}
+          onMouseDown={draggable ? onMouseDown : undefined}>
           <h2>{title}</h2>
         </div>
         <div className="base-modal-buttons">
@@ -64,15 +68,17 @@ const BaseModalUI = ({
               {action.icon ? <i className={action.icon} aria-hidden="true"></i> : action.label}
             </button>
           ))}
-          <button
-            className="base-modal-header-button minimize-button"
-            onClick={handleToggleMinimize}
-            title={isMinimized ? "Agrandir" : "Réduire"}
-            type="button">
-            <i
-              className={isMinimized ? "fa fa-window-maximize" : "fa fa-window-minimize"}
-              aria-hidden="true"></i>
-          </button>
+          {showMinimize && (
+            <button
+              className="base-modal-header-button minimize-button"
+              onClick={handleToggleMinimize}
+              title={isMinimized ? "Agrandir" : "Réduire"}
+              type="button">
+              <i
+                className={isMinimized ? "fa fa-window-maximize" : "fa fa-window-minimize"}
+                aria-hidden="true"></i>
+            </button>
+          )}
           {isCloseButtonVisible && (
             <button
               className="base-modal-header-button close-button"

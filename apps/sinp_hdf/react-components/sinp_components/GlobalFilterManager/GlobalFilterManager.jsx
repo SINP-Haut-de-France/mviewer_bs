@@ -21,9 +21,34 @@ const GlobalFilterManager = () => {
     showSidebar,
   } = useFilters();
   const [sidebarContainer, setSidebarContainer] = useState(null);
+  const [isMobile, setIsMobile] = useState(() =>
+    Boolean(window.configuration?.getConfiguration?.().mobile || window.innerWidth < 992)
+  );
+
+  useEffect(() => {
+    const syncMobileState = () => {
+      setIsMobile(
+        Boolean(window.configuration?.getConfiguration?.().mobile || window.innerWidth < 992)
+      );
+    };
+
+    syncMobileState();
+    window.addEventListener("resize", syncMobileState);
+
+    return () => {
+      window.removeEventListener("resize", syncMobileState);
+    };
+  }, []);
 
   // Trouver le conteneur du sidebar (créé par reactInjector.js)
   useEffect(() => {
+    if (isMobile) {
+      setSidebarContainer(null);
+      return undefined;
+    }
+
+    let retryTimer = null;
+
     const findContainer = () => {
       const container = document.getElementById("react-sidebar-filter-panel");
 
@@ -34,12 +59,18 @@ const GlobalFilterManager = () => {
         console.warn(
           "⚠️ Container react-sidebar-filter-panel non trouvé, nouvelle tentative..."
         );
-        setTimeout(findContainer, 200);
+        retryTimer = setTimeout(findContainer, 200);
       }
     };
 
     findContainer();
-  }, []);
+
+    return () => {
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+      }
+    };
+  }, [isMobile]);
 
   useEffect(() => {
     const sidebarMenu = document.getElementById("react-filters-menu");
@@ -50,6 +81,14 @@ const GlobalFilterManager = () => {
 
     sidebarMenu.style.display = displayMode === "sidebar" ? "" : "none";
   }, [displayMode, sidebarContainer]);
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("sinpMobileFilters:state", {
+        detail: { isOpen: Boolean(isMobile && modalState.isOpen) },
+      })
+    );
+  }, [isMobile, modalState.isOpen]);
 
   const handleOpenModalFromSidebar = () => {
     switchToModal({
@@ -104,7 +143,8 @@ const GlobalFilterManager = () => {
           density={modalState.uiConfig?.density}
           initialFilters={currentFilters}
           onFiltersChange={setCurrentFilters}
-          onAnchorToSidebar={handleAnchorModalToSidebar}
+          onAnchorToSidebar={isMobile ? undefined : handleAnchorModalToSidebar}
+          isMobile={isMobile}
         />
       )}
 

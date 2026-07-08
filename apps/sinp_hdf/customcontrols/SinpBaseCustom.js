@@ -1367,6 +1367,7 @@ class SinpBaseCustom {
       layerInstance.beforeLoad();
 
       if (layerInstance.serverRenderOnly) {
+        layerInstance.fitToDefaultSearchExtent?.();
         return layerInstance.renderServerOnly(mainOptions);
       }
 

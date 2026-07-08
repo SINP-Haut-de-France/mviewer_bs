@@ -14,6 +14,7 @@ const DIRECTORIES_TO_PACKAGE = [
   "customlayers",
   "custom_theme",
   "data",
+  "pages",
   "templates",
 ];
 

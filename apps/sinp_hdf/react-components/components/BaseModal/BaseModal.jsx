@@ -20,6 +20,8 @@ const BaseModal = forwardRef(
       headerActions = [],
       closeButton = { visible: true, enabled: true },
       contentClassName = "",
+      showMinimize = true,
+      draggable = true,
     },
     ref
   ) => {
@@ -48,6 +50,10 @@ const BaseModal = forwardRef(
   // Utiliser useCallback pour éviter de recréer les fonctions à chaque render
   const handleMouseDown = useCallback(
     (e) => {
+      if (!draggable) {
+        return;
+      }
+
       setIsDragging(true);
       // Enregistrer l'offset initial entre la position de la souris et la position de la modale
       if (position) {
@@ -57,7 +63,7 @@ const BaseModal = forwardRef(
         };
       }
     },
-    [position]
+    [draggable, position]
   );
 
   const handleMouseMove = useCallback(
@@ -148,7 +154,9 @@ const BaseModal = forwardRef(
         onToggleMinimize={handleToggleMinimize}
         headerActions={headerActions}
         contentClassName={contentClassName}
-        closeButton={closeButton}>
+        closeButton={closeButton}
+        showMinimize={showMinimize}
+        draggable={draggable}>
         {children}
       </BaseModalUI>
     );

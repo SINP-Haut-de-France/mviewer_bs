@@ -84,41 +84,66 @@ const activateTutorialTab = () => {
     return;
   }
 
-  if (window.bootstrap?.Tab) {
-    window.bootstrap.Tab.getOrCreateInstance(tabTrigger).show();
-    return;
-  }
+  const help = tabTrigger.closest(".sinp-help");
+  const targetSelector = tabTrigger.getAttribute("href");
+  const targetPanel = targetSelector ? document.querySelector(targetSelector) : null;
 
-  document.querySelectorAll(".sinp-help .nav-link").forEach((tab) => {
+  help?.querySelectorAll(".sinp-help-tabs a").forEach((tab) => {
     tab.classList.toggle("active", tab === tabTrigger);
+    tab.parentElement?.classList.toggle("active", tab === tabTrigger);
     tab.setAttribute("aria-selected", tab === tabTrigger ? "true" : "false");
   });
 
-  document.querySelectorAll(".sinp-help .tab-pane").forEach((panel) => {
-    const isTutorialPanel = panel.id === "sinp-tutoriels";
-    panel.classList.toggle("show", isTutorialPanel);
-    panel.classList.toggle("active", isTutorialPanel);
+  help?.querySelectorAll(".tab-pane").forEach((panel) => {
+    const isActivePanel = panel === targetPanel;
+    panel.classList.toggle("show", isActivePanel);
+    panel.classList.toggle("in", isActivePanel);
+    panel.classList.toggle("active", isActivePanel);
   });
 };
 
 const showHelpModal = () => {
   const helpModal = document.querySelector(HELP_MODAL_SELECTOR);
 
-  if (!helpModal || !window.bootstrap?.Modal) {
+  if (!helpModal) {
     return;
   }
 
-  window.bootstrap.Modal.getOrCreateInstance(helpModal).show();
+  helpModal.classList.add("show", "in");
+  helpModal.style.display = "block";
+  helpModal.setAttribute("aria-modal", "true");
+  helpModal.removeAttribute("aria-hidden");
+  document.body.classList.add("modal-open");
+
+  if (!helpModal.dataset.sinpModalCloseBound) {
+    helpModal
+      .querySelectorAll(".btn-close, .close, [data-bs-dismiss='modal'], [data-dismiss='modal']")
+      .forEach((button) => {
+        button.addEventListener("click", hideHelpModal);
+      });
+    helpModal.dataset.sinpModalCloseBound = "true";
+  }
 };
 
 const hideHelpModal = () => {
   const helpModal = document.querySelector(HELP_MODAL_SELECTOR);
 
-  if (!helpModal || !window.bootstrap?.Modal) {
+  if (!helpModal) {
     return;
   }
 
-  window.bootstrap.Modal.getOrCreateInstance(helpModal).hide();
+  helpModal.classList.remove("show", "in");
+  helpModal.style.display = "none";
+  helpModal.removeAttribute("aria-modal");
+  helpModal.setAttribute("aria-hidden", "true");
+
+  const hasAnotherOpenModal = Array.from(
+    document.querySelectorAll(".modal.show, .modal.in")
+  ).some((modal) => modal !== helpModal && modal.style.display !== "none");
+
+  if (!hasAnotherOpenModal) {
+    document.body.classList.remove("modal-open");
+  }
 };
 
 const getValidatedSteps = () =>

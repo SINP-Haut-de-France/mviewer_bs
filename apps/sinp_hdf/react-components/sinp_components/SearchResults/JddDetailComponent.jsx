@@ -15,13 +15,18 @@ const PAGE_SIZE_OPTIONS = [
   { value: "all", label: "Tous" },
 ];
 
+const METADATA_MAINTENANCE_PAGE_URL = "apps/sinp_hdf/pages/metadata_maintenance.html";
+
 const JddDetailComponent = ({
   details = [],
   selectionPrompt = false,
   selectionPromptMessage = "",
   loadingState = false,
   errorMessage = "",
+  inMaintenace,
+  inMaintenance,
 }) => {
+  const isMetadataMaintenance = inMaintenace ?? inMaintenance ?? true;
   const groupedDetails = useMemo(() => groupJddDetails(details), [details]);
   const metadataBaseUrl = useMemo(() => getMetadataBaseUrl(), []);
   const [pageSize, setPageSize] = useState(5);
@@ -104,13 +109,26 @@ const JddDetailComponent = ({
                       metadataBaseUrl,
                       dataset.metadataId || dataset.idJdd || group.metadataId || group.idCA
                     );
+                    const hasMetadataAction = isMetadataMaintenance || Boolean(metadataUrl);
 
                     return (
                       <tr key={dataset.key} className="mv-sr-jdd-row">
                         <td>
                           <div className="mv-sr-jdd-manager-cell">
                             <span>{dataset.libelJdd}</span>
-                            {metadataUrl ? (
+                            {hasMetadataAction && isMetadataMaintenance ? (
+                              <a
+                                href={METADATA_MAINTENANCE_PAGE_URL}
+                                className="mv-sr-action-link"
+                                title="Afficher l'information sur les fiches métadonnées"
+                                aria-label="Afficher l'information sur les fiches métadonnées"
+                                target="_blank"
+                                rel="noopener noreferrer">
+                                <i
+                                  className="fas fa-external-link-alt"
+                                  aria-hidden="true"></i>
+                              </a>
+                            ) : hasMetadataAction ? (
                               <a
                                 href={metadataUrl}
                                 className="mv-sr-action-link"
