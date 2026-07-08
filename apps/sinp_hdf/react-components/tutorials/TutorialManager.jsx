@@ -15,6 +15,7 @@ const DISABLE_SELECTOR = "#sinp-tutorial-disable";
 const RESET_SELECTOR = "#sinp-tutorial-reset";
 const TUTORIAL_TAB_SELECTOR = "#sinp-tutoriels-tab";
 const HELP_MODAL_SELECTOR = "#help";
+const SHEPHERD_CLEANUP_DELAY = 350;
 
 const waitForElement = (selector, timeout = 4000) =>
   new Promise((resolve) => {
@@ -109,6 +110,7 @@ const showHelpModal = () => {
     return;
   }
 
+  helpModal.inert = false;
   helpModal.classList.add("show", "in");
   helpModal.style.display = "block";
   helpModal.setAttribute("aria-modal", "true");
@@ -125,6 +127,47 @@ const showHelpModal = () => {
   }
 };
 
+const moveFocusOutside = (element) => {
+  if (!element?.contains(document.activeElement)) {
+    return;
+  }
+
+  document.activeElement?.blur();
+
+  const focusTarget =
+    document.getElementById("map") ||
+    document.querySelector(".ol-viewport") ||
+    document.body;
+
+  if (focusTarget && typeof focusTarget.focus === "function") {
+    const hadTabIndex = focusTarget.hasAttribute("tabindex");
+
+    if (!hadTabIndex) {
+      focusTarget.setAttribute("tabindex", "-1");
+    }
+
+    focusTarget.focus({ preventScroll: true });
+
+    if (!hadTabIndex) {
+      focusTarget.removeAttribute("tabindex");
+    }
+  }
+};
+
+const hasVisibleModal = (excludedModal = null) =>
+  Array.from(document.querySelectorAll(".modal.show, .modal.in")).some(
+    (modal) => modal !== excludedModal && modal.style.display !== "none"
+  );
+
+const cleanupModalBlockingState = () => {
+  if (hasVisibleModal()) {
+    return;
+  }
+
+  document.body.classList.remove("modal-open");
+  document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
+};
+
 const hideHelpModal = () => {
   const helpModal = document.querySelector(HELP_MODAL_SELECTOR);
 
@@ -132,18 +175,36 @@ const hideHelpModal = () => {
     return;
   }
 
+  moveFocusOutside(helpModal);
   helpModal.classList.remove("show", "in");
   helpModal.style.display = "none";
   helpModal.removeAttribute("aria-modal");
+  helpModal.inert = true;
   helpModal.setAttribute("aria-hidden", "true");
 
-  const hasAnotherOpenModal = Array.from(
-    document.querySelectorAll(".modal.show, .modal.in")
-  ).some((modal) => modal !== helpModal && modal.style.display !== "none");
+  cleanupModalBlockingState();
+};
 
-  if (!hasAnotherOpenModal) {
-    document.body.classList.remove("modal-open");
-  }
+const cleanupShepherdOverlay = () => {
+  document
+    .querySelectorAll(".shepherd-modal-overlay-container, .shepherd-element")
+    .forEach(moveFocusOutside);
+
+  document
+    .querySelectorAll(".shepherd-modal-overlay-container, .shepherd-element")
+    .forEach((element) => element.remove());
+
+  document
+    .querySelectorAll(".shepherd-enabled, .shepherd-target, .shepherd-target-click-disabled")
+    .forEach((element) => {
+      element.classList.remove(
+        "shepherd-enabled",
+        "shepherd-target",
+        "shepherd-target-click-disabled"
+      );
+    });
+
+  cleanupModalBlockingState();
 };
 
 const getValidatedSteps = () =>
@@ -226,6 +287,7 @@ const TutorialManager = () => {
 
   const startTutorial = async () => {
     activeTourRef.current?.cancel();
+    cleanupShepherdOverlay();
 
     const steps = await buildTourSteps();
 
@@ -288,8 +350,19 @@ const TutorialManager = () => {
       });
     });
 
-    tour.on("complete", markTutorialSeen);
-    tour.on("cancel", markTutorialSeen);
+    const finishTour = () => {
+      markTutorialSeen();
+
+      if (activeTourRef.current === tour) {
+        activeTourRef.current = null;
+      }
+
+      window.setTimeout(cleanupShepherdOverlay, 0);
+      window.setTimeout(cleanupShepherdOverlay, SHEPHERD_CLEANUP_DELAY);
+    };
+
+    tour.on("complete", finishTour);
+    tour.on("cancel", finishTour);
     activeTourRef.current = tour;
     tour.start();
   };
@@ -349,6 +422,7 @@ const TutorialManager = () => {
     return () => {
       isMounted = false;
       activeTourRef.current?.cancel();
+      cleanupShepherdOverlay();
     };
   }, []);
 
