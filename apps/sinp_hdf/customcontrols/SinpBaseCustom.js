@@ -98,7 +98,54 @@ class SinpBaseCustom {
       }
 
       layerInstance.clear?.();
+      this._removeSearchLayerFromLegend(layerId);
     });
+  }
+
+  _removeSearchLayerFromLegend(layerId) {
+    const legendItem = $(`#layers-container .list-group-item[data-layerid="${layerId}"]`);
+    if (!legendItem.length) {
+      return;
+    }
+
+    if (typeof mviewer.removeLayer === "function") {
+      mviewer.removeLayer(legendItem);
+      return;
+    }
+
+    legendItem.remove();
+    mviewer.getLayer?.(layerId)?.layer?.setVisible?.(false);
+    if ($("#layers-container .list-group-item").length === 0) {
+      $("#legend").addClass("empty");
+    }
+  }
+
+  _prepareServerRenderLayer(layerInstance, queryOptions = {}) {
+    const layerConfig = mviewer.getLayer?.(this.layerId);
+    layerInstance.attachLegacyConfig?.(layerConfig, queryOptions);
+
+    const layer = layerConfig?.layer;
+    if (layer && !layer.getVisible?.()) {
+      layer.setVisible(true);
+    }
+  }
+
+  _showSearchLayerLegend(queryOptions = {}) {
+    const layerConfig = mviewer.getLayer?.(this.layerId);
+    const layerInstance = this.getLayerInstance();
+
+    layerInstance?.attachLegacyConfig?.(layerConfig, queryOptions);
+
+    if (!layerConfig?.showintoc || typeof mviewer.addLayer !== "function") {
+      return;
+    }
+
+    const legendItem = $(
+      `#layers-container .list-group-item[data-layerid="${this.layerId}"]`
+    );
+    if (!legendItem.length) {
+      mviewer.addLayer(layerConfig);
+    }
   }
 
   _buildQueryURL(options = {}) {
@@ -1270,12 +1317,7 @@ class SinpBaseCustom {
 
     if (normalizedFeatures.length === 0) {
       layerInstance.clear();
-      return mainData;
-    }
-
-    if (layerInstance.serverRenderOnly) {
-      layerInstance.fitToFeatures?.(normalizedFeatures);
-      await layerInstance.renderServerOnly(mainOptions);
+      this._removeSearchLayerFromLegend(this.layerId);
       return mainData;
     }
 
@@ -1362,14 +1404,19 @@ class SinpBaseCustom {
       this._lastSearchParams = normalizedParams;
       this._setLastResultFeatures([]);
       this._setBlockingSearchOverlayVisible(useSearchLoader);
-      this._activateSearchLayer(mainOptions);
       this._clearOtherSearchLayers();
-      layerInstance.beforeLoad();
-
       if (layerInstance.serverRenderOnly) {
+        this._removeSearchLayerFromLegend(this.layerId);
+        layerInstance.beforeLoad();
+        this._prepareServerRenderLayer(layerInstance, mainOptions);
         layerInstance.fitToDefaultSearchExtent?.();
-        return layerInstance.renderServerOnly(mainOptions);
+        await layerInstance.renderServerOnly(mainOptions);
+        this._showSearchLayerLegend(mainOptions);
+        return undefined;
+      } else {
+        this._activateSearchLayer(mainOptions);
       }
+      layerInstance.beforeLoad();
 
       const result = await this._loadSearchResultInMemory(normalizedParams, options);
       return this._renderSearchResult(

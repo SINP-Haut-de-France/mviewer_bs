@@ -1248,6 +1248,43 @@ describe("CommuneSearchLayer", () => {
     fetchGeoServerDataSpy.mockRestore();
   });
 
+  test("Le contrôle communeSearch charge la légende après la réponse WMS", async () => {
+    const control = mviewer.customControls.communeSearch;
+    const layerInstance = mviewer.customLayers.communeSearch._instance;
+    const renderServerOnlySpy = jest
+      .spyOn(layerInstance, "renderServerOnly")
+      .mockResolvedValue(undefined);
+    const showLegendSpy = jest
+      .spyOn(SinpBaseCustom.prototype, "_showSearchLayerLegend")
+      .mockImplementation(() => {});
+    const fetchGeoServerDataSpy = jest.spyOn(
+      SinpBaseCustom.prototype,
+      "fetchGeoServerData"
+    ).mockResolvedValue({ type: "FeatureCollection", features: [] });
+
+    await control.submit({
+      filteredDepartments: ["62"],
+      dateDeb: "2020-01-01",
+      dateFin: "2026-03-10",
+    });
+
+    expect(renderServerOnlySpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        TYPENAME: "sinp_diffusion:fn_get_stats",
+      })
+    );
+    expect(fetchGeoServerDataSpy).not.toHaveBeenCalled();
+    expect(showLegendSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        TYPENAME: "sinp_diffusion:fn_get_stats",
+      })
+    );
+
+    renderServerOnlySpy.mockRestore();
+    showLegendSpy.mockRestore();
+    fetchGeoServerDataSpy.mockRestore();
+  });
+
   test("Le contrôle communeSearch accroche un listener de clic carte", () => {
     const controlApi = mviewer.customControls.communeSearch;
     const previousGetMap = mviewer.getMap;
