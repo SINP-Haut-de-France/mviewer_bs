@@ -22,7 +22,7 @@ const SearchResultsTabs = ({
   errorMessage = "",
   datasetLoadingState = false,
   datasetErrorMessage = "",
-  metadataInMaintenace = true,
+  metadataInMaintenance = false,
 }) => {
   return (
     <>
@@ -56,7 +56,7 @@ const SearchResultsTabs = ({
             selectionPromptMessage={selectionPromptMessage}
             loadingState={datasetLoadingState}
             errorMessage={datasetErrorMessage}
-            inMaintenace={metadataInMaintenace}
+            inMaintenance={metadataInMaintenance}
           />
         ) : null}
       </div>

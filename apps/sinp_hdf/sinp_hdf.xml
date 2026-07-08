@@ -80,9 +80,9 @@
 			icon="fa fa-leaf"
 		>
 			<layer
-				id="Patrinat_RAMSAR_France"
+				id="Patrinat_APB_France"
 				visible="false"
-				name="APPB"
+				name="APB"
 				queryable="false"
 				url="https://data.geopf.fr/wms-v/wms"
 			>
@@ -152,8 +152,8 @@
 			icon="fa fa-search-minus">
 			<layer
 				id="communeSearch"
-				name="Communes"
-				visible="true"
+				name="Nb Observations par communes"
+				visible="false"
 				opacity="0.7"
 				queryable="false"
 				tiled="true"
@@ -177,8 +177,8 @@
 			</layer>
 			<layer
 				id="gridSearch5x5"
-				name="Grille 5x5"
-				visible="true"
+				name="Nb Observations - grille 5x5"
+				visible="false"
 				opacity="0.7"
 				queryable="false"
 				tiled="true"
@@ -201,8 +201,8 @@
 			</layer>
 			<layer
 				id="grid10x10search"
-				name="Grille 10x10"
-				visible="true"
+				name="Nb Observations - grille 10x10"
+				visible="false"
 				opacity="0.7"
 				queryable="false"
 				tiled="true"

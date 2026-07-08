@@ -23,10 +23,9 @@ const JddDetailComponent = ({
   selectionPromptMessage = "",
   loadingState = false,
   errorMessage = "",
-  inMaintenace,
   inMaintenance,
 }) => {
-  const isMetadataMaintenance = inMaintenace ?? inMaintenance ?? true;
+  const isMetadataMaintenance = inMaintenance ?? false;
   const groupedDetails = useMemo(() => groupJddDetails(details), [details]);
   const metadataBaseUrl = useMemo(() => getMetadataBaseUrl(), []);
   const [pageSize, setPageSize] = useState(5);
