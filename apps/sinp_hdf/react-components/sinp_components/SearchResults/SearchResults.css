@@ -222,9 +222,33 @@
   flex: 0 0 auto;
 }
 
+.mv-sr-action-button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
 .mv-sr-action-link:hover,
 .mv-sr-action-link:focus {
   color: #0f4f94;
+}
+
+.mv-sr-metadata-maintenance-modal {
+  max-width: 460px;
+}
+
+.mv-sr-metadata-maintenance-message {
+  margin: 0;
+  color: #1f2937;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.mv-sr-metadata-maintenance-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
 }
 
 .mv-sr-detail-list {

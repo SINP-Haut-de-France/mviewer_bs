@@ -1137,6 +1137,99 @@
 }
 
 /* ========================================
+   Sidebar reduite - correctif legacy Bootstrap 3
+   ======================================== */
+
+#wrapper.toggled-2 #sidebar-wrapper #menu,
+#wrapper.toggled-2 #sidebar-wrapper .sidebar-nav,
+#wrapper.toggled-2 #sidebar-wrapper #react-filters-menu {
+  width: 50px !important;
+  max-width: 50px !important;
+  min-width: 50px !important;
+  overflow: hidden !important;
+}
+
+#wrapper.toggled-2 #sidebar-wrapper #menu > li,
+#wrapper.toggled-2 #sidebar-wrapper .sidebar-nav > li,
+#wrapper.toggled-2 #sidebar-wrapper #react-filters-menu > li {
+  width: 50px !important;
+  max-width: 50px !important;
+  min-width: 50px !important;
+  overflow: hidden !important;
+}
+
+#wrapper.toggled-2 #sidebar-wrapper #menu > li > a,
+#wrapper.toggled-2 #sidebar-wrapper .sidebar-nav > li > a,
+#wrapper.toggled-2 #sidebar-wrapper #react-filters-menu > li > a,
+#wrapper.toggled-2 #theme-react-filters > a {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 50px !important;
+  max-width: 50px !important;
+  min-width: 50px !important;
+  min-height: 42px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  text-align: center !important;
+  text-indent: 0 !important;
+  white-space: nowrap !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
+
+#wrapper.toggled-2 #sidebar-wrapper .menu-theme-layers-name {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 50px !important;
+  max-width: 50px !important;
+  min-width: 50px !important;
+  min-height: 42px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  color: inherit !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  text-indent: 0 !important;
+}
+
+#wrapper.toggled-2 #sidebar-wrapper #menu > li > a > :not(.menu-theme-layers-name):not(.fa-stack),
+#wrapper.toggled-2 #sidebar-wrapper .sidebar-nav > li > a > :not(.menu-theme-layers-name):not(.fa-stack),
+#wrapper.toggled-2 #sidebar-wrapper .menu-theme-layers-name > :not(.fa-stack):not(i):not(.glyphicon),
+#wrapper.toggled-2 #sidebar-wrapper .toggle-theme-layers,
+#wrapper.toggled-2 #sidebar-wrapper .badge,
+#wrapper.toggled-2 #sidebar-wrapper .mv-nav-item,
+#wrapper.toggled-2 #sidebar-wrapper .level-2,
+#wrapper.toggled-2 #sidebar-wrapper #menu > li > ul,
+#wrapper.toggled-2 #sidebar-wrapper .sidebar-nav > li > ul,
+#wrapper.toggled-2 #sidebar-wrapper #react-filters-menu > li > ul {
+  display: none !important;
+}
+
+#wrapper.toggled-2 #sidebar-wrapper .fa-stack,
+#wrapper.toggled-2 #sidebar-wrapper .fa-stack-1x,
+#wrapper.toggled-2 #sidebar-wrapper .menu-theme-layers-name > i,
+#wrapper.toggled-2 #sidebar-wrapper .menu-theme-layers-name > .glyphicon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  float: none !important;
+  width: 50px !important;
+  max-width: 50px !important;
+  min-width: 50px !important;
+  height: 42px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 16px !important;
+  line-height: 42px !important;
+  text-align: center !important;
+  text-indent: 0 !important;
+}
+
+/* ========================================
    Correctifs compat Bootstrap 3 / 5 - mviewer natif
    ======================================== */
 

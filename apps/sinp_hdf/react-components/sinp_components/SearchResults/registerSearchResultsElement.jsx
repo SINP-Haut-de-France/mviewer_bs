@@ -12,6 +12,9 @@ const renderElement = (element) => {
   const layerId = element.getAttribute("data-layer-id") || "communeSearch";
   const featureUid = element.getAttribute("data-feature-uid") || "";
   const promptOnly = element.getAttribute("data-selection-prompt") === "true";
+  const metadataInMaintenace =
+    element.getAttribute("data-metadata-in-maintenace") !== "false" &&
+    element.getAttribute("data-metadata-in-maintenance") !== "false";
 
   if (!element.__reactRoot) {
     element.__reactRoot = ReactDOM.createRoot(element);
@@ -22,6 +25,7 @@ const renderElement = (element) => {
       layerId={layerId}
       featureUid={featureUid}
       promptOnly={promptOnly}
+      metadataInMaintenace={metadataInMaintenace}
     />
   );
 };
@@ -35,7 +39,13 @@ const defineElement = () => {
     if (!window.customElements.get(elementName)) {
       class SearchResultsElement extends HTMLElement {
         static get observedAttributes() {
-          return ["data-layer-id", "data-feature-uid", "data-selection-prompt"];
+          return [
+            "data-layer-id",
+            "data-feature-uid",
+            "data-selection-prompt",
+            "data-metadata-in-maintenace",
+            "data-metadata-in-maintenance",
+          ];
         }
 
         connectedCallback() {

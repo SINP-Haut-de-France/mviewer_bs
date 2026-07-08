@@ -16,6 +16,7 @@ const SearchResultsComponent = ({
   layerId,
   featureUid,
   promptOnly = false,
+  metadataInMaintenace = true,
 }) => {
   const [activeTab, setActiveTab] = useState(TAB_IDS.OBSERVATIONS);
   const [feature, setFeature] = useState(() => getFeatureByUid(layerId, featureUid));
@@ -145,6 +146,7 @@ const SearchResultsComponent = ({
         errorMessage={errorMessage}
         datasetLoadingState={datasetLoadingState}
         datasetErrorMessage={datasetErrorMessage}
+        metadataInMaintenace={metadataInMaintenace}
       />
     </div>
   );

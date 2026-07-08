@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import BaseModal from "../../components/BaseModal/BaseModal";
 import PaginationControls from "./PaginationControls";
 import {
   buildMetadataUrl,
@@ -15,17 +16,24 @@ const PAGE_SIZE_OPTIONS = [
   { value: "all", label: "Tous" },
 ];
 
+const METADATA_MAINTENANCE_MESSAGE =
+  "Information : Les fiches métadonnées n'ont pas pu être intégrées et sont pour le moment indisponibles. Merci de votre compréhension.";
+
 const JddDetailComponent = ({
   details = [],
   selectionPrompt = false,
   selectionPromptMessage = "",
   loadingState = false,
   errorMessage = "",
+  inMaintenace,
+  inMaintenance,
 }) => {
+  const isMetadataMaintenance = inMaintenace ?? inMaintenance ?? true;
   const groupedDetails = useMemo(() => groupJddDetails(details), [details]);
   const metadataBaseUrl = useMemo(() => getMetadataBaseUrl(), []);
   const [pageSize, setPageSize] = useState(5);
   const [page, setPage] = useState(1);
+  const [isMaintenanceModalOpen, setIsMaintenanceModalOpen] = useState(false);
 
   useEffect(() => {
     setPage(1);
@@ -53,6 +61,22 @@ const JddDetailComponent = ({
 
   return (
     <div className="mv-sr-section">
+      <BaseModal
+        isOpen={isMaintenanceModalOpen}
+        onClose={() => setIsMaintenanceModalOpen(false)}
+        title="Information"
+        contentClassName="mv-sr-metadata-maintenance-modal">
+        <p className="mv-sr-metadata-maintenance-message">{METADATA_MAINTENANCE_MESSAGE}</p>
+        <div className="mv-sr-metadata-maintenance-actions">
+          <button
+            type="button"
+            className="mv-sr-page-button"
+            onClick={() => setIsMaintenanceModalOpen(false)}>
+            Fermer
+          </button>
+        </div>
+      </BaseModal>
+
       <PaginationControls
         items={groupedDetails}
         page={page}
@@ -104,13 +128,25 @@ const JddDetailComponent = ({
                       metadataBaseUrl,
                       dataset.metadataId || dataset.idJdd || group.metadataId || group.idCA
                     );
+                    const hasMetadataAction = isMetadataMaintenance || Boolean(metadataUrl);
 
                     return (
                       <tr key={dataset.key} className="mv-sr-jdd-row">
                         <td>
                           <div className="mv-sr-jdd-manager-cell">
                             <span>{dataset.libelJdd}</span>
-                            {metadataUrl ? (
+                            {hasMetadataAction && isMetadataMaintenance ? (
+                              <button
+                                type="button"
+                                className="mv-sr-action-link mv-sr-action-button"
+                                title="Afficher l'information sur les fiches métadonnées"
+                                aria-label="Afficher l'information sur les fiches métadonnées"
+                                onClick={() => setIsMaintenanceModalOpen(true)}>
+                                <i
+                                  className="fas fa-external-link-alt"
+                                  aria-hidden="true"></i>
+                              </button>
+                            ) : hasMetadataAction ? (
                               <a
                                 href={metadataUrl}
                                 className="mv-sr-action-link"
