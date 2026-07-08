@@ -18,6 +18,8 @@ class SinpBaseLayer {
     this.serverStyle = config.serverStyle || null;
     this.serverRenderOnly = config.serverRenderOnly === true;
     this.serverRenderRatio = config.serverRenderRatio || 1.5;
+    this.defaultSearchExtent =
+      config.defaultSearchExtent || [550000, 6900000, 815000, 7115000];
     this._serverStyleActive = false;
     this._pendingServerRenderPromise = Promise.resolve();
     this._serverInfoFormat = config.serverInfoFormat || "application/vnd.ogc.gml";
@@ -671,6 +673,9 @@ class SinpBaseLayer {
     try {
       ["bottom-panel", "right-panel", "modal-panel"].forEach((panelId) => {
         const panel = $("#" + panelId);
+        if (panelId === "modal-panel" && panel.length) {
+          this._hideModalPanel(panel);
+        }
         panel.removeClass("active");
         panel.find(".popup-content").empty();
         this._syncPanelRevealHandle(panelId);
@@ -797,9 +802,59 @@ class SinpBaseLayer {
         panel.addClass("active");
       }
 
+      if (viewData.panelType === "modal-panel") {
+        this._showModalPanel(panel);
+      }
+
       this._syncPanelRevealHandle(viewData.panelType);
     } catch (e) {
       console.warn("Unable to show results panel:", e);
+    }
+  }
+
+  _showModalPanel(panel) {
+    const modalElement = panel?.get?.(0);
+
+    if (!modalElement) {
+      return;
+    }
+
+    panel
+      .addClass("active show in")
+      .css("display", "block")
+      .attr("aria-modal", "true")
+      .removeAttr("aria-hidden");
+
+    $("body").addClass("modal-open");
+
+    if (!panel.data("sinpModalCloseBound")) {
+      panel.find(".btn-close, .close, [data-bs-dismiss='modal'], [data-dismiss='modal']")
+        .on("click.sinpModalPanel", () => this._hideModalPanel(panel));
+      panel.data("sinpModalCloseBound", true);
+    }
+  }
+
+  _hideModalPanel(panel) {
+    const modalElement = panel?.get?.(0);
+
+    if (!modalElement) {
+      return;
+    }
+
+    panel
+      .removeClass("active show in")
+      .css("display", "none")
+      .removeAttr("aria-modal")
+      .attr("aria-hidden", "true");
+
+    const hasAnotherOpenModal = $(".modal.show, .modal.in")
+      .not(panel)
+      .filter(function () {
+        return $(this).css("display") !== "none";
+      }).length > 0;
+
+    if (!hasAnotherOpenModal) {
+      $("body").removeClass("modal-open");
     }
   }
 
@@ -834,6 +889,18 @@ class SinpBaseLayer {
 
   fitToFeatures(features = []) {
     this._fitMapToFeatures(features);
+  }
+
+  fitToDefaultSearchExtent() {
+    const map = mviewer.getMap();
+    if (!map || !Array.isArray(this.defaultSearchExtent)) {
+      return;
+    }
+
+    map.getView().fit(this.defaultSearchExtent, {
+      duration: 500,
+      padding: [24, 24, 24, 24],
+    });
   }
 
   showFeatureInfo(features) {

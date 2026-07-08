@@ -16,6 +16,7 @@ const GlobalFilterModal = ({
   initialFilters,
   onFiltersChange,
   onAnchorToSidebar,
+  isMobile = false,
 }) => {
   const { pushFilterError } = useFilters();
   const modalRef = useRef(null);
@@ -25,24 +26,16 @@ const GlobalFilterModal = ({
 
   const executeSearch = async (params, layerId = activeLayerId) => {
     if (typeof onSubmit === "function") {
-      await onSubmit(params, layerId);
-      return;
+      return onSubmit(params, layerId);
     }
 
     const targetLayer = getSearchLayer(layerId);
 
     if (targetLayer?.get_datas) {
-      await targetLayer.get_datas(params);
-      return;
+      return targetLayer.get_datas(params);
     }
 
     throw new Error("Service de recherche non disponible.");
-  };
-
-  const getActiveLayerFeatures = (layerId = activeLayerId) => {
-    const targetLayer = getSearchLayer(layerId);
-
-    return targetLayer?.layer?.getSource?.().getFeatures?.() || null;
   };
 
   const handleSubmit = async (params, filtersState, layerId) => {
@@ -89,22 +82,18 @@ const GlobalFilterModal = ({
       // 1. Appel au code mviewer / callback configuré
       await executeSearch(finalParams, layerId);
 
-      // Vérifier si des données ont été retournées quand la couche expose bien sa source
-      const features = getActiveLayerFeatures(layerId);
-
-      if (Array.isArray(features) && features.length === 0) {
-        pushFilterError("Aucune donnée trouvée avec les filtres appliqués.");
-        return; // Ne pas minimiser la modal
-      }
-
       // Sauvegarder l'état complet des filtres pour le rebinding
       // Use effectiveFilters (the most recent known state)
       filtersStateRef.current = effectiveFilters;
       setAppliedFilters(effectiveFilters);
 
-      // Minimiser la modal après succès
-      if (modalRef.current?.handleToggleMinimize) {
+      // Minimiser la modal après succès en desktop uniquement.
+      if (!isMobile && modalRef.current?.handleToggleMinimize) {
         modalRef.current.handleToggleMinimize();
+      }
+
+      if (isMobile && typeof onClose === "function") {
+        onClose();
       }
 
       // 2. Callback optionnel pour comportements additionnels (UI, analytics, etc.)
@@ -140,6 +129,10 @@ const GlobalFilterModal = ({
   };
 
   const handleAnchorToSidebar = () => {
+    if (isMobile) {
+      return;
+    }
+
     if (typeof onAnchorToSidebar === "function") {
       onAnchorToSidebar(filtersStateRef.current || appliedFilters || null);
     }
@@ -169,16 +162,22 @@ const GlobalFilterModal = ({
       onClose={handleClose}
       title="Filtres avancés"
       onMinimize={handleModalToggle}
-      closeButton={closeButton}
-      contentClassName={density || ""}
-      headerActions={[
-        {
-          key: "anchor-to-sidebar",
-          title: "Ancrer les filtres dans le sidebar",
-          icon: "fas fa-thumbtack",
-          onClick: handleAnchorToSidebar,
-        },
-      ]}
+      closeButton={isMobile ? { visible: true, enabled: true } : closeButton}
+      contentClassName={`${density || ""} ${isMobile ? "mobile-global-filter-modal" : ""}`.trim()}
+      showMinimize={!isMobile}
+      draggable={!isMobile}
+      headerActions={
+        isMobile
+          ? []
+          : [
+              {
+                key: "anchor-to-sidebar",
+                title: "Ancrer les filtres dans le sidebar",
+                icon: "fas fa-thumbtack",
+                onClick: handleAnchorToSidebar,
+              },
+            ]
+      }
       ref={modalRef}>
       <div className={`modal-filters-wrapper ${density || ""}`.trim()}>
         <GlobalFilters

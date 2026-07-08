@@ -87,6 +87,11 @@
   cursor: grabbing;
 }
 
+.base-modal-drag-handle.not-draggable,
+.base-modal-drag-handle.not-draggable:active {
+  cursor: default;
+}
+
 .base-modal-drag-handle h2 {
   margin: 0;
   font-size: 0.875rem;
@@ -223,6 +228,16 @@
   .base-modal-buttons {
     padding: 0.3125rem 0.5rem;
   }
+}
+
+.base-modal-content.mobile-global-filter-modal {
+  width: min(800px, calc(100vw - 1rem));
+  max-width: calc(100vw - 1rem);
+  max-height: calc(100dvh - 1rem);
+}
+
+.base-modal-content.mobile-global-filter-modal .base-modal-body {
+  max-height: calc(100dvh - 4.5rem);
 }
 
 /* Scrollbar personnalisée (WebKit) */

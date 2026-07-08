@@ -38,8 +38,21 @@ var reactInjector = (function () {
 
       initSinpHelpTabs();
 
+      const isMobileLayout = () =>
+        Boolean(
+          window.configuration?.getConfiguration?.().mobile || window.innerWidth < 992
+        );
+
       // Fonction pour injecter le conteneur React dans le sidebar
       const injectSidebarFilterContainer = () => {
+        if (isMobileLayout()) {
+          return;
+        }
+
+        if (document.getElementById("react-sidebar-filter-panel")) {
+          return;
+        }
+
         const sidebarWrapper = document.getElementById("sidebar-wrapper");
 
         if (!sidebarWrapper) {
@@ -199,6 +212,8 @@ var reactInjector = (function () {
         waitForMviewerInit();
       }
 
+      window.addEventListener("resize", injectSidebarFilterContainer);
+
       // Injecter le bouton filtre dans la barre mobile mviewer
       const injectMobileFilterButton = () => {
         const mobileNav = document.getElementById("mvNavbarMobile");
@@ -221,6 +236,10 @@ var reactInjector = (function () {
         filterBtn.addEventListener("click", function (e) {
           e.preventDefault();
           window.dispatchEvent(new CustomEvent("reactSidebarFilters:openModal"));
+        });
+
+        window.addEventListener("sinpMobileFilters:state", function (event) {
+          filterBtn.classList.toggle("active", Boolean(event.detail?.isOpen));
         });
 
         mobileNav.appendChild(filterBtn);

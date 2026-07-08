@@ -1,0 +1,98 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Mviewer | Fiches métadonnées indisponibles</title>
+  <link rel="icon" type="image/png" href="../../../favicon.png" />
+
+  <style type="text/css">
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    text-align: center;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .layout-error {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 15px;
+    box-sizing: border-box;
+  }
+
+  .title {
+    font-size: 5em;
+    font-weight: 700;
+    margin: 0 0 1.5rem;
+  }
+
+  .sub.text {
+    font-weight: 600;
+  }
+
+  .text {
+    font-size: larger;
+    color: #656565;
+  }
+
+  .actions-div {
+    margin-top: 1.5rem;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .btn-dark {
+    color: #fff;
+    background-color: #212529;
+    border-color: #212529;
+  }
+
+  .btn-dark:hover,
+  .btn-dark:focus {
+    background-color: #1c1f23;
+    border-color: #1a1e21;
+  }
+  </style>
+</head>
+
+<body>
+  <div class="layout-error">
+    <h1 class="title">Oops !</h1>
+    <div class="sub text">Fiches métadonnées indisponibles.</div>
+    <div id="message" class="text">
+      Les fiches métadonnées n'ont pas pu être intégrées et sont pour le moment
+      indisponibles. Merci de votre compréhension.
+    </div>
+    <div class="actions-div">
+      <button id="close" type="button" class="btn btn-dark">
+        Fermer cette page
+      </button>
+    </div>
+  </div>
+  <script>
+    document.querySelector("#close").addEventListener("click", function () {
+      window.close();
+    });
+  </script>
+</body>
+</html>
