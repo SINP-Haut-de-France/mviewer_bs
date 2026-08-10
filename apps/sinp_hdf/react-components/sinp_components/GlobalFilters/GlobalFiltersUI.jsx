@@ -120,7 +120,7 @@ const GlobalFiltersUI = ({
               const baseURL = `${
                 mviewer.env?.[mviewer.env?.CURRENT_ENV]?.GEOSERVER_BASE_URL
               }/wfs`;
-              const typeName = "sinp_diffusion:vm_taxref_search";
+              const typeName = "sinp_diffusion:v_taxref_search";
               const encodedFilter = encodeURIComponent(`search_field ILIKE '%${query}%'`);
               return `${baseURL}?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=${typeName}&CQL_FILTER=${encodedFilter}&outputFormat=json&${new URLSearchParams(
                 params
@@ -136,12 +136,12 @@ const GlobalFiltersUI = ({
                   title="Nom scientifique ou vernaculaire"
                   label={(item) => (
                     <div className="taxon-label">
-                      <div className="taxon-vernacular">{item.nom_vern || "N/A"}</div>
-                      <div className="taxon-scientific">{item.nom_complet || "N/A"}</div>
+                      <div className="taxon-vernacular">{item.nom_vern || item.nom_complet}</div>
+                      <div className="taxon-scientific">{item.nom_complet}</div>
                     </div>
                   )}
                   minCharacters={3}
-                  maxResults={15}
+                  maxResults={200}
                   multiselect={true}
                   disabled={hasSelectedGroupes}
                   onChange={handleTaxChange}

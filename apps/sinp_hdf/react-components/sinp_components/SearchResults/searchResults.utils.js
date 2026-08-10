@@ -241,7 +241,11 @@ const getColumnSortValue = (item, column) => {
   return item?.[column?.id];
 };
 
-const normalizeSortValue = (value, sortType = "text") => {
+const STRING_COLLATOR = new Intl.Collator("fr", {
+  sensitivity: "base",
+});
+
+const normalizeSortValue = (value, sortType = "string") => {
   if (value === undefined || value === null || String(value).trim() === "") {
     return null;
   }
@@ -252,11 +256,26 @@ const normalizeSortValue = (value, sortType = "text") => {
   }
 
   if (sortType === "number") {
-    const normalizedNumber = Number(value);
+    if (typeof value !== "number" && typeof value !== "string") {
+      return null;
+    }
+
+    const normalizedNumber =
+      typeof value === "number"
+        ? value
+        : Number(value.trim().replace(/\s/g, "").replace(",", "."));
     return Number.isFinite(normalizedNumber) ? normalizedNumber : null;
   }
 
-  return String(value).trim().toLocaleLowerCase("fr");
+  return String(value).trim();
+};
+
+const compareSortValues = (leftValue, rightValue, sortType) => {
+  if (sortType === "number" || sortType === "date") {
+    return leftValue - rightValue;
+  }
+
+  return STRING_COLLATOR.compare(leftValue, rightValue);
 };
 
 export const sortTableItems = (items = [], columns = [], sortConfig = null) => {
@@ -290,11 +309,9 @@ export const sortTableItems = (items = [], columns = [], sortConfig = null) => {
         return -1;
       }
 
-      if (leftValue < rightValue) {
-        return -1 * directionFactor;
-      }
-      if (leftValue > rightValue) {
-        return 1 * directionFactor;
+      const comparison = compareSortValues(leftValue, rightValue, column.sortType);
+      if (comparison !== 0) {
+        return comparison * directionFactor;
       }
 
       return left.index - right.index;

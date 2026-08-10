@@ -158,16 +158,22 @@ const SearchResultsTable = ({
               className={`mv-sr-display-button ${
                 displayMode === "standard" ? "is-active" : ""
               }`}
+              title="Vue standard"
+              aria-label="Vue standard"
+              aria-pressed={displayMode === "standard"}
               onClick={() => setDisplayMode("standard")}>
-              Vue standard
+              <i className="fas fa-table" aria-hidden="true"></i>
             </button>
             <button
               type="button"
               className={`mv-sr-display-button ${
                 displayMode === "grouped" ? "is-active" : ""
               }`}
+              title={groupBy.toggleLabel || `Regrouper par ${groupBy.label}`}
+              aria-label={groupBy.toggleLabel || `Regrouper par ${groupBy.label}`}
+              aria-pressed={displayMode === "grouped"}
               onClick={() => setDisplayMode("grouped")}>
-              {groupBy.toggleLabel || `Regrouper par ${groupBy.label}`}
+              <i className="fas fa-layer-group" aria-hidden="true"></i>
             </button>
           </div>
         ) : (

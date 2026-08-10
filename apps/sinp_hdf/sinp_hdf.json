@@ -1,24 +1,39 @@
 {
-  "CURRENT_ENV": "PREPROD",
+  "CURRENT_ENV": "DEV",
   "VERSION": "1.0.0.1",
   "QUA": {
     "GEOSERVER_BASE_URL": "http://localhost:8080/geoserver/qua_sinp",
-    "GEONETWORK_METADATA_BASE_URL": "http://localhost:8081/geonetwork/srv/fre/catalog.search#/metadata"
+    "GEONETWORK_METADATA_BASE_URL": "http://localhost:8081/geonetwork/srv/fre/catalog.search#/metadata",
+    "CLICNAT_BASE_URL": "http://localhost:8080/clicnat/sinp/",
+    "CBN_BASE_URL": "http://localhost:8080/cbns/sinp/",
+    "INPN_BASE_URL": "http://localhost:8080/inpn/sinp/"
   },
   "DEV": {
     "GEOSERVER_BASE_URL": "http://localhost:8080/geoserver/dev_sinp",
-    "GEONETWORK_METADATA_BASE_URL": "http://localhost:8081/geonetwork/srv/fre/catalog.search#/metadata"
+    "GEONETWORK_METADATA_BASE_URL": "http://localhost:8081/geonetwork/srv/fre/catalog.search#/metadata",
+    "CLICNAT_BASE_URL": "http://localhost:8080/clicnat/sinp/",
+    "CBN_BASE_URL": "http://localhost:8080/cbns/sinp/",
+    "INPN_BASE_URL": "http://localhost:8080/inpn/sinp/"
   },
   "PREPROD": {
     "GEOSERVER_BASE_URL": "https://dev.geo2france.fr/geoserver/sinp",
-    "GEONETWORK_METADATA_BASE_URL": "https://dev.geo2france.fr/datahub/dataset/"
+    "GEONETWORK_METADATA_BASE_URL": "https://dev.geo2france.fr/datahub/dataset/",
+    "CLICNAT_BASE_URL": "http://localhost:8080/clicnat/sinp/",
+    "CBN_BASE_URL": "http://localhost:8080/cbns/sinp/",
+    "INPN_BASE_URL": "http://localhost:8080/inpn/sinp/"
   },
   "PREPROD_DEV": {
     "GEOSERVER_BASE_URL": "http://localhost:8080/geoserver/preprod_sinp/wms",
-    "GEONETWORK_METADATA_BASE_URL": "https://dev.geo2france.fr/datahub/dataset/"
+    "GEONETWORK_METADATA_BASE_URL": "https://dev.geo2france.fr/datahub/dataset/",
+    "CLICNAT_BASE_URL": "http://localhost:8080/clicnat/sinp/",
+    "CBN_BASE_URL": "http://localhost:8080/cbns/sinp/",
+    "INPN_BASE_URL": "http://localhost:8080/inpn/sinp/"
   },
   "PROD": {
     "GEOSERVER_BASE_URL": "https://www.geo2france.fr/geoserver/sinp",
-    "GEONETWORK_METADATA_BASE_URL": "https://dev.geo2france.fr/datahub/dataset/"
+    "GEONETWORK_METADATA_BASE_URL": "https://dev.geo2france.fr/datahub/dataset/",
+    "CLICNAT_BASE_URL": "http://localhost:8080/clicnat/sinp/",
+    "CBN_BASE_URL": "http://localhost:8080/cbns/sinp/",
+    "INPN_BASE_URL": "http://localhost:8080/inpn/sinp/"
   }
 }
