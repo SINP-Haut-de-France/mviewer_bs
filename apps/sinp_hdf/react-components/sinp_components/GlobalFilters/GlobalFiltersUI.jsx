@@ -37,32 +37,6 @@ const GlobalFiltersUI = ({
       {/*    </small>*/}
       {/*  </div>*/}
       {/*)}*/}
-      {restitutionLayers.length > 0 && (
-        <CollapsibleFilterSection
-          title="Couche de restitution"
-          icon="fa-layer-group"
-          defaultExpanded={true}
-          dataTour="filter-restitution-layer">
-          <div className="btn-group btn-group-sm mv-restitution-switch" role="group">
-            {restitutionLayers.map((restitutionLayer) => {
-              const isSelected = restitutionLayer.id === selectedRestitutionLayerId;
-
-              return (
-                <button
-                  key={restitutionLayer.id}
-                  type="button"
-                  className={`btn ${isSelected ? "btn-primary" : "btn-outline-primary"}`}
-                  disabled={isLoading || isSelected}
-                  aria-pressed={isSelected}
-                  onClick={() => onRestitutionChange?.(restitutionLayer.id)}>
-                  {restitutionLayer.label}
-                </button>
-              );
-            })}
-          </div>
-        </CollapsibleFilterSection>
-      )}
-
       {/* Section Groupes taxonomiques */}
       {filterVisibility.showTaxonomicGroup && (
         <CollapsibleFilterSection
@@ -81,22 +55,22 @@ const GlobalFiltersUI = ({
 
               return (
                 <>
-                <CheckBoxTreeView
-                  datasource={groupes || []}
-                  selectedValues={filters.filteredGroupes || []}
-                  idKey="id"
-                  returnKey="id"
-                  label={(node) => node.name}
-                  childrenKey="children"
-                  title=""
-                  disabled={hasSelectedTaxons}
-                  onSelectionChange={handleGrpChange}
-                />
-                {hasSelectedTaxons && (
-                  <small className="text-muted">
-                    Désélectionnez les espèces pour filtrer par groupe taxonomique.
-                  </small>
-                )}
+                  <CheckBoxTreeView
+                    datasource={groupes || []}
+                    selectedValues={filters.filteredGroupes || []}
+                    idKey="id"
+                    returnKey="id"
+                    label={(node) => node.name}
+                    childrenKey="children"
+                    title=""
+                    disabled={hasSelectedTaxons}
+                    onSelectionChange={handleGrpChange}
+                  />
+                  {hasSelectedTaxons && (
+                    <small className="text-muted">
+                      Désélectionnez les espèces pour filtrer par groupe taxonomique.
+                    </small>
+                  )}
                 </>
               );
             }}
@@ -136,7 +110,9 @@ const GlobalFiltersUI = ({
                   title="Nom scientifique ou vernaculaire"
                   label={(item) => (
                     <div className="taxon-label">
-                      <div className="taxon-vernacular">{item.nom_vern || item.nom_complet}</div>
+                      <div className="taxon-vernacular">
+                        {item.nom_vern || item.nom_complet}
+                      </div>
                       <div className="taxon-scientific">{item.nom_complet}</div>
                     </div>
                   )}
@@ -257,6 +233,32 @@ const GlobalFiltersUI = ({
               );
             }}
           </Datasource>
+        </CollapsibleFilterSection>
+      )}
+
+      {restitutionLayers.length > 0 && (
+        <CollapsibleFilterSection
+          title="Couche de restitution"
+          icon="fa-layer-group"
+          defaultExpanded={true}
+          dataTour="filter-restitution-layer">
+          <div className="btn-group btn-group-sm mv-restitution-switch" role="group">
+            {restitutionLayers.map((restitutionLayer) => {
+              const isSelected = restitutionLayer.id === selectedRestitutionLayerId;
+
+              return (
+                <button
+                  key={restitutionLayer.id}
+                  type="button"
+                  className={`btn ${isSelected ? "btn-primary" : "btn-outline-primary"}`}
+                  disabled={isLoading || isSelected}
+                  aria-pressed={isSelected}
+                  onClick={() => onRestitutionChange?.(restitutionLayer.id)}>
+                  {restitutionLayer.label}
+                </button>
+              );
+            })}
+          </div>
         </CollapsibleFilterSection>
       )}
 
