@@ -5,6 +5,12 @@ import MultiSelectSearchComponent from "../../components/MultiSelectSearch/Multi
 import CheckBoxTreeView from "../../components/CheckBoxTreeView/CheckBoxTreeView";
 import Datasource from "../../components/Datasource/Datasource";
 
+const TAXON_FILTER_TOUR_TARGETS = [
+  "filter-taxonomic-group",
+  "filter-taxon",
+  "filter-date",
+];
+
 const GlobalFiltersUI = ({
   filters,
   filterVisibility,
@@ -26,6 +32,8 @@ const GlobalFiltersUI = ({
 }) => {
   const hasSelectedTaxons = (filters.filteredTaxons || []).length > 0;
   const hasSelectedGroupes = (filters.filteredGroupes || []).length > 0;
+  const selectedTaxonFilterCount =
+    (filters.filteredTaxons || []).length + (filters.filteredGroupes || []).length;
 
   return (
     <div className="global-filters-container">
@@ -37,126 +45,139 @@ const GlobalFiltersUI = ({
       {/*    </small>*/}
       {/*  </div>*/}
       {/*)}*/}
-      {/* Section Groupes taxonomiques */}
-      {filterVisibility.showTaxonomicGroup && (
+      {(filterVisibility.showTaxonomicGroup ||
+        filterVisibility.showTaxon ||
+        filterVisibility.showDate) && (
         <CollapsibleFilterSection
-          title="Classification des espèces"
-          icon="fa-sitemap"
-          defaultExpanded={false}
-          badge={filters.filteredGroupes?.length || null}
-          dataTour="filter-taxonomic-group">
-          <Datasource
-            name="groupesDatasource"
-            datatype="json"
-            datasource="apps/sinp_hdf/data/taxonomie_tree.json">
-            {({ data: groupes, loading, error }) => {
-              if (loading) return <p className="loading-message">Chargement...</p>;
-              if (error) return <p className="error-message">Erreur</p>;
-
-              return (
-                <>
-                  <CheckBoxTreeView
-                    datasource={groupes || []}
-                    selectedValues={filters.filteredGroupes || []}
-                    idKey="id"
-                    returnKey="id"
-                    label={(node) => node.name}
-                    childrenKey="children"
-                    title=""
-                    disabled={hasSelectedTaxons}
-                    onSelectionChange={handleGrpChange}
-                  />
-                  {hasSelectedTaxons && (
-                    <small className="text-muted">
-                      Désélectionnez les espèces pour filtrer par groupe taxonomique.
-                    </small>
-                  )}
-                </>
-              );
-            }}
-          </Datasource>
-        </CollapsibleFilterSection>
-      )}
-      {/* Section Taxonomie */}
-      {filterVisibility.showTaxon && (
-        <CollapsibleFilterSection
-          title="Recherche d'espèce"
+          title="Taxon"
           icon="fa-leaf"
           defaultExpanded={true}
-          dataTour="filter-taxon">
-          <Datasource
-            name="taxonsDatasource"
-            datatype="wfs"
-            lazyloading={true}
-            minCharacters={2}
-            queryParams={{ maxFeatures: 10 }}
-            searchUrlBuilder={(query, params) => {
-              const baseURL = `${
-                mviewer.env?.[mviewer.env?.CURRENT_ENV]?.GEOSERVER_BASE_URL
-              }/wfs`;
-              const typeName = "sinp_diffusion:v_taxref_search";
-              const encodedFilter = encodeURIComponent(`search_field ILIKE '%${query}%'`);
-              return `${baseURL}?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=${typeName}&CQL_FILTER=${encodedFilter}&outputFormat=json&${new URLSearchParams(
-                params
-              ).toString()}`;
-            }}>
-            {({ data: taxons, loading, error, setQuery }) => (
-              <>
-                <MultiSelectSearchComponent
-                  datasource={taxons || []}
-                  selectedValues={filters.filteredTaxons || []}
-                  returnValueKey="cd_ref"
-                  cacheKey="taxons_selected"
-                  title="Nom scientifique ou vernaculaire"
-                  label={(item) => (
-                    <div className="taxon-label">
-                      <div className="taxon-vernacular">
-                        {item.nom_vern || item.nom_complet}
-                      </div>
-                      <div className="taxon-scientific">{item.nom_complet}</div>
-                    </div>
-                  )}
-                  minCharacters={3}
-                  maxResults={200}
-                  multiselect={true}
-                  disabled={hasSelectedGroupes}
-                  onChange={handleTaxChange}
-                  onSearch={setQuery}
-                  loading={loading}
-                  error={error}
-                />
-                {hasSelectedGroupes && (
-                  <small className="text-muted">
-                    Désélectionnez les groupes taxonomiques pour rechercher par espèce.
-                  </small>
-                )}
-              </>
-            )}
-          </Datasource>
-        </CollapsibleFilterSection>
-      )}
+          badge={selectedTaxonFilterCount || null}
+          dataTour="filter-taxon-group"
+          expandOnTourTargets={TAXON_FILTER_TOUR_TARGETS}>
+          {filterVisibility.showTaxonomicGroup && (
+            <CollapsibleFilterSection
+              title="Groupes taxinomiques"
+              icon="fa-sitemap"
+              defaultExpanded={false}
+              badge={filters.filteredGroupes?.length || null}
+              dataTour="filter-taxonomic-group">
+              <Datasource
+                name="groupesDatasource"
+                datatype="json"
+                datasource="apps/sinp_hdf/data/taxonomie_tree.json">
+                {({ data: groupes, loading, error }) => {
+                  if (loading) return <p className="loading-message">Chargement...</p>;
+                  if (error) return <p className="error-message">Erreur</p>;
 
-      {/* Section Période */}
-      {filterVisibility.showDate && (
-        <CollapsibleFilterSection
-          title="Période d'observation"
-          icon="fa-calendar"
-          defaultExpanded={true}
-          dataTour="filter-date">
-          <DateFilter
-            dateDeb={filters.dateDeb}
-            dateFin={filters.dateFin}
-            defaultNbYears={20}
-            title="Dates"
-            onChange={handleDateChange}
-          />
+                  return (
+                    <>
+                      <CheckBoxTreeView
+                        datasource={groupes || []}
+                        selectedValues={filters.filteredGroupes || []}
+                        idKey="id"
+                        returnKey="id"
+                        label={(node) => node.name}
+                        childrenKey="children"
+                        title=""
+                        disabled={hasSelectedTaxons}
+                        onSelectionChange={handleGrpChange}
+                      />
+                      {hasSelectedTaxons && (
+                        <small className="text-muted">
+                          Désélectionnez les espèces pour filtrer par groupe taxonomique.
+                        </small>
+                      )}
+                    </>
+                  );
+                }}
+              </Datasource>
+            </CollapsibleFilterSection>
+          )}
+
+          {filterVisibility.showTaxon && (
+            <CollapsibleFilterSection
+              title="Recherche d'espèce"
+              icon="fa-leaf"
+              defaultExpanded={true}
+              dataTour="filter-taxon">
+              <Datasource
+                name="taxonsDatasource"
+                datatype="wfs"
+                lazyloading={true}
+                minCharacters={2}
+                queryParams={{ maxFeatures: 10 }}
+                searchUrlBuilder={(query, params) => {
+                  const baseURL = `${
+                    mviewer.env?.[mviewer.env?.CURRENT_ENV]?.GEOSERVER_BASE_URL
+                  }/wfs`;
+                  const typeName = "sinp_diffusion:v_taxref_search";
+                  const encodedFilter = encodeURIComponent(
+                    `search_field ILIKE '%${query}%'`
+                  );
+                  return `${baseURL}?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=${typeName}&CQL_FILTER=${encodedFilter}&outputFormat=json&${new URLSearchParams(
+                    params
+                  ).toString()}`;
+                }}>
+                {({ data: taxons, loading, error, setQuery }) => (
+                  <>
+                    <MultiSelectSearchComponent
+                      datasource={taxons || []}
+                      selectedValues={filters.filteredTaxons || []}
+                      returnValueKey="cd_ref"
+                      cacheKey="taxons_selected"
+                      title="Nom scientifique ou vernaculaire"
+                      label={(item) => (
+                        <div className="taxon-label">
+                          <div className="taxon-vernacular">
+                            {item.nom_vern || item.nom_complet}
+                          </div>
+                          <div className="taxon-scientific">{item.nom_complet}</div>
+                        </div>
+                      )}
+                      minCharacters={3}
+                      maxResults={200}
+                      multiselect={true}
+                      disabled={hasSelectedGroupes}
+                      onChange={handleTaxChange}
+                      onSearch={setQuery}
+                      loading={loading}
+                      error={error}
+                    />
+                    {hasSelectedGroupes && (
+                      <small className="text-muted">
+                        Désélectionnez les groupes taxonomiques pour rechercher par
+                        espèce.
+                      </small>
+                    )}
+                  </>
+                )}
+              </Datasource>
+            </CollapsibleFilterSection>
+          )}
+
+          {filterVisibility.showDate && (
+            <CollapsibleFilterSection
+              title="Période d'observation"
+              icon="fa-calendar"
+              defaultExpanded={true}
+              dataTour="filter-date">
+              <DateFilter
+                dateDeb={filters.dateDeb}
+                dateFin={filters.dateFin}
+                defaultNbYears={20}
+                title="Dates"
+                onChange={handleDateChange}
+              />
+            </CollapsibleFilterSection>
+          )}
         </CollapsibleFilterSection>
       )}
 
       {/* Section Géographique */}
       {(filterVisibility.showDepartment || filterVisibility.showCommune) && (
         <CollapsibleFilterSection
-          title="Localisation géographique"
+          title="Localisation"
           icon="fa-map-marker-alt"
           defaultExpanded={true}
           badge={

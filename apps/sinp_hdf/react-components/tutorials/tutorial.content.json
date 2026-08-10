@@ -82,7 +82,7 @@
       "required": false,
       "waitForTarget": true,
       "beforeShowAction": "openTaxonomicGroupFilter",
-      "title": "Classification des espèces",
+      "title": "Groupes taxinomiques",
       "text": "Ce filtre permet de restreindre la recherche à un ou plusieurs groupes taxonomiques."
     },
     {
@@ -94,7 +94,7 @@
       "placement": "right",
       "required": false,
       "waitForTarget": true,
-      "beforeShowAction": "openAdvancedFilters",
+      "beforeShowAction": "openTaxonFilter",
       "title": "Recherche d'espèce",
       "text": "Ce filtre sert à rechercher une espèce par son nom scientifique ou vernaculaire. Plusieurs taxons peuvent être sélectionnés."
     },
@@ -107,7 +107,7 @@
       "placement": "right",
       "required": false,
       "waitForTarget": true,
-      "beforeShowAction": "openAdvancedFilters",
+      "beforeShowAction": "openDateFilter",
       "title": "Période d'observation",
       "text": "Ce filtre permet de définir la période temporelle souhaitée. Par défaut, la recherche couvre les 20 dernières années."
     },
@@ -121,7 +121,7 @@
       "required": false,
       "waitForTarget": true,
       "beforeShowAction": "openAdvancedFilters",
-      "title": "Localisation géographique",
+      "title": "Localisation",
       "text": "Cette section regroupe les filtres géographiques. Elle permet de limiter la recherche à un département et/ou à des communes. Elle sera enrichie avec d'autres couches de repérage administratif (EPCI, bassins versants, PNR, etc.)."
     },
     {

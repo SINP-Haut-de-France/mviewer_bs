@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import './CollapsibleFilterSection.css';
+import React, { useEffect, useState } from "react";
+import "./CollapsibleFilterSection.css";
+
+const EMPTY_TOUR_TARGETS = [];
 
 const CollapsibleFilterSection = ({
   title,
-  icon = 'fa-filter',
+  icon = "fa-filter",
   children,
   defaultExpanded = true,
   badge = null,
-  dataTour = null
+  dataTour = null,
+  expandOnTourTargets = EMPTY_TOUR_TARGETS,
 }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
@@ -17,40 +20,36 @@ const CollapsibleFilterSection = ({
     }
 
     const handleExpandRequest = (event) => {
-      if (event.detail?.dataTour === dataTour) {
+      const requestedTarget = event.detail?.dataTour;
+      if (requestedTarget === dataTour || expandOnTourTargets.includes(requestedTarget)) {
         setIsExpanded(true);
       }
     };
 
-    window.addEventListener('sinpTutorial:expandFilterSection', handleExpandRequest);
+    window.addEventListener("sinpTutorial:expandFilterSection", handleExpandRequest);
 
     return () => {
-      window.removeEventListener('sinpTutorial:expandFilterSection', handleExpandRequest);
+      window.removeEventListener("sinpTutorial:expandFilterSection", handleExpandRequest);
     };
-  }, [dataTour]);
+  }, [dataTour, expandOnTourTargets]);
 
   return (
     <div
-      className={`collapsible-filter-section ${isExpanded ? 'expanded' : 'collapsed'}`}
+      className={`collapsible-filter-section ${isExpanded ? "expanded" : "collapsed"}`}
       data-tour={dataTour || undefined}>
-      <div
-        className="section-header"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
+      <div className="section-header" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="section-title">
           <i className={`fas ${icon}`}></i>
           <span>{title}</span>
           {badge && <span className="section-badge">{badge}</span>}
         </div>
-        <button className="toggle-btn" aria-label={isExpanded ? 'Réduire' : 'Développer'}>
-          <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'}`}></i>
+        <button className="toggle-btn" aria-label={isExpanded ? "Réduire" : "Développer"}>
+          <i className={`fas fa-chevron-${isExpanded ? "up" : "down"}`}></i>
         </button>
       </div>
 
       <div className="section-content-collapse" aria-hidden={!isExpanded}>
-        <div className="section-content">
-          {children}
-        </div>
+        <div className="section-content">{children}</div>
       </div>
     </div>
   );

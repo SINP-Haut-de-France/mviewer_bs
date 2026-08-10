@@ -24,7 +24,7 @@ const TAXON_COLUMNS = [
   },
   {
     id: "observedSpecies",
-    label: "Espèce(s) observée(s)",
+    label: "Taxon(s) observée(s)",
     sortable: true,
     sortType: "string",
     getValue: (detail) => detail?.nom_vern || detail?.nom_valide || "-",

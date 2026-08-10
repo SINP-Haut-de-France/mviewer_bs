@@ -6,7 +6,7 @@
 		logo='apps/sinp_hdf/custom_theme/img/logo/logo-obsbiodiv-hdf.svg'
 		help="apps/sinp_hdf/custom_theme/sinp_aide.html"
 		showhelp="true"
-		titlehelp="SINP Hauts de France"
+		titlehelp="SINP Hauts-de-France"
 		favicon='apps/sinp_hdf/custom_theme/img/logo/logo-arb-vertpng.ico'
 		style='apps/sinp_hdf/custom_theme/css/sinp_hdf.css'
 		measuretools="true"
@@ -75,7 +75,7 @@
 			</layer>
 		</theme>
 		<theme
-			name="Environnement"
+			name="Zonages environnementaux"
 			collapsed="false"
 			id="environnement"
 			icon="fa fa-leaf"
@@ -153,7 +153,7 @@
 			icon="fa fa-search-minus">
 			<layer
 				id="communeSearch"
-				name="Nb Observations par communes"
+				name="Nombre de données par communes"
 				visible="false"
 				opacity="0.7"
 				queryable="false"
@@ -166,7 +166,7 @@
 				customcontrolpath="apps/sinp_hdf/customcontrols/communeSearch"
 				expanded="true"
 				fields=""
-				attribution="Source: SINP Hauts-de-France. Synthèse des observations naturalistes par commune."
+				attribution="Source: SINP Hauts-de-France. Synthèse des données naturalistes."
 				nohighlight="false"
 				jsonfields="details"
 				infopanel="right-panel"
@@ -178,7 +178,7 @@
 			</layer>
 			<layer
 				id="gridSearch5x5"
-				name="Nb Observations - grille 5x5"
+				name="Nombre de données - grille 5x5"
 				visible="false"
 				opacity="0.7"
 				queryable="false"
@@ -190,7 +190,7 @@
 				customcontrol="true"
 				customcontrolpath="apps/sinp_hdf/customcontrols/grid5x5search"
 				fields=""
-				attribution="Source: SINP Hauts-de-France. Synthèse des observations naturalistes par commune."
+				attribution="Source: SINP Hauts-de-France. Synthèse des données naturalistes."
 				nohighlight="false"
 				jsonfields="details"
 				infopanel="right-panel"
@@ -202,7 +202,7 @@
 			</layer>
 			<layer
 				id="grid10x10search"
-				name="Nb Observations - grille 10x10"
+				name="Nombre de données - grille 10x10"
 				visible="false"
 				opacity="0.7"
 				queryable="false"

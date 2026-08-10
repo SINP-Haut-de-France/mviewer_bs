@@ -37,7 +37,7 @@
   background-color: var(--bs-gray-200, #e9ecef);
 }
 
-.collapsible-filter-section.expanded .section-header {
+.collapsible-filter-section.expanded > .section-header {
   border-bottom-color: var(--bs-border-color, #dee2e6);
 }
 
@@ -97,7 +97,7 @@
   border-radius: 0.25rem;
 }
 
-.collapsible-filter-section.expanded .toggle-btn {
+.collapsible-filter-section.expanded > .section-header .toggle-btn {
   transform: rotate(180deg);
 }
 
@@ -114,7 +114,7 @@
   transform: translateY(-0.25rem);
 }
 
-.collapsible-filter-section.expanded .section-content-collapse {
+.collapsible-filter-section.expanded > .section-content-collapse {
   grid-template-rows: 1fr;
   opacity: 1;
   overflow: visible;
@@ -127,7 +127,7 @@
   transition: padding 0.24s ease;
 }
 
-.collapsible-filter-section.expanded .section-content {
+.collapsible-filter-section.expanded > .section-content-collapse > .section-content {
   padding: 0.625rem;
 }
 
