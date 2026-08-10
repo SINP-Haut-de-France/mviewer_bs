@@ -8,6 +8,24 @@
  * - sortie: une requête GeoServer WFS avec TYPENAME + VIEWPARAMS (+ CQL_FILTER si besoin legacy)
  * - rendu: mise à jour du layer OL + injection du HTML du template dans le panneau mviewer
  */
+const PANEL_REVEAL_HANDLE_CONFIG = {
+  "right-panel": {
+    positionClass: "mv-panel-reveal-handle--right",
+    iconClass: "fa-chevron-left",
+    panelLabel: "panneau latéral",
+  },
+  "bottom-panel": {
+    positionClass: "mv-panel-reveal-handle--bottom",
+    iconClass: "fa-chevron-up",
+    panelLabel: "panneau inférieur",
+  },
+  "top-panel": {
+    positionClass: "mv-panel-reveal-handle--top",
+    iconClass: "fa-chevron-down",
+    panelLabel: "panneau supérieur",
+  },
+};
+
 class SinpBaseLayer {
   constructor(layerId, typeName, config = {}) {
     this.layerId = layerId;
@@ -686,7 +704,8 @@ class SinpBaseLayer {
   }
 
   _ensurePanelRevealHandle(panelType) {
-    if (panelType !== "right-panel" || configuration.getConfiguration().mobile) {
+    const handleConfig = PANEL_REVEAL_HANDLE_CONFIG[panelType];
+    if (!handleConfig || configuration.getConfiguration().mobile) {
       return null;
     }
 
@@ -703,15 +722,19 @@ class SinpBaseLayer {
         <button
           type="button"
           id="${handleId}"
-          class="mv-panel-reveal-handle"
-          aria-label="Réafficher le panneau d'informations"
-          title="Réafficher le panneau d'informations">
-          <i class="fas fa-chevron-left" aria-hidden="true"></i>
+          class="mv-panel-reveal-handle ${handleConfig.positionClass}"
+          aria-controls="${panelType}"
+          aria-expanded="false">
+          <i class="fas ${handleConfig.iconClass}" aria-hidden="true"></i>
         </button>
       `);
 
       handle.on("click", () => {
-        panel.addClass("active");
+        const isCollapsing = panel.hasClass("active");
+        panel.toggleClass("active");
+        if (isCollapsing) {
+          this._hideLocationMarkers();
+        }
         this._syncPanelRevealHandle(panelType);
       });
 
@@ -738,10 +761,16 @@ class SinpBaseLayer {
 
     const panelContent = panel.find(".popup-content");
     const hasContent = Boolean(panelContent.length && panelContent.html()?.trim());
-    const shouldShowHandle = !panel.hasClass("active") && hasContent;
+    const isExpanded = panel.hasClass("active");
+    const actionLabel = isExpanded ? "Réduire" : "Réafficher";
+    const handleConfig = PANEL_REVEAL_HANDLE_CONFIG[panelType];
 
-    handle.toggleClass("is-visible", shouldShowHandle);
-    handle.attr("aria-hidden", shouldShowHandle ? "false" : "true");
+    handle.toggleClass("is-visible", hasContent);
+    handle.toggleClass("is-expanded", isExpanded);
+    handle.attr("aria-hidden", hasContent ? "false" : "true");
+    handle.attr("aria-expanded", isExpanded ? "true" : "false");
+    handle.attr("aria-label", `${actionLabel} le ${handleConfig.panelLabel}`);
+    handle.attr("title", `${actionLabel} le ${handleConfig.panelLabel}`);
   }
 
   _hideLocationMarkers() {
