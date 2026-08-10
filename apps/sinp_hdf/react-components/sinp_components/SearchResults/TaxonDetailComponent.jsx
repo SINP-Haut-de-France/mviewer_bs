@@ -19,14 +19,14 @@ const TAXON_COLUMNS = [
     id: "taxonomicGroup",
     label: "Groupe taxonomique",
     sortable: true,
-    sortType: "text",
+    sortType: "string",
     getValue: (detail) => getTaxonomicGroupLabel(detail),
   },
   {
     id: "observedSpecies",
     label: "Espèce(s) observée(s)",
     sortable: true,
-    sortType: "text",
+    sortType: "string",
     getValue: (detail) => detail?.nom_vern || detail?.nom_valide || "-",
     getSortValue: (detail) => [detail?.nom_vern || "", detail?.nom_valide || ""].join(" "),
     render: (detail) => (
@@ -47,8 +47,9 @@ const TAXON_COLUMNS = [
   {
     id: "observationCount",
     label: "Nb. observations",
-    sortable: false,
-    getValue: (detail) => detail?.nb_observations ?? "-",
+    sortable: true,
+    sortType: "number",
+    getValue: (detail) => detail?.nb_observations ?? null,
   },
 ];
 

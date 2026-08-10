@@ -10,6 +10,7 @@
 		favicon='apps/sinp_hdf/custom_theme/img/logo/logo-arb-vertpng.ico'
 		style='apps/sinp_hdf/custom_theme/css/sinp_hdf.css'
 		measuretools="true"
+		addlayerstools="true"
 	/>
 	<extensions>
 		<extension type="javascript" src="apps/sinp_hdf/customlayers/SinpBaseLayer.js" />

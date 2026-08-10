@@ -26,7 +26,7 @@ const EspeceSearchFilter = ({
   // Construire l'URL de recherche WFS
   const buildSearchUrl = useCallback((query, params) => {
     const baseURL = `${mviewer.env?.[mviewer.env?.CURRENT_ENV]?.GEOSERVER_BASE_URL}/wfs`;
-    const typeName = 'sinp_diffusion:vm_taxref_search';
+    const typeName = 'sinp_diffusion:v_taxref_search';
     const encodedFilter = encodeURIComponent(`search_field ILIKE '%${query}%'`);
     return `${baseURL}?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=${typeName}&CQL_FILTER=${encodedFilter}&outputFormat=json&${new URLSearchParams(params).toString()}`;
   }, []);
