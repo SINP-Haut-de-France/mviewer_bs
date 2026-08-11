@@ -1,0 +1,50 @@
+.mv-sr-section {
+  margin:5px 10px 5px 10px
+}
+
+.mv-sr-taxon-table th:nth-last-child(2),
+.mv-sr-taxon-table
+  tbody
+  tr:not(.mv-sr-group-row)
+  td:nth-last-child(2):not(.mv-sr-empty-row):not(.mv-sr-loading-row) {
+  width: 110px;
+  min-width: 110px;
+  max-width: 110px;
+}
+
+.mv-sr-taxon-table th:last-child,
+.mv-sr-taxon-table
+  tbody
+  tr:not(.mv-sr-group-row)
+  td:last-child:not(.mv-sr-empty-row):not(.mv-sr-loading-row) {
+  width: 100px;
+  min-width: 100px;
+  max-width: 1000px;
+}
+
+.mv-sr-taxon-table
+  tbody
+  tr:not(.mv-sr-group-row)
+  td:nth-last-child(2):not(.mv-sr-empty-row):not(.mv-sr-loading-row),
+.mv-sr-taxon-table
+  tbody
+  tr:not(.mv-sr-group-row)
+  td:last-child:not(.mv-sr-empty-row):not(.mv-sr-loading-row) {
+  white-space: nowrap;
+}
+
+.mv-sr-taxon-table th:nth-last-child(2),
+.mv-sr-taxon-table th:last-child {
+  white-space: normal;
+}
+
+.mv-sr-taxon-table th:nth-last-child(2) .mv-sr-sort-button > span,
+.mv-sr-taxon-table th:last-child .mv-sr-sort-button > span {
+  min-width: 0;
+  white-space: normal;
+}
+
+.mv-sr-taxon-table th:nth-last-child(2) .mv-sr-sort-button > i,
+.mv-sr-taxon-table th:last-child .mv-sr-sort-button > i {
+  flex: 0 0 auto;
+}

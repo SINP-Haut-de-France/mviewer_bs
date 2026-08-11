@@ -91,6 +91,7 @@
 
 /* Panneau droit élargi pour SINP */
 #right-panel.active {
+  margin-top: 20px;
   width: var(--sinp-rightpanel-width) !important;
   max-width: var(--sinp-rightpanel-width) !important;
 }

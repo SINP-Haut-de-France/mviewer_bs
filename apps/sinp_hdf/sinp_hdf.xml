@@ -35,20 +35,16 @@
     <proxy url=""/>
     <searchparameters bbox="false" localities="true" features="false" />
     <themes>
-		<theme
-			name="Limites administrative"
-			collapsed="false"
-			id="limiteAdm"
-			icon="fa fa-layer-group"
-		>
-			<layer
-				id="communes"
-				name="Communes"
-				visible="false"
-				queryable="false"
-				url="https://www.geo2france.fr/geoserver/spld/ows"
-			>
-			</layer>
+		<theme name="Fonds de cartes" collapsed="false" id="environnement" icon="fa fa-layer-group">
+			<group name="Limites administratives" id="limites_adm">
+				<layer
+					id="communes"
+					name="Communes"
+					visible="false"
+					queryable="false"
+					url="https://www.geo2france.fr/geoserver/spld/ows"
+				>
+				</layer>
 			<layer
 				id="epci"
 				name="EPCI"
@@ -73,77 +69,75 @@
 				url="https://www.geo2france.fr/geoserver/sandre/ows"
 			>
 			</layer>
-		</theme>
-		<theme
-			name="Zonages environnementaux"
-			collapsed="false"
-			id="environnement"
-			icon="fa fa-leaf"
-		>
-			<layer
-				id="Patrinat_APB_France"
-				visible="false"
-				name="APB"
-				queryable="false"
-				url="https://data.geopf.fr/wms-v/wms"
-			>
-			</layer>
-			<layer
-				id="Patrinat_RNN_France"
-				visible="false"
-				name="RNN"
-				queryable="false"
-				url="https://data.geopf.fr/wms-v/wms"
-			>
-			</layer>
-			<layer
-				id="Patrinat_RNR_France"
-				visible="false"
-				name="RNR"
-				queryable="false"
-				url="https://data.geopf.fr/wms-v/wms"
-			>
-			</layer>
-			<layer
-				id="Patrinat_SIC_France"
-				visible="false"
-				name="Natura 2000 - ZSC"
-				queryable="false"
-				url="https://data.geopf.fr/wms-v/wms"
-			>
-			</layer>
-			<layer
-				id="Patrinat_ZPS_France"
-				visible="false"
-				name="Natura 2000 - ZPS"
-				queryable="false"
-				url="https://data.geopf.fr/wms-v/wms"
-			>
-			</layer>
-			<layer
-				id="Patrinat_RAMSAR_France"
-				visible="false"
-				name="RAMSAR"
-				queryable="false"
-				url="https://data.geopf.fr/wms-v/wms"
-			>
-			</layer>
-			<layer
-				id="Patrinat_ZNIEFF1_France"
-				visible="false"
-				name="ZNIEFF 1 Terrestre"
-				queryable="false"
-				url="https://data.geopf.fr/wms-v/wms"
-			>
-			</layer>
-			<layer
-				id="Patrinat_ZNIEFF2_France"
-				visible="false"
-				name="ZNIEFF 2 Terrestre"
-				queryable="false"
-				url="https://data.geopf.fr/wms-v/wms"
-			>
-			</layer>
+		</group>
+			<group name="Zonages environnementaux" id="environnement">
+				<layer
+					id="Patrinat_APB_France"
+					visible="false"
+					name="APB"
+					queryable="false"
+					url="https://data.geopf.fr/wms-v/wms"
+				>
+				</layer>
+				<layer
+					id="Patrinat_RNN_France"
+					visible="false"
+					name="RNN"
+					queryable="false"
+					url="https://data.geopf.fr/wms-v/wms"
+				>
+				</layer>
+				<layer
+					id="Patrinat_RNR_France"
+					visible="false"
+					name="RNR"
+					queryable="false"
+					url="https://data.geopf.fr/wms-v/wms"
+				>
+				</layer>
+				<layer
+					id="Patrinat_SIC_France"
+					visible="false"
+					name="Natura 2000 - ZSC"
+					queryable="false"
+					url="https://data.geopf.fr/wms-v/wms"
+				>
+				</layer>
+				<layer
+					id="Patrinat_ZPS_France"
+					visible="false"
+					name="Natura 2000 - ZPS"
+					queryable="false"
+					url="https://data.geopf.fr/wms-v/wms"
+				>
+				</layer>
+				<layer
+					id="Patrinat_RAMSAR_France"
+					visible="false"
+					name="RAMSAR"
+					queryable="true"
+					infoformat="application/vnd.ogc.gml"
+					featurecount="1"
+					url="https://data.geopf.fr/wms-v/wms"
+				>
+				</layer>
+				<layer
+					id="Patrinat_ZNIEFF1_France"
+					visible="false"
+					name="ZNIEFF 1 Terrestre"
+					queryable="false"
+					url="https://data.geopf.fr/wms-v/wms"
+				>
+				</layer>
+				<layer
+					id="Patrinat_ZNIEFF2_France"
+					visible="false"
+					name="ZNIEFF 2 Terrestre"
+					queryable="false"
+					url="https://data.geopf.fr/wms-v/wms"
+				>
+				</layer>
+			</group>
 		</theme>
 		<theme
 			name="Couches de restitution"

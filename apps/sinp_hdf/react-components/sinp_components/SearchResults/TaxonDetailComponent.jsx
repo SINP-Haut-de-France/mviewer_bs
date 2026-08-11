@@ -1,6 +1,7 @@
 import React from "react";
 import SearchResultsTable from "./SearchResultsTable";
 import { formatDisplayDate } from "../../utils/date.utils";
+import "./TaxonDetailComponent.css";
 
 const PAGE_SIZE_OPTIONS = [
   { value: 25, label: "25" },
@@ -10,7 +11,11 @@ const PAGE_SIZE_OPTIONS = [
 
 const getTaxonomicGroupLabel = (detail = {}) => {
   return (
-    detail?.group2_inpn || detail?.group1_inpn || detail?.group3_inpn || detail?.groupe_taxo || "-"
+    detail?.group2_inpn ||
+    detail?.group1_inpn ||
+    detail?.group3_inpn ||
+    detail?.groupe_taxo ||
+    "-"
   );
 };
 
@@ -28,7 +33,8 @@ const TAXON_COLUMNS = [
     sortable: true,
     sortType: "string",
     getValue: (detail) => detail?.nom_vern || detail?.nom_valide || "-",
-    getSortValue: (detail) => [detail?.nom_vern || "", detail?.nom_valide || ""].join(" "),
+    getSortValue: (detail) =>
+      [detail?.nom_vern || "", detail?.nom_valide || ""].join(" "),
     render: (detail) => (
       <>
         <div>{detail?.nom_vern || detail?.nom_valide || "-"}</div>
@@ -80,8 +86,10 @@ const TaxonDetailComponent = ({
       <SearchResultsTable
         items={details}
         columns={TAXON_COLUMNS}
-        rowKey={(detail, index) => `${detail?.cd_ref || detail?.nom_valide || "detail"}-${index}`}
-        tableClassName="table table-striped table-hover mv-sr-table"
+        rowKey={(detail, index) =>
+          `${detail?.cd_ref || detail?.nom_valide || "detail"}-${index}`
+        }
+        tableClassName="table table-striped table-hover mv-sr-table mv-sr-taxon-table"
         itemLabel="taxons"
         pageSizeOptions={PAGE_SIZE_OPTIONS}
         defaultPageSize={25}
