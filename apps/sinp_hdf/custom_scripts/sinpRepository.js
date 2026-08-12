@@ -39,7 +39,7 @@ window.sinpRepository = (function () {
       : trimmedTypeName;
   };
 
-  const _escapePostViewParams = function (viewParams = "") {
+  const _escapeViewParams = function (viewParams = "") {
     let escapedViewParams = "";
 
     for (let index = 0; index < viewParams.length; index += 1) {
@@ -116,7 +116,7 @@ window.sinpRepository = (function () {
 
       const value =
         key === "VIEWPARAMS"
-          ? _escapePostViewParams(finalParams[key])
+          ? _escapeViewParams(finalParams[key])
           : finalParams[key];
 
       body.append(key, value);
@@ -222,6 +222,7 @@ window.sinpRepository = (function () {
     // Fonctions principales
     buildQueryURL: _buildQueryURL,
     buildPostRequest: _buildPostRequest,
+    escapeViewParams: _escapeViewParams,
     fetchGeoServerData: _fetchGeoServerData,
     fetchGeoServerDataGet: _fetchGeoServerDataGet,
     fetchGeoServerDataPost: _fetchGeoServerDataPost,

@@ -65,12 +65,19 @@ const GlobalFiltersComponent = (
     };
   }, []);
 
-  const [filters, setFilters] = useState(initialFilters || defaultFilters);
+  const initialRestitutionLayerId =
+    initialFilters?.restitutionLayerId || resolveSearchLayerId(activeLayerId);
+  const initialFilterState = {
+    ...(initialFilters || defaultFilters),
+    restitutionLayerId: initialRestitutionLayerId,
+  };
+  const [filters, setFilters] = useState(initialFilterState);
   // Synchronous ref mirror to avoid race between setState and immediate submit
-  const filtersRef = useRef(initialFilters || defaultFilters);
-  const [selectedRestitutionLayerId, setSelectedRestitutionLayerId] = useState(() =>
-    resolveSearchLayerId(activeLayerId)
+  const filtersRef = useRef(initialFilterState);
+  const [selectedRestitutionLayerId, setSelectedRestitutionLayerId] = useState(
+    initialRestitutionLayerId
   );
+  const selectedRestitutionLayerIdRef = useRef(initialRestitutionLayerId);
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
   const lastSubmittedFiltersRef = useRef(null);
 
@@ -96,7 +103,8 @@ const GlobalFiltersComponent = (
 
   useEffect(() => {
     const resolvedLayerId = resolveSearchLayerId(activeLayerId);
-    if (resolvedLayerId) {
+    if (resolvedLayerId && !selectedRestitutionLayerIdRef.current) {
+      selectedRestitutionLayerIdRef.current = resolvedLayerId;
       setSelectedRestitutionLayerId(resolvedLayerId);
     }
   }, [activeLayerId]);
@@ -322,8 +330,8 @@ const GlobalFiltersComponent = (
   }, [buildSubmitParams, onSubmit, onSubmitError]);
 
   const handleSubmit = useCallback(() => {
-    return submitForLayer(selectedRestitutionLayerId);
-  }, [selectedRestitutionLayerId, submitForLayer]);
+    return submitForLayer(selectedRestitutionLayerIdRef.current);
+  }, [submitForLayer]);
 
   const handleRestitutionChange = useCallback(
     async (layerId) => {
@@ -331,20 +339,33 @@ const GlobalFiltersComponent = (
         return;
       }
 
+      selectedRestitutionLayerIdRef.current = layerId;
       setSelectedRestitutionLayerId(layerId);
-      const lastSubmittedFilters = lastSubmittedFiltersRef.current;
+      updateFilters((currentFilters) => ({
+        ...currentFilters,
+        restitutionLayerId: layerId,
+      }));
+      const lastSubmittedFilters = lastSubmittedFiltersRef.current
+        ? {
+            ...lastSubmittedFiltersRef.current,
+            restitutionLayerId: layerId,
+          }
+        : null;
       if (!hasSubmittedSearch || !lastSubmittedFilters) {
         return;
       }
 
       await submitForLayer(layerId, lastSubmittedFilters);
     },
-    [hasSubmittedSearch, selectedRestitutionLayerId, submitForLayer]
+    [hasSubmittedSearch, selectedRestitutionLayerId, submitForLayer, updateFilters]
   );
 
   const handleReset = useCallback(() => {
     console.log("🔄 Réinitialisation des filtres");
-    updateFilters(defaultFilters);
+    updateFilters({
+      ...defaultFilters,
+      restitutionLayerId: selectedRestitutionLayerIdRef.current,
+    });
     setHasSubmittedSearch(false);
     lastSubmittedFiltersRef.current = null;
     if (onReset) {
@@ -376,7 +397,17 @@ const GlobalFiltersComponent = (
         console.log("🔄 Rebinding filters imperatively:", savedFilters);
         if (savedFilters) {
           // Try to recover complete objects from cache
-          let restoredFilters = { ...savedFilters };
+          const restoredRestitutionLayerId =
+            savedFilters.restitutionLayerId || selectedRestitutionLayerIdRef.current;
+          let restoredFilters = {
+            ...savedFilters,
+            restitutionLayerId: restoredRestitutionLayerId,
+          };
+
+          if (restoredRestitutionLayerId) {
+            selectedRestitutionLayerIdRef.current = restoredRestitutionLayerId;
+            setSelectedRestitutionLayerId(restoredRestitutionLayerId);
+          }
 
           if (savedFilters.filteredTaxons && savedFilters.filteredTaxons.length > 0) {
             const taxonIds = savedFilters.filteredTaxons.map((t) =>

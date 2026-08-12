@@ -3,9 +3,14 @@ class SinpBaseCustom {
 
   static MAX_SELECTED_COMMUNES = 5;
 
-  static SEARCH_RESULT_CACHE = new Map();
+  static SEARCH_REFRESH_SEQUENCE = 0;
 
-  static SEARCH_RESULT_REQUESTS = new Map();
+  static ACTIVE_SEARCH_REFRESH = {
+    id: 0,
+    layerId: null,
+  };
+
+  static DEBUG_PREFIX = "[SINP restitution]";
 
   static DEFAULT_PARAMETERS = {
     BASEURL: `${mviewer.env?.[mviewer.env?.CURRENT_ENV]?.GEOSERVER_BASE_URL}/wfs`,
@@ -23,6 +28,14 @@ class SinpBaseCustom {
     "grid10x10search",
     "gridSearch10x10",
   ];
+
+  static SEARCH_TARGET_LOC_CODES = {
+    communeSearch: "2",
+    advancedSearch: "2",
+    gridSearch5x5: "7",
+    grid10x10search: "6",
+    gridSearch10x10: "6",
+  };
 
   constructor(config = {}) {
     this.layerId = config.layerId;
@@ -49,8 +62,6 @@ class SinpBaseCustom {
     );
     this.format = new ol.format.GeoJSON();
     this._lastSearchParams = null;
-    this._dataCache = new Map();
-    this._dataRequests = new Map();
     this._featureInfoRenderToken = 0;
     this._selectionRequestInFlight = false;
     this._searchRequestInFlight = false;
@@ -62,6 +73,78 @@ class SinpBaseCustom {
 
   getLayerInstance() {
     return mviewer.customLayers?.[this.layerId]?._instance || null;
+  }
+
+  static _beginSearchRefresh(layerId) {
+    const refresh = {
+      id: ++this.SEARCH_REFRESH_SEQUENCE,
+      layerId,
+    };
+    this.ACTIVE_SEARCH_REFRESH = refresh;
+    return refresh;
+  }
+
+  static _isCurrentSearchRefresh(refreshId) {
+    return this.ACTIVE_SEARCH_REFRESH.id === refreshId;
+  }
+
+  static _debug(refreshId, event, details = {}) {
+    console.info(
+      `${this.DEBUG_PREFIX}[refresh:${refreshId ?? "none"}] ${event}`,
+      details
+    );
+  }
+
+  static _getRestitutionLayersSnapshot() {
+    const mapLayers = mviewer.getMap?.()?.getLayers?.()?.getArray?.() || [];
+    const uniqueInstances = new Map();
+
+    this.SEARCH_LAYER_IDS.forEach((layerId) => {
+      const instance = mviewer.customLayers?.[layerId]?._instance;
+      if (instance && !uniqueInstances.has(instance)) {
+        uniqueInstances.set(instance, layerId);
+      }
+    });
+
+    return {
+      activeRefresh: { ...this.ACTIVE_SEARCH_REFRESH },
+      restitutions: Array.from(uniqueInstances, ([instance, layerId]) => ({
+        layerId,
+        expectedTargetLocCode: this.SEARCH_TARGET_LOC_CODES[layerId] || null,
+        vectorVisible: instance.layer?.getVisible?.() ?? null,
+        serverRenderExists: Boolean(instance._serverRenderLayer),
+        serverRenderVisible: instance._serverRenderLayer?.getVisible?.() ?? false,
+        serverRenderAttached: mapLayers.includes(instance._serverRenderLayer),
+        serverRenderParams:
+          instance._serverRenderLayer?.getSource?.()?.getParams?.() || null,
+      })),
+      visibleMapLayers: mapLayers
+        .filter((layer) => layer?.getVisible?.())
+        .map((layer) => ({
+          name: layer.get?.("name") || layer.get?.("mviewerid") || "(sans nom)",
+          sourceParams: layer.getSource?.()?.getParams?.() || null,
+        })),
+    };
+  }
+
+  static refreshSearchLayer(layerId, params = {}, options = {}) {
+    const targetControl = mviewer.customControls?.[layerId];
+    if (!targetControl?.submit) {
+      throw new Error(`Contrôle de restitution introuvable pour ${layerId}`);
+    }
+
+    const refresh = this._beginSearchRefresh(layerId);
+    this._debug(refresh.id, "route search", {
+      requestedLayerId: layerId,
+      expectedTargetLocCode: this.SEARCH_TARGET_LOC_CODES[layerId] || null,
+      availableControl: Boolean(targetControl),
+      inputParams: params,
+      previousMapState: this._getRestitutionLayersSnapshot(),
+    });
+    return targetControl.submit(params, {
+      ...options,
+      searchRefreshId: refresh.id,
+    });
   }
 
   _activateSearchLayer(queryOptions = {}) {
@@ -84,21 +167,25 @@ class SinpBaseCustom {
     }
   }
 
-  _clearOtherSearchLayers() {
-    const currentLayerInstance = this.getLayerInstance();
-
+  _clearSearchLayersForRefresh(refreshId = null) {
+    this.constructor._debug(refreshId, "clear restitutions: before", {
+      requestedLayerId: this.layerId,
+      mapState: this.constructor._getRestitutionLayersSnapshot(),
+    });
+    const clearedInstances = new Set();
     this.constructor.SEARCH_LAYER_IDS.forEach((layerId) => {
-      if (layerId === this.layerId) {
-        return;
-      }
-
       const layerInstance = mviewer.customLayers?.[layerId]?._instance;
-      if (!layerInstance || layerInstance === currentLayerInstance) {
+      if (!layerInstance || clearedInstances.has(layerInstance)) {
         return;
       }
 
+      clearedInstances.add(layerInstance);
       layerInstance.clear?.();
       this._removeSearchLayerFromLegend(layerId);
+    });
+    this.constructor._debug(refreshId, "clear restitutions: after", {
+      requestedLayerId: this.layerId,
+      mapState: this.constructor._getRestitutionLayersSnapshot(),
     });
   }
 
@@ -133,10 +220,24 @@ class SinpBaseCustom {
   _showSearchLayerLegend(queryOptions = {}) {
     const layerConfig = mviewer.getLayer?.(this.layerId);
     const layerInstance = this.getLayerInstance();
+    const refreshId = queryOptions.SINP_REFRESH || null;
 
     layerInstance?.attachLegacyConfig?.(layerConfig, queryOptions);
+    this.constructor._debug(refreshId, "prepare legend", {
+      layerId: this.layerId,
+      layerName: layerConfig?.layername,
+      style: layerConfig?.style || "(style GeoServer par défaut)",
+      legendUrl: layerConfig?.legendurl,
+      viewParams: queryOptions.VIEWPARAMS,
+      targetLocCode: this._getResolvedTargetLocCode(this._lastSearchParams || {}),
+    });
 
     if (!layerConfig?.showintoc || typeof mviewer.addLayer !== "function") {
+      this.constructor._debug(refreshId, "legend not added", {
+        layerId: this.layerId,
+        showInToc: layerConfig?.showintoc,
+        addLayerAvailable: typeof mviewer.addLayer === "function",
+      });
       return;
     }
 
@@ -146,6 +247,13 @@ class SinpBaseCustom {
     if (!legendItem.length) {
       mviewer.addLayer(layerConfig);
     }
+    this.constructor._debug(refreshId, "legend ready", {
+      layerId: this.layerId,
+      legendPresent: Boolean(
+        $(`#layers-container .list-group-item[data-layerid="${this.layerId}"]`).length
+      ),
+      mapState: this.constructor._getRestitutionLayersSnapshot(),
+    });
   }
 
   _buildQueryURL(options = {}) {
@@ -269,92 +377,6 @@ class SinpBaseCustom {
     }, 0);
   }
 
-  _resetDataCache() {
-    this._dataCache.clear();
-    this._dataRequests.clear();
-  }
-
-  _normalizeCacheValue(value) {
-    if (Array.isArray(value)) {
-      return value
-        .map((item) => this._normalizeCacheValue(item))
-        .sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right)));
-    }
-
-    if (value && typeof value === "object") {
-      return Object.keys(value)
-        .sort()
-        .reduce((accumulator, key) => {
-          if (key === "forceRefresh" || key === "__forceRefresh") {
-            return accumulator;
-          }
-
-          accumulator[key] = this._normalizeCacheValue(value[key]);
-          return accumulator;
-        }, {});
-    }
-
-    return value;
-  }
-
-  _getSearchResultCacheKey(params = {}, mainOptions = {}) {
-    return JSON.stringify({
-      layerId: this.layerId,
-      typeName: mainOptions?.TYPENAME || this.mainTypeName || "",
-      viewParams: mainOptions?.VIEWPARAMS || "",
-      cqlFilter: mainOptions?.CQL_FILTER || "",
-      params: this._normalizeCacheValue(params),
-    });
-  }
-
-  _shouldForceSearchRefresh(params = {}, options = {}) {
-    return (
-      options.forceRefresh === true ||
-      params.forceRefresh === true ||
-      params.__forceRefresh === true
-    );
-  }
-
-  _getCachedSearchResult(cacheKey, forceRefresh = false) {
-    if (!cacheKey || forceRefresh) {
-      return null;
-    }
-
-    return this.constructor.SEARCH_RESULT_CACHE.get(cacheKey) || null;
-  }
-
-  _setCachedSearchResult(cacheKey, result) {
-    if (!cacheKey) {
-      return;
-    }
-
-    this.constructor.SEARCH_RESULT_CACHE.set(cacheKey, result);
-  }
-
-  _getSearchResultRequest(cacheKey, forceRefresh = false) {
-    if (!cacheKey || forceRefresh) {
-      return null;
-    }
-
-    return this.constructor.SEARCH_RESULT_REQUESTS.get(cacheKey) || null;
-  }
-
-  _setSearchResultRequest(cacheKey, request) {
-    if (!cacheKey) {
-      return;
-    }
-
-    this.constructor.SEARCH_RESULT_REQUESTS.set(cacheKey, request);
-  }
-
-  _clearSearchResultRequest(cacheKey) {
-    if (!cacheKey) {
-      return;
-    }
-
-    this.constructor.SEARCH_RESULT_REQUESTS.delete(cacheKey);
-  }
-
   _setLastResultFeatures(features = []) {
     this._lastResultFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
   }
@@ -363,58 +385,15 @@ class SinpBaseCustom {
     return this._lastResultFeatures;
   }
 
-  _getDataRequestCacheKey(params = {}, typeName) {
-    if (!typeName) {
-      return null;
-    }
-
-    const options = this.buildRequestOptions(params, typeName);
-    return JSON.stringify({
-      typeName,
-      viewParams: options?.VIEWPARAMS || "",
-      cqlFilter: options?.CQL_FILTER || "",
-    });
-  }
-
-  async _fetchPropertiesWithCache(params, typeName) {
+  async _fetchProperties(params, typeName) {
     if (!typeName) {
       return [];
     }
 
-    const cacheKey = this._getDataRequestCacheKey(params, typeName);
-
-    if (cacheKey && this._dataCache.has(cacheKey)) {
-      return this._dataCache.get(cacheKey);
-    }
-
-    if (cacheKey && this._dataRequests.has(cacheKey)) {
-      return this._dataRequests.get(cacheKey);
-    }
-
-    const request = this.fetchGeoServerData(this.buildRequestOptions(params, typeName))
-      .then((data) => {
-        const properties =
-          data?.features?.map((feature) => feature.properties || {}) || [];
-
-        if (cacheKey) {
-          this._dataCache.set(cacheKey, properties);
-          this._dataRequests.delete(cacheKey);
-        }
-
-        return properties;
-      })
-      .catch((error) => {
-        if (cacheKey) {
-          this._dataRequests.delete(cacheKey);
-        }
-        throw error;
-      });
-
-    if (cacheKey) {
-      this._dataRequests.set(cacheKey, request);
-    }
-
-    return request;
+    const data = await this.fetchGeoServerData(
+      this.buildRequestOptions(params, typeName)
+    );
+    return data?.features?.map((feature) => feature.properties || {}) || [];
   }
 
   _setBlockingSearchOverlayVisible(visible, options = {}) {
@@ -868,11 +847,11 @@ class SinpBaseCustom {
   }
 
   async _loadDetailProperties(params, typeName = this.detailsTypeName) {
-    return this._fetchPropertiesWithCache(params, typeName);
+    return this._fetchProperties(params, typeName);
   }
 
   async _loadMetadataProperties(params, typeName = this.metadataTypeName) {
-    return this._fetchPropertiesWithCache(params, typeName);
+    return this._fetchProperties(params, typeName);
   }
 
   _buildMetadataRequestParams(features = [], params = this._lastSearchParams || {}) {
@@ -1184,7 +1163,8 @@ class SinpBaseCustom {
 
     window.reactComponentManager.openFilterModal({
       activeLayerId: this.layerId,
-      onSubmit: (params) => this.submit(params),
+      onSubmit: (params, layerId = this.layerId) =>
+        SinpBaseCustom.refreshSearchLayer(layerId, params),
       ...options,
     });
   }
@@ -1342,47 +1322,19 @@ class SinpBaseCustom {
       layerInstance?.typeName
     );
     const mainOptions = this.buildRequestOptions(normalizedParams, mainTypeName);
-    const forceRefresh = this._shouldForceSearchRefresh(params, options);
-    const cacheKey = this._getSearchResultCacheKey(normalizedParams, mainOptions);
-    const cachedResult = this._getCachedSearchResult(cacheKey, forceRefresh);
+    const mainData = await this.fetchGeoServerData(mainOptions);
+    const mainFeatures = this.format.readFeatures(
+      mainData || { type: "FeatureCollection", features: [] }
+    );
+    const enrichedFeatures =
+      mainFeatures.length > 0
+        ? await this._enrichMainFeatures(mainFeatures, normalizedParams)
+        : [];
 
-    if (cachedResult) {
-      return cachedResult;
-    }
-
-    const pendingRequest = this._getSearchResultRequest(cacheKey, forceRefresh);
-    if (pendingRequest) {
-      return pendingRequest;
-    }
-
-    const request = (async () => {
-      const mainDataPromise = this.fetchGeoServerData(mainOptions);
-      const mainData = await mainDataPromise;
-      const mainFeatures = this.format.readFeatures(
-        mainData || { type: "FeatureCollection", features: [] }
-      );
-      const enrichedFeatures =
-        mainFeatures.length > 0
-          ? await this._enrichMainFeatures(mainFeatures, normalizedParams)
-          : [];
-      const result = {
-        mainData,
-        features: enrichedFeatures,
-      };
-
-      this._setCachedSearchResult(cacheKey, result);
-      return result;
-    })()
-      .catch((error) => {
-        this._clearSearchResultRequest(cacheKey);
-        throw error;
-      })
-      .finally(() => {
-        this._clearSearchResultRequest(cacheKey);
-      });
-
-    this._setSearchResultRequest(cacheKey, request);
-    return request;
+    return {
+      mainData,
+      features: enrichedFeatures,
+    };
   }
 
   async submit(params = {}, options = {}) {
@@ -1391,26 +1343,67 @@ class SinpBaseCustom {
       throw new Error(`Layer introuvable pour ${this.layerId}`);
     }
 
+    const refreshId =
+      options.searchRefreshId ||
+      SinpBaseCustom._beginSearchRefresh(this.layerId).id;
+    this._clearSearchLayersForRefresh(refreshId);
     const normalizedParams = this._normalizeInputParams(params);
     const mainTypeName = this._resolveRequestTypeName(
       this.mainTypeName,
       layerInstance?.typeName
     );
     const mainOptions = this.buildRequestOptions(normalizedParams, mainTypeName);
+    mainOptions.SINP_REFRESH = refreshId;
     const useSearchLoader = true;
+    this.constructor._debug(refreshId, "submit normalized", {
+      controlLayerId: this.layerId,
+      instanceLayerId: layerInstance.layerId,
+      targetLocCode: normalizedParams.targetLocCode,
+      expectedTargetLocCode:
+        this.constructor.SEARCH_TARGET_LOC_CODES[this.layerId] || null,
+      typeName: mainOptions.TYPENAME,
+      viewParams: mainOptions.VIEWPARAMS,
+      wmsRefreshParam: mainOptions.SINP_REFRESH,
+    });
+    const expectedTargetLocCode =
+      this.constructor.SEARCH_TARGET_LOC_CODES[this.layerId] || null;
+    if (
+      expectedTargetLocCode &&
+      String(normalizedParams.targetLocCode) !== expectedTargetLocCode
+    ) {
+      console.error(
+        `${this.constructor.DEBUG_PREFIX}[refresh:${refreshId}] TARGET_LOC_CODE incohérent`,
+        {
+          layerId: this.layerId,
+          expectedTargetLocCode,
+          actualTargetLocCode: normalizedParams.targetLocCode,
+          viewParams: mainOptions.VIEWPARAMS,
+        }
+      );
+    }
 
     try {
+      this._activeSearchRefreshId = refreshId;
       this._searchRequestInFlight = true;
       this._lastSearchParams = normalizedParams;
       this._setLastResultFeatures([]);
       this._setBlockingSearchOverlayVisible(useSearchLoader);
-      this._clearOtherSearchLayers();
       if (layerInstance.serverRenderOnly) {
-        this._removeSearchLayerFromLegend(this.layerId);
         layerInstance.beforeLoad();
         this._prepareServerRenderLayer(layerInstance, mainOptions);
         layerInstance.fitToDefaultSearchExtent?.();
         await layerInstance.renderServerOnly(mainOptions);
+        this.constructor._debug(refreshId, "WMS render completed", {
+          layerId: this.layerId,
+          isCurrentRefresh: SinpBaseCustom._isCurrentSearchRefresh(refreshId),
+          mapState: this.constructor._getRestitutionLayersSnapshot(),
+        });
+        if (!SinpBaseCustom._isCurrentSearchRefresh(refreshId)) {
+          if (SinpBaseCustom.ACTIVE_SEARCH_REFRESH.layerId !== this.layerId) {
+            layerInstance.clear();
+          }
+          return undefined;
+        }
         this._showSearchLayerLegend(mainOptions);
         return undefined;
       } else {
@@ -1419,6 +1412,12 @@ class SinpBaseCustom {
       layerInstance.beforeLoad();
 
       const result = await this._loadSearchResultInMemory(normalizedParams, options);
+      if (!SinpBaseCustom._isCurrentSearchRefresh(refreshId)) {
+        if (SinpBaseCustom.ACTIVE_SEARCH_REFRESH.layerId !== this.layerId) {
+          layerInstance.clear();
+        }
+        return result.mainData;
+      }
       return this._renderSearchResult(
         layerInstance,
         result.features,
@@ -1426,14 +1425,31 @@ class SinpBaseCustom {
         result.mainData
       );
     } catch (error) {
+      if (!SinpBaseCustom._isCurrentSearchRefresh(refreshId)) {
+        return undefined;
+      }
       console.error(`[${this.layerId}] Error during search:`, error);
       layerInstance.clear();
       throw error;
     } finally {
-      this._searchRequestInFlight = false;
+      if (this._activeSearchRefreshId === refreshId) {
+        this._searchRequestInFlight = false;
+      }
       if (useSearchLoader) {
         this._setBlockingSearchOverlayVisible(false);
       }
+      this.constructor._debug(refreshId, "submit finished", {
+        layerId: this.layerId,
+        isCurrentRefresh: SinpBaseCustom._isCurrentSearchRefresh(refreshId),
+        mapState: this.constructor._getRestitutionLayersSnapshot(),
+      });
     }
   }
 }
+
+window.sinpRestitutionDebug = () => {
+  const snapshot = SinpBaseCustom._getRestitutionLayersSnapshot();
+  console.info(`${SinpBaseCustom.DEBUG_PREFIX} diagnostic manuel`, snapshot);
+  console.table(snapshot.restitutions);
+  return snapshot;
+};

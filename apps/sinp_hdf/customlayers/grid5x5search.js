@@ -32,7 +32,7 @@ mviewer.customLayers.gridSearch5x5 = (function () {
     layer: instance.getLayer(),
     handle: false,
     get_datas: function (params, options) {
-      return mviewer.customControls.gridSearch5x5.submit(params, options);
+      return SinpBaseCustom.refreshSearchLayer("gridSearch5x5", params, options);
     },
     _instance: instance,
   };

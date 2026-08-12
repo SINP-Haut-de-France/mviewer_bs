@@ -38,7 +38,7 @@ mviewer.customLayers.communeSearch = (function () {
     layer: instance.getLayer(),
     handle: false,
     get_datas: function (params, options) {
-      return mviewer.customControls.communeSearch.submit(params, options);
+      return SinpBaseCustom.refreshSearchLayer("communeSearch", params, options);
     },
     _instance: instance,
   };

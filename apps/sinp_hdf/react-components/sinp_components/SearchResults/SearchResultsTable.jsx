@@ -84,7 +84,7 @@ const SearchResultsTable = ({
   }, [displayMode, expandedGroupKey, groupedItems]);
 
   const visibleRowCount = useMemo(() => {
-    if (selectionPrompt || loadingState || errorMessage) {
+    if (selectionPrompt || loadingState || errorMessage || !items.length) {
       return 1;
     }
 
@@ -99,6 +99,7 @@ const SearchResultsTable = ({
     selectionPrompt,
     loadingState,
     errorMessage,
+    items.length,
     displayMode,
     groupedItems,
     expandedGroupKey,
@@ -143,10 +144,6 @@ const SearchResultsTable = ({
       ))}
     </tr>
   );
-
-  if (!items.length && !selectionPrompt && !loadingState && !errorMessage) {
-    return <p className="mv-sr-empty">{emptyMessage}</p>;
-  }
 
   return (
     <div className="mv-sr-section">
@@ -270,7 +267,7 @@ const SearchResultsTable = ({
             </tr>
           </thead>
 
-          {selectionPrompt || loadingState || errorMessage ? (
+          {selectionPrompt || loadingState || errorMessage || !items.length ? (
             <tbody>
               <tr>
                 <td colSpan={visibleColumns.length} className={loadingState ? "mv-sr-loading-row" : "mv-sr-empty-row"}>
@@ -281,8 +278,10 @@ const SearchResultsTable = ({
                     </div>
                   ) : selectionPrompt ? (
                     selectionPromptMessage
-                  ) : (
+                  ) : errorMessage ? (
                     errorMessage
+                  ) : (
+                    emptyMessage
                   )}
                 </td>
               </tr>

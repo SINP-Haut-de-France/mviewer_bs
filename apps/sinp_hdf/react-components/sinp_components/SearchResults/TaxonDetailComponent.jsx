@@ -9,23 +9,13 @@ const PAGE_SIZE_OPTIONS = [
   { value: "all", label: "Tous" },
 ];
 
-const getTaxonomicGroupLabel = (detail = {}) => {
-  return (
-    detail?.group2_inpn ||
-    detail?.group1_inpn ||
-    detail?.group3_inpn ||
-    detail?.groupe_taxo ||
-    "-"
-  );
-};
-
 const TAXON_COLUMNS = [
   {
     id: "taxonomicGroup",
     label: "Groupe taxonomique",
     sortable: true,
     sortType: "string",
-    getValue: (detail) => getTaxonomicGroupLabel(detail),
+    getValue: (detail) => detail?.groupe_taxo,
   },
   {
     id: "observedSpecies",
@@ -67,10 +57,6 @@ const TaxonDetailComponent = ({
   loadingState = false,
   errorMessage = "",
 }) => {
-  if (!details.length && !selectionPrompt && !loadingState && !errorMessage) {
-    return <p className="mv-sr-empty">Aucune observation détaillée disponible.</p>;
-  }
-
   return (
     <div className="mv-sr-section">
       {!selectionPrompt && selectionSummary ? (
@@ -103,7 +89,7 @@ const TaxonDetailComponent = ({
           columnId: "taxonomicGroup",
           label: "groupe taxonomique",
           toggleLabel: "Regrouper par groupe taxonomique",
-          getValue: (detail) => getTaxonomicGroupLabel(detail),
+          getValue: (detail) => detail.groupe_taxo,
           emptyLabel: "Groupe non renseigné",
         }}
       />

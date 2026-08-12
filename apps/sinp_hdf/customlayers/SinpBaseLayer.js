@@ -337,6 +337,31 @@ class SinpBaseLayer {
     return renderLayer;
   }
 
+  _debugServerRender(event, details = {}, refreshId = null) {
+    const mapLayers = mviewer.getMap?.()?.getLayers?.()?.getArray?.() || [];
+    console.info(
+      `[SINP restitution][refresh:${refreshId ?? "none"}][${this.layerId}] ${event}`,
+      {
+        targetLayerId: this.layerId,
+        vectorVisible: this.layer?.getVisible?.() ?? null,
+        serverRenderExists: Boolean(this._serverRenderLayer),
+        serverRenderVisible: this._serverRenderLayer?.getVisible?.() ?? false,
+        serverRenderAttached: mapLayers.includes(this._serverRenderLayer),
+        visibleRestitutionLayers: mapLayers
+          .filter(
+            (layer) =>
+              layer?.getVisible?.() &&
+              String(layer.get?.("name") || "").endsWith("-server-render")
+          )
+          .map((layer) => ({
+            name: layer.get("name"),
+            params: layer.getSource?.()?.getParams?.() || null,
+          })),
+        ...details,
+      }
+    );
+  }
+
   _attachServerRenderLoader(source) {
     if (!source?.on || source.get?.("sinpServerRenderLoaderAttached")) {
       return;
@@ -344,12 +369,21 @@ class SinpBaseLayer {
 
     source.set?.("sinpServerRenderLoaderAttached", true);
     source.on("imageloadstart", () => {
+      this._debugServerRender("WMS image load start", {
+        sourceParams: source.getParams?.() || null,
+      }, source.getParams?.()?.SINP_REFRESH);
       SinpBaseLayer._startServerRenderLoad();
     });
     source.on("imageloadend", () => {
+      this._debugServerRender("WMS image load end", {
+        sourceParams: source.getParams?.() || null,
+      }, source.getParams?.()?.SINP_REFRESH);
       SinpBaseLayer._finishServerRenderLoad();
     });
     source.on("imageloaderror", () => {
+      this._debugServerRender("WMS image load error", {
+        sourceParams: source.getParams?.() || null,
+      }, source.getParams?.()?.SINP_REFRESH);
       SinpBaseLayer._finishServerRenderLoad();
     });
   }
@@ -385,6 +419,14 @@ class SinpBaseLayer {
     return queryString ? `${url}${separator}${queryString}` : url;
   }
 
+  _escapeViewParams(viewParams = "") {
+    if (window.sinpRepository?.escapeViewParams) {
+      return window.sinpRepository.escapeViewParams(viewParams);
+    }
+
+    return String(viewParams).replace(/(^|[^\\]),/g, "$1\\,");
+  }
+
   _buildServerLegendUrl(queryOptions = {}) {
     const serverStyleContext = this._getServerStyleContext();
     if (!serverStyleContext) {
@@ -410,7 +452,7 @@ class SinpBaseLayer {
     }
 
     if (queryOptions?.VIEWPARAMS) {
-      params.VIEWPARAMS = queryOptions.VIEWPARAMS;
+      params.VIEWPARAMS = this._escapeViewParams(queryOptions.VIEWPARAMS);
     }
 
     if (queryOptions?.CQL_FILTER) {
@@ -461,12 +503,26 @@ class SinpBaseLayer {
 
     Object.assign(config, legendConfig);
     this._refreshLegacyLegend(config);
+    this._debugServerRender(
+      "legacy layer and legend configured",
+      {
+        layerName: legendConfig.layername,
+        style: legendConfig.style || "(style GeoServer par défaut)",
+        legendUrl: legendConfig.legendurl,
+        viewParams: queryOptions.VIEWPARAMS || null,
+      },
+      queryOptions.SINP_REFRESH
+    );
     return config;
   }
 
   _ensureServerRenderLayer() {
-    if (!this._serverRenderLayer) {
+    if (!this.serverStyle?.enabled) {
       return;
+    }
+
+    if (!this._serverRenderLayer) {
+      this._serverRenderLayer = this._createServerRenderLayer();
     }
 
     const map = mviewer.getMap();
@@ -480,6 +536,25 @@ class SinpBaseLayer {
     }
 
     this._syncServerRenderLayerState();
+  }
+
+  _discardServerRenderLayer() {
+    const renderLayer = this._serverRenderLayer;
+    if (!renderLayer) {
+      return;
+    }
+
+    const previousParams = renderLayer.getSource?.()?.getParams?.() || null;
+    this._debugServerRender("discard WMS layer: before", {
+      previousParams,
+    }, previousParams?.SINP_REFRESH);
+    renderLayer.setVisible?.(false);
+    mviewer.getMap?.()?.removeLayer?.(renderLayer);
+    renderLayer.setSource?.(null);
+    this._serverRenderLayer = null;
+    this._debugServerRender("discard WMS layer: after", {
+      previousParams,
+    }, previousParams?.SINP_REFRESH);
   }
 
   _ensureSelectionLayer() {
@@ -606,12 +681,13 @@ class SinpBaseLayer {
   }
 
   _updateServerRenderLayer(queryOptions = {}, hasFeatures = false) {
+    this._ensureServerRenderLayer();
+
     if (!this._serverRenderLayer) {
       this._pendingServerRenderPromise = Promise.resolve();
       return this._pendingServerRenderPromise;
     }
 
-    this._ensureServerRenderLayer();
     this.attachLegacyConfig(this.config, queryOptions);
 
     if (!hasFeatures) {
@@ -634,13 +710,30 @@ class SinpBaseLayer {
     }
 
     if (queryOptions?.VIEWPARAMS) {
-      params.VIEWPARAMS = queryOptions.VIEWPARAMS;
+      params.VIEWPARAMS = this._escapeViewParams(queryOptions.VIEWPARAMS);
     }
 
     if (queryOptions?.CQL_FILTER) {
       params.CQL_FILTER = queryOptions.CQL_FILTER;
     }
 
+    if (queryOptions?.SINP_REFRESH) {
+      params.SINP_REFRESH = queryOptions.SINP_REFRESH;
+    }
+
+    this._debugServerRender(
+      "apply WMS rendering",
+      {
+        requestedParams: params,
+        targetLocCode:
+          String(queryOptions?.VIEWPARAMS || "").match(
+            /(?:^|;)TARGET_LOC_CODE:([^;]+)/
+          )?.[1] || null,
+        style: params.STYLES || "(style GeoServer par défaut)",
+        legendUrl: this._buildServerLegendUrl(queryOptions),
+      },
+      queryOptions.SINP_REFRESH
+    );
     this._refreshLegacyLegend({
       legendurl: this._buildServerLegendUrl(queryOptions),
     });
@@ -651,6 +744,14 @@ class SinpBaseLayer {
       () => {
         this._serverRenderLayer.getSource().updateParams(params);
         this._serverRenderLayer.getSource().refresh();
+        this._debugServerRender(
+          "WMS source refreshed",
+          {
+            effectiveParams:
+              this._serverRenderLayer.getSource().getParams?.() || null,
+          },
+          queryOptions.SINP_REFRESH
+        );
       }
     );
 
@@ -1006,10 +1107,8 @@ class SinpBaseLayer {
     this._clearSelectedFeatures();
     this.layer?.getSource()?.clear();
     this._pendingServerRenderPromise = Promise.resolve();
-    if (this._serverRenderLayer) {
-      this._serverStyleActive = false;
-      this._syncServerRenderLayerState();
-    }
+    this._serverStyleActive = false;
+    this._discardServerRenderLayer();
   }
 
   getLayer() {
@@ -1021,10 +1120,6 @@ class SinpBaseLayer {
     if (this._selectionLayer) {
       mviewer.getMap()?.removeLayer(this._selectionLayer);
       this._selectionLayer = null;
-    }
-    if (this._serverRenderLayer) {
-      mviewer.getMap()?.removeLayer(this._serverRenderLayer);
-      this._serverRenderLayer = null;
     }
     this.layer = null;
   }

@@ -35,7 +35,7 @@ mviewer.customLayers.grid10x10search = (function () {
     layer: instance.getLayer(),
     handle: false,
     get_datas: function (params, options) {
-      return mviewer.customControls.grid10x10search.submit(params, options);
+      return SinpBaseCustom.refreshSearchLayer("grid10x10search", params, options);
     },
     _instance: instance,
   };
