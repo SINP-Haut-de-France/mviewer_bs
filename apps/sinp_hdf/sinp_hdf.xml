@@ -83,7 +83,9 @@
 					id="Patrinat_RNN_France"
 					visible="false"
 					name="RNN"
-					queryable="false"
+					queryable="true"
+					infoformat="application/vnd.ogc.gml"
+					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
 				</layer>
@@ -91,7 +93,9 @@
 					id="Patrinat_RNR_France"
 					visible="false"
 					name="RNR"
-					queryable="false"
+					queryable="true"
+					infoformat="application/vnd.ogc.gml"
+					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
 				</layer>
@@ -99,7 +103,9 @@
 					id="Patrinat_SIC_France"
 					visible="false"
 					name="Natura 2000 - ZSC"
-					queryable="false"
+					queryable="true"
+					infoformat="application/vnd.ogc.gml"
+					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
 				</layer>
@@ -107,7 +113,9 @@
 					id="Patrinat_ZPS_France"
 					visible="false"
 					name="Natura 2000 - ZPS"
-					queryable="false"
+					queryable="true"
+					infoformat="application/vnd.ogc.gml"
+					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
 				</layer>
@@ -125,7 +133,9 @@
 					id="Patrinat_ZNIEFF1_France"
 					visible="false"
 					name="ZNIEFF 1 Terrestre"
-					queryable="false"
+					queryable="true"
+					infoformat="application/vnd.ogc.gml"
+					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
 				</layer>
@@ -133,7 +143,9 @@
 					id="Patrinat_ZNIEFF2_France"
 					visible="false"
 					name="ZNIEFF 2 Terrestre"
-					queryable="false"
+					queryable="true"
+					infoformat="application/vnd.ogc.gml"
+					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
 				</layer>

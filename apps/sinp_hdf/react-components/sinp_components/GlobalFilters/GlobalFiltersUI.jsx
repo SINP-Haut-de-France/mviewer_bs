@@ -30,8 +30,6 @@ const GlobalFiltersUI = ({
   selectedRestitutionLayerId = null,
   onRestitutionChange = null,
 }) => {
-  const hasSelectedTaxons = (filters.filteredTaxons || []).length > 0;
-  const hasSelectedGroupes = (filters.filteredGroupes || []).length > 0;
   const selectedTaxonFilterCount =
     (filters.filteredTaxons || []).length + (filters.filteredGroupes || []).length;
 
@@ -80,14 +78,8 @@ const GlobalFiltersUI = ({
                         label={(node) => node.name}
                         childrenKey="children"
                         title=""
-                        disabled={hasSelectedTaxons}
                         onSelectionChange={handleGrpChange}
                       />
-                      {hasSelectedTaxons && (
-                        <small className="text-muted">
-                          Désélectionnez les espèces pour filtrer par groupe taxonomique.
-                        </small>
-                      )}
                     </>
                   );
                 }}
@@ -107,7 +99,8 @@ const GlobalFiltersUI = ({
                 lazyloading={true}
                 minCharacters={2}
                 queryParams={{ maxFeatures: 10 }}
-                searchUrlBuilder={(query, params) => {
+                searchDependencies={filters.filteredGroupes || []}
+                searchUrlBuilder={(query, params, selectedGroupIds) => {
                   const baseURL = `${
                     mviewer.env?.[mviewer.env?.CURRENT_ENV]?.GEOSERVER_BASE_URL
                   }/wfs`;
@@ -115,9 +108,16 @@ const GlobalFiltersUI = ({
                   const encodedFilter = encodeURIComponent(
                     `search_field ILIKE '%${query}%'`
                   );
+                  const groupIds = (selectedGroupIds || []).filter(
+                    (groupId) => groupId !== null && groupId !== undefined
+                  );
+                  const viewParams = `&VIEWPARAMS=${encodeURIComponent(
+                    `GROUP_IDS:${groupIds.length > 0 ? groupIds.join("|") : "0"}`
+                  )}`;
+
                   return `${baseURL}?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=${typeName}&CQL_FILTER=${encodedFilter}&outputFormat=json&${new URLSearchParams(
                     params
-                  ).toString()}`;
+                  ).toString()}${viewParams}`;
                 }}>
                 {({ data: taxons, loading, error, setQuery }) => (
                   <>
@@ -138,18 +138,11 @@ const GlobalFiltersUI = ({
                       minCharacters={3}
                       maxResults={200}
                       multiselect={true}
-                      disabled={hasSelectedGroupes}
                       onChange={handleTaxChange}
                       onSearch={setQuery}
                       loading={loading}
                       error={error}
                     />
-                    {hasSelectedGroupes && (
-                      <small className="text-muted">
-                        Désélectionnez les groupes taxonomiques pour rechercher par
-                        espèce.
-                      </small>
-                    )}
                   </>
                 )}
               </Datasource>
