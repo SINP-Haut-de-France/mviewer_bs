@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import MultiSelectSearchUI from "./MultiSelectSearchComponentUI";
 import useWFSCache from "../../hooks/useWFSCache";
 
@@ -33,9 +33,6 @@ const MultiSelectSearchComponent = ({
   // Initialize cache hook if cacheKey is provided
   const cache = cacheKey ? useWFSCache(cacheKey, returnValueKey) : null;
 
-  // Ref pour éviter les réinitialisations multiples
-  const isSelectingRef = useRef(false);
-
   // Modifie l'état local `search` lors d'une saisie utilisateur
   const handleSearchChange = (value) => {
     if (disabled) return;
@@ -45,85 +42,58 @@ const MultiSelectSearchComponent = ({
     onSearch(value);
   };
 
-  // Initialiser les éléments déjà sélectionnés
-  // Se déclenche si selectedValues change, même si datasource n'a pas de données
-  // (pour permettre le rebind du cache même avant que WFS charge)
+  // Synchroniser les objets sélectionnés sans perdre ceux qui ne figurent pas
+  // dans la dernière page de résultats d'une datasource dynamique.
   useEffect(() => {
-    // Ne pas réinitialiser si on est en train de sélectionner
-    if (isSelectingRef.current) {
-      return;
-    }
+    const normalizedValues = Array.isArray(selectedValues)
+      ? selectedValues
+      : selectedValues
+      ? [selectedValues]
+      : [];
 
-    if (
-      !selectedValues ||
-      (Array.isArray(selectedValues) && selectedValues.length === 0)
-    ) {
+    if (normalizedValues.length === 0) {
       setSelected([]);
       return;
     }
 
-    // Normalize selectedValues: extract IDs if they are complete objects
-    // (when restoring from cache, selectedValues might be full objects)
-    const valuesArray = (
-      Array.isArray(selectedValues) ? selectedValues : [selectedValues]
-    ).map((val) => (typeof val === "object" && val !== null ? val[returnValueKey] : val));
-
-    // If we have complete objects in selectedValues (from cache), use them directly
-    // This allows rebinding before/without WFS datasource loading
-    if (
-      selectedValues &&
-      typeof selectedValues[0] === "object" &&
-      selectedValues[0][returnValueKey]
-    ) {
-      console.log(
-        "🔄 Using complete objects from selectedValues (cache):",
-        selectedValues
+    setSelected((currentSelected) => {
+      const currentItems = new Map(
+        currentSelected.map((item) => [item[returnValueKey], item])
       );
-      setSelected(selectedValues);
-      return;
-    }
-
-    // Otherwise, try to match against datasource
-    if (!datasource || datasource.length === 0) {
-      return;
-    }
-
-    const selectedItems = datasource.filter((item) =>
-      valuesArray.includes(item[returnValueKey])
-    );
-
-    // Mettre à jour seulement si les items ont changé
-    if (JSON.stringify(selectedItems) !== JSON.stringify(selected)) {
-      setSelected(selectedItems);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedValues, returnValueKey]); // datasource et selected exclus intentionnellement pour éviter boucle infinie
-
-  // Synchroniser selected quand datasource change ET qu'il y a des selectedValues
-  useEffect(() => {
-    if (isSelectingRef.current) return;
-
-    if (
-      selectedValues &&
-      selectedValues.length > 0 &&
-      datasource &&
-      datasource.length > 0
-    ) {
-      // Normalize: extract IDs from objects if needed
-      const valuesArray = (
-        Array.isArray(selectedValues) ? selectedValues : [selectedValues]
-      ).map((val) =>
-        typeof val === "object" && val !== null ? val[returnValueKey] : val
+      const datasourceItems = new Map(
+        (datasource || []).map((item) => [item[returnValueKey], item])
       );
-      const selectedItems = datasource.filter((item) =>
-        valuesArray.includes(item[returnValueKey])
+      const providedItems = new Map(
+        normalizedValues
+          .filter((value) => typeof value === "object" && value !== null)
+          .map((item) => [item[returnValueKey], item])
       );
 
-      // Seulement mettre à jour si on a trouvé des correspondances
-      if (selectedItems.length > 0) {
-        setSelected(selectedItems);
+      const nextSelected = normalizedValues
+        .map((value) => {
+          const itemValue =
+            typeof value === "object" && value !== null
+              ? value[returnValueKey]
+              : value;
+
+          return (
+            providedItems.get(itemValue) ||
+            currentItems.get(itemValue) ||
+            datasourceItems.get(itemValue)
+          );
+        })
+        .filter(Boolean);
+
+      const selectionIsUnchanged =
+        nextSelected.length === currentSelected.length &&
+        nextSelected.every((item, index) => item === currentSelected[index]);
+
+      if (selectionIsUnchanged) {
+        return currentSelected;
       }
-    }
+
+      return nextSelected;
+    });
   }, [datasource, selectedValues, returnValueKey]);
 
   // Filtrer les données selon données parents
@@ -221,8 +191,6 @@ const MultiSelectSearchComponent = ({
   const handleSelect = (item) => {
     if (disabled) return;
 
-    isSelectingRef.current = true; // Indiquer qu'on est en train de sélectionner
-
     let newSelected;
     let newlyAdded = []; // Track newly added items for caching
 
@@ -239,7 +207,6 @@ const MultiSelectSearchComponent = ({
             }.`
           );
         }
-        isSelectingRef.current = false;
         return;
       }
 
@@ -248,7 +215,6 @@ const MultiSelectSearchComponent = ({
         newlyAdded = [item]; // Only the newly added item
       } else {
         newSelected = selected;
-        isSelectingRef.current = false;
         return; // Ne rien faire si déjà sélectionné
       }
     } else {
@@ -282,27 +248,15 @@ const MultiSelectSearchComponent = ({
       newSelected.map((item) => item[returnValueKey])
     );
     onChange(returnValues);
-
-    // Use shorter timeout to protect selection without blocking prop updates
-    setTimeout(() => {
-      isSelectingRef.current = false;
-    }, 50);
   };
 
   // Gestion de la suppression des éléments sélectionnés
   const handleRemove = (itemValue) => {
-    isSelectingRef.current = true;
-
     const newSelected = selected.filter((item) => item[returnValueKey] !== itemValue);
     setSelected(newSelected);
 
     const returnValues = newSelected.map((item) => item[returnValueKey]);
     onChange(returnValues);
-
-    // Use shorter timeout to protect selection without blocking prop updates
-    setTimeout(() => {
-      isSelectingRef.current = false;
-    }, 50);
   };
 
   return (
