@@ -75,7 +75,9 @@
 					id="Patrinat_APB_France"
 					visible="false"
 					name="APB"
-					queryable="false"
+					queryable="true"
+					infoformat="text/html"
+					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
 				</layer>
@@ -84,7 +86,7 @@
 					visible="false"
 					name="RNN"
 					queryable="true"
-					infoformat="application/vnd.ogc.gml"
+					infoformat="text/html"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
@@ -94,7 +96,7 @@
 					visible="false"
 					name="RNR"
 					queryable="true"
-					infoformat="application/vnd.ogc.gml"
+					infoformat="text/html"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
@@ -104,7 +106,7 @@
 					visible="false"
 					name="Natura 2000 - ZSC"
 					queryable="true"
-					infoformat="application/vnd.ogc.gml"
+					infoformat="text/html"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
@@ -114,7 +116,7 @@
 					visible="false"
 					name="Natura 2000 - ZPS"
 					queryable="true"
-					infoformat="application/vnd.ogc.gml"
+					infoformat="text/html"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
@@ -123,8 +125,8 @@
 					id="Patrinat_RAMSAR_France"
 					visible="false"
 					name="RAMSAR"
-					queryable="true"
-					infoformat="application/vnd.ogc.gml"
+					queryable="false"
+					infoformat="text/html"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
@@ -134,7 +136,7 @@
 					visible="false"
 					name="ZNIEFF 1 Terrestre"
 					queryable="true"
-					infoformat="application/vnd.ogc.gml"
+					infoformat="text/html"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
@@ -144,7 +146,7 @@
 					visible="false"
 					name="ZNIEFF 2 Terrestre"
 					queryable="true"
-					infoformat="application/vnd.ogc.gml"
+					infoformat="text/html"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
