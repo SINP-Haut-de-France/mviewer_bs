@@ -96,6 +96,89 @@ describe("SinpBaseLayer - Classe abstraite", () => {
     mviewer.getLegendUrl = previousGetLegendUrl;
   });
 
+  test("Résout le style WMS avec fn_get_legend et les VIEWPARAMS sélectionnés", async () => {
+    const previousRepository = window.sinpRepository;
+    const previousEnv = mviewer.env;
+    window.sinpRepository = {
+      fetchGeoServerData: jest.fn().mockResolvedValue({
+        type: "FeatureCollection",
+        features: [
+          {
+            properties: {
+              style_name: "fn_get_stats_500",
+            },
+          },
+        ],
+      }),
+    };
+    mviewer.env = {
+      CURRENT_ENV: "TEST",
+      TEST: {
+        GEOSERVER_BASE_URL: "https://example.test/geoserver/sinp",
+      },
+    };
+
+    const layer = new mviewer.customLayers.SinpBaseLayer("testLayer", "fn_get_stats", {
+      serverStyle: {
+        enabled: true,
+        legendTypeName: "fn_get_legend",
+        allowedStyleNames: [
+          "fn_get_stats_100",
+          "fn_get_stats_500",
+          "fn_get_stats_5000",
+          "fn_get_stats_50000",
+        ],
+      },
+    });
+    const viewParams =
+      "DATE_DEB:2020-01-01;DATE_FIN:2026-03-10;DEPT_IDS:62;TARGET_LOC_CODE:2";
+
+    await layer._resolveServerStyleName({
+      VIEWPARAMS: viewParams,
+    });
+
+    expect(window.sinpRepository.fetchGeoServerData).toHaveBeenCalledWith({
+      TYPENAME: "sinp_diffusion:fn_get_legend",
+      VIEWPARAMS: viewParams,
+    });
+    expect(layer._getServerStyleContext().styleName).toBe("fn_get_stats_500");
+    expect(layer._buildServerLegendUrl({ VIEWPARAMS: viewParams })).toContain(
+      "STYLE=fn_get_stats_500"
+    );
+
+    window.sinpRepository = previousRepository;
+    mviewer.env = previousEnv;
+  });
+
+  test("Rejette un style non configuré retourné par fn_get_legend", async () => {
+    const previousRepository = window.sinpRepository;
+    window.sinpRepository = {
+      fetchGeoServerData: jest.fn().mockResolvedValue({
+        features: [
+          {
+            properties: {
+              style_name: "style_inconnu",
+            },
+          },
+        ],
+      }),
+    };
+
+    const layer = new mviewer.customLayers.SinpBaseLayer("testLayer", "fn_get_stats", {
+      serverStyle: {
+        enabled: true,
+        legendTypeName: "fn_get_legend",
+        allowedStyleNames: ["fn_get_stats_100"],
+      },
+    });
+
+    await expect(layer._resolveServerStyleName()).rejects.toThrow(
+      "fn_get_legend a retourné un style invalide"
+    );
+
+    window.sinpRepository = previousRepository;
+  });
+
   test("Désactive les tooltips legacy pour un layer en rendu WMS seul", () => {
     const layer = new mviewer.customLayers.SinpBaseLayer("testLayer", "fn_get_stats", {
       serverRenderOnly: true,

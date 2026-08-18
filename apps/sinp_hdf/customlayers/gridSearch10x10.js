@@ -15,6 +15,8 @@ mviewer.customLayers.grid10x10search = (function () {
         serverRenderOnly: true,
         serverStyle: {
           enabled: true,
+          legendTypeName: "fn_get_legend",
+          allowedStyleNames: mviewer.customLayers.SinpBaseLayer.STATS_STYLE_NAMES,
         },
         style: new ol.style.Style({
           stroke: new ol.style.Stroke({

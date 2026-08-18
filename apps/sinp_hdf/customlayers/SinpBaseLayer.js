@@ -34,6 +34,7 @@ class SinpBaseLayer {
     this.style = config.style || this._getDefaultStyle();
     this.format = new ol.format.GeoJSON();
     this.serverStyle = config.serverStyle || null;
+    this._resolvedServerStyleName = this.serverStyle?.styleName || "";
     this.serverRenderOnly = config.serverRenderOnly === true;
     this.serverRenderRatio = config.serverRenderRatio || 1.5;
     this.defaultSearchExtent =
@@ -403,8 +404,47 @@ class SinpBaseLayer {
     return {
       url: `${geoserverBaseUrl}/wms`,
       layerName: this.serverStyle?.layerName || `${workspace}:${this.typeName}`,
-      styleName: this.serverStyle?.styleName || "",
+      styleName: this._resolvedServerStyleName,
     };
+  }
+
+  async _resolveServerStyleName(queryOptions = {}) {
+    const legendTypeName = this.serverStyle?.legendTypeName;
+    if (!legendTypeName) {
+      return this._resolvedServerStyleName;
+    }
+
+    if (!window.sinpRepository?.fetchGeoServerData) {
+      throw new Error(
+        `[${this.layerId}] Impossible d'interroger ${legendTypeName}: dépôt GeoServer indisponible`
+      );
+    }
+
+    const workspace = this.serverStyle?.workspace || "sinp_diffusion";
+    const legendOptions = {
+      TYPENAME: legendTypeName.includes(":")
+        ? legendTypeName
+        : `${workspace}:${legendTypeName}`,
+    };
+
+    if (queryOptions?.VIEWPARAMS) {
+      legendOptions.VIEWPARAMS = queryOptions.VIEWPARAMS;
+    }
+
+    const legendData = await window.sinpRepository.fetchGeoServerData(legendOptions);
+    const styleName = legendData?.features?.[0]?.properties?.style_name;
+    const allowedStyleNames = this.serverStyle?.allowedStyleNames || [];
+
+    if (
+      typeof styleName !== "string" ||
+      !styleName.trim() ||
+      (allowedStyleNames.length > 0 && !allowedStyleNames.includes(styleName.trim()))
+    ) {
+      throw new Error(`[${this.layerId}] ${legendTypeName} a retourné un style invalide`);
+    }
+
+    this._resolvedServerStyleName = styleName.trim();
+    return this._resolvedServerStyleName;
   }
 
   _appendUrlParams(url, params = {}) {
@@ -680,7 +720,17 @@ class SinpBaseLayer {
     });
   }
 
-  _updateServerRenderLayer(queryOptions = {}, hasFeatures = false) {
+  async _updateServerRenderLayer(queryOptions = {}, hasFeatures = false) {
+    const requestToken = Symbol("server-render");
+    this._serverRenderRequestToken = requestToken;
+
+    if (hasFeatures) {
+      await this._resolveServerStyleName(queryOptions);
+      if (this._serverRenderRequestToken !== requestToken) {
+        return;
+      }
+    }
+
     this._ensureServerRenderLayer();
 
     if (!this._serverRenderLayer) {
@@ -705,8 +755,9 @@ class SinpBaseLayer {
       TRANSPARENT: true,
     };
 
-    if (this.serverStyle?.styleName) {
-      params.STYLES = this.serverStyle.styleName;
+    const serverStyleContext = this._getServerStyleContext();
+    if (serverStyleContext?.styleName) {
+      params.STYLES = serverStyleContext.styleName;
     }
 
     if (queryOptions?.VIEWPARAMS) {
@@ -1104,6 +1155,7 @@ class SinpBaseLayer {
   }
 
   clear() {
+    this._serverRenderRequestToken = Symbol("server-render-cleared");
     this._clearSelectedFeatures();
     this.layer?.getSource()?.clear();
     this._pendingServerRenderPromise = Promise.resolve();
@@ -1125,4 +1177,10 @@ class SinpBaseLayer {
   }
 }
 
+SinpBaseLayer.STATS_STYLE_NAMES = Object.freeze([
+  "fn_get_stats_100",
+  "fn_get_stats_500",
+  "fn_get_stats_5000",
+  "fn_get_stats_50000",
+]);
 mviewer.customLayers.SinpBaseLayer = SinpBaseLayer;
