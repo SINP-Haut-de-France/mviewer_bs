@@ -125,7 +125,7 @@
 					id="Patrinat_RAMSAR_France"
 					visible="false"
 					name="RAMSAR"
-					queryable="false"
+					queryable="true"
 					infoformat="text/html"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
