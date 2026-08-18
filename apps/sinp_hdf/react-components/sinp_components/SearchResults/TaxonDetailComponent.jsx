@@ -42,7 +42,7 @@ const TAXON_COLUMNS = [
   },
   {
     id: "observationCount",
-    label: "Nb. observations",
+    label: "Nb. de données",
     sortable: true,
     sortType: "number",
     getValue: (detail) => detail?.nb_observations ?? null,
