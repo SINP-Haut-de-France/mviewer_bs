@@ -17,6 +17,7 @@ const BaseModalUI = ({
   contentClassName = "",
   showMinimize = true,
   draggable = true,
+  nonBlocking = false,
 }) => {
   const modalRef = useRef(null);
   const isCloseButtonVisible = closeButton?.visible !== false;
@@ -36,7 +37,13 @@ const BaseModalUI = ({
     <Modal
       isOpen={isOpen}
       onRequestClose={onClose}
-      overlayClassName={isMinimized ? "base-modal-overlay-hidden" : "base-modal-overlay"}
+      overlayClassName={
+        isMinimized
+          ? "base-modal-overlay-hidden"
+          : nonBlocking
+            ? "base-modal-overlay-non-blocking"
+            : "base-modal-overlay"
+      }
       className={`base-modal-content ${contentClassName || ""}`.trim()}
       shouldCloseOnOverlayClick={false}
       shouldCloseOnEsc={false}
@@ -92,7 +99,9 @@ const BaseModalUI = ({
           )}
         </div>
       </div>
-      {!isMinimized && <div className="base-modal-body">{children}</div>}
+      <div className="base-modal-body" hidden={isMinimized}>
+        {children}
+      </div>
     </Modal>
   );
 };

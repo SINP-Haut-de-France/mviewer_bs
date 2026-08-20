@@ -69,6 +69,24 @@
   flex-wrap: wrap;
 }
 
+.mv-sr-entity-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid #d6e0ea;
+  border-radius: 4px;
+  background: #f8fbff;
+}
+
+.mv-sr-entity-status {
+  color: #1f2937;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+}
+
 .mv-sr-page-size,
 .mv-sr-pagination,
 .mv-sr-pagination-cluster {

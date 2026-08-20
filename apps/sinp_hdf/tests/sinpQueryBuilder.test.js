@@ -234,7 +234,7 @@ describe("GRP_IDS - Gestion correcte des séparateurs", () => {
     expect(result.VIEWPARAMS).not.toContain("GRP_IDS");
   });
 
-  test("Cohérence CD_REF et GRP_IDS avec virgules", () => {
+  test("CD_REF rend GRP_IDS inutile", () => {
     const params = {
       communes: ["62225"],
       departements: ["62"],
@@ -248,8 +248,7 @@ describe("GRP_IDS - Gestion correcte des séparateurs", () => {
 
     // CD_REF utilise des virgules
     expect(result.VIEWPARAMS).toContain("CD_REF:2440,2442");
-    // GRP_IDS utilise des virgules
-    expect(result.VIEWPARAMS).toContain("GRP_IDS:12,23");
+    expect(result.VIEWPARAMS).not.toContain("GRP_IDS:");
   });
 });
 
@@ -289,7 +288,7 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
     expect(result.TYPENAME).toBe("sinp_diffusion:fn_get_stats");
     expect(result.CQL_FILTER).toBeUndefined();
     expect(result.VIEWPARAMS).toBe(
-      "DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;DEPT_IDS:62,59;CODE_INSEES:62225,59350;CD_REF:2440,2442;GRP_IDS:13,15;EPCI_IDS:200069193;TARGET_LOC_CODE:2"
+      "DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;DEPT_IDS:62,59;CODE_INSEES:62225,59350;CD_REF:2440,2442;EPCI_IDS:200069193;TARGET_LOC_CODE:2"
     );
   });
 
@@ -380,8 +379,65 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
     expect(result.VIEWPARAMS).toContain("DEPT_IDS:62");
     expect(result.VIEWPARAMS).toContain("CODE_INSEES:62225");
     expect(result.VIEWPARAMS).toContain("CD_REF:2440,2442");
-    expect(result.VIEWPARAMS).toContain("GRP_IDS:12,23");
+    expect(result.VIEWPARAMS).not.toContain("GRP_IDS:");
     expect(result.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
+  });
+
+  test("les fonctions géométriques transmettent le GeoJSON et les filtres métier", () => {
+    const geometryGeojson = JSON.stringify({
+      type: "MultiPolygon",
+      coordinates: [[[[1.5, 50.1], [1.6, 50.1], [1.5, 50.1]]]],
+    });
+    const params = {
+      geometryGeojson,
+      taxons: [2440, 2442],
+      groupes: [12],
+      dateDeb: "2020-01-01",
+      dateFin: "2026-08-19",
+      targetLocCode: "7",
+    };
+
+    const details = sinpQueryBuilder.buildRequestOptions(
+      params,
+      "fn_get_obs_detaillee_for_geometry"
+    );
+    const metadata = sinpQueryBuilder.buildRequestOptions(
+      params,
+      "fn_get_metadonnees_for_geometry"
+    );
+
+    expect(details.TYPENAME).toBe(
+      "sinp_diffusion:fn_get_obs_detaillee_for_geometry"
+    );
+    expect(metadata.TYPENAME).toBe(
+      "sinp_diffusion:fn_get_metadonnees_for_geometry"
+    );
+    expect(details.VIEWPARAMS).toContain(`GEOMETRY_GEOJSON:${geometryGeojson}`);
+    expect(details.VIEWPARAMS).toContain("DATE_DEB:2020-01-01");
+    expect(details.VIEWPARAMS).toContain("DATE_FIN:2026-08-19");
+    expect(details.VIEWPARAMS).toContain("TARGET_LOC_CODE:7");
+    expect(details.VIEWPARAMS).toContain("CD_REF:2440,2442");
+    expect(details.VIEWPARAMS).not.toContain("GRP_IDS:");
+    expect(metadata.VIEWPARAMS).toBe(details.VIEWPARAMS);
+  });
+
+  test("la restitution au zonage complet n'impose pas de TARGET_LOC_CODE", () => {
+    const geometryGeojson = JSON.stringify({
+      type: "Polygon",
+      coordinates: [[[1.5, 50.1], [1.6, 50.1], [1.5, 50.1]]],
+    });
+
+    const result = sinpQueryBuilder.buildRequestOptions(
+      {
+        geometryGeojson,
+        dateDeb: "2020-01-01",
+        dateFin: "2026-08-20",
+      },
+      "fn_get_obs_detaillee_for_geometry"
+    );
+
+    expect(result.VIEWPARAMS).toContain(`GEOMETRY_GEOJSON:${geometryGeojson}`);
+    expect(result.VIEWPARAMS).not.toContain("TARGET_LOC_CODE:");
   });
 
   test("CD_REF utilise des virgules comme les autres listes", () => {
@@ -395,7 +451,7 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
     const result = sinpQueryBuilder.buildRequestOptions(params, "fn_get_stats");
 
     expect(result.VIEWPARAMS).toContain("CD_REF:2440,2442,2444");
-    expect(result.VIEWPARAMS).toContain("GRP_IDS:12,23");
+    expect(result.VIEWPARAMS).not.toContain("GRP_IDS:");
   });
 
   test("communes et départements passent en VIEWPARAMS", () => {
@@ -465,7 +521,7 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
 
     expect(result.TYPENAME).toBe("sinp_diffusion:fn_get_stats");
     expect(result.VIEWPARAMS).toBe(
-      "DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;DEPT_IDS:62;CODE_INSEES:62225;CD_REF:2440,2442;GRP_IDS:13;EPCI_IDS:200069193;TARGET_LOC_CODE:2"
+      "DATE_DEB:2005-12-10;DATE_FIN:2025-12-10;DEPT_IDS:62;CODE_INSEES:62225;CD_REF:2440,2442;EPCI_IDS:200069193;TARGET_LOC_CODE:2"
     );
   });
 

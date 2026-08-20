@@ -70,7 +70,7 @@
       "waitForTarget": true,
       "beforeShowAction": "openAdvancedFilters",
       "title": "Couche de restitution",
-      "text": "Ce filtre permet de choisir le niveau de restitution de la recherche, par exemple les communes ou les grilles disponibles. La recherche s'effectuent dans ce cas en calculant et en rattachant les données au niveau de restitution souhaité."
+      "text": "Ce filtre permet de choisir le niveau de restitution de la recherche : communes, grilles ou zonage complet lorsqu'un zonage environnemental est utilisé comme périmètre."
     },
     {
       "id": "filtre-groupe-taxonomique",
@@ -122,7 +122,7 @@
       "waitForTarget": true,
       "beforeShowAction": "openAdvancedFilters",
       "title": "Localisation",
-      "text": "Cette section regroupe les filtres géographiques. Elle permet de limiter la recherche à un département et/ou à des communes. Elle sera enrichie avec d'autres couches de repérage administratif (EPCI, bassins versants, PNR, etc.)."
+      "text": "Cette section permet de limiter la recherche à un département ou à des communes. Lorsqu'un zonage environnemental visible a été sélectionné depuis sa fiche, il peut également être utilisé comme périmètre ; les autres filtres de localisation sont alors désactivés."
     },
     {
       "id": "filtre-departement",

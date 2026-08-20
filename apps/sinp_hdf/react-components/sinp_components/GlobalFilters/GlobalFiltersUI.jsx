@@ -20,39 +20,39 @@ const GlobalFiltersUI = ({
   handleDptChange,
   handleComChange,
   handleGrpChange,
-  onSubmit,
-  onReset,
-  showActions,
-  actionLabels,
   isLoading = false,
-  hasActiveFilters = true,
-  restitutionLayers = [],
-  selectedRestitutionLayerId = null,
-  onRestitutionChange = null,
+  selectionMode = false,
+  hasValidSelection = false,
+  selectionLabel = null,
+  visibleEnvironmentalLayers = [],
+  selectedSelectionLayerId = null,
+  onSelectionModeChange = null,
+  onSelectionLayerChange = null,
+  onRequestSelectionChange = null,
 }) => {
   const selectedTaxonFilterCount =
     (filters.filteredTaxons || []).length + (filters.filteredGroupes || []).length;
 
   return (
     <div className="global-filters-container">
-      {/*/!* Indicateur du profil actif *!/*/}
-      {/*{activeProfile && (*/}
-      {/*  <div className="filter-profile-indicator">*/}
-      {/*    <small className="text-muted">*/}
-      {/*      <i className="fas fa-layer-group"></i> {activeProfile.name}*/}
-      {/*    </small>*/}
-      {/*  </div>*/}
-      {/*)}*/}
-      {(filterVisibility.showTaxonomicGroup ||
-        filterVisibility.showTaxon ||
-        filterVisibility.showDate) && (
-        <CollapsibleFilterSection
-          title="Taxon"
-          icon="fa-leaf"
-          defaultExpanded={true}
-          badge={selectedTaxonFilterCount || null}
-          dataTour="filter-taxon-group"
-          expandOnTourTargets={TAXON_FILTER_TOUR_TARGETS}>
+        {/*/!* Indicateur du profil actif *!/*/}
+        {/*{activeProfile && (*/}
+        {/*  <div className="filter-profile-indicator">*/}
+        {/*    <small className="text-muted">*/}
+        {/*      <i className="fas fa-layer-group"></i> {activeProfile.name}*/}
+        {/*    </small>*/}
+        {/*  </div>*/}
+        {/*)}*/}
+        {(filterVisibility.showTaxonomicGroup ||
+          filterVisibility.showTaxon ||
+          filterVisibility.showDate) && (
+          <CollapsibleFilterSection
+            title="Taxon"
+            icon="fa-leaf"
+            defaultExpanded={true}
+            badge={selectedTaxonFilterCount || null}
+            dataTour="filter-taxon-group"
+            expandOnTourTargets={TAXON_FILTER_TOUR_TARGETS}>
           {filterVisibility.showTaxonomicGroup && (
             <CollapsibleFilterSection
               title="Groupes taxinomiques"
@@ -84,8 +84,8 @@ const GlobalFiltersUI = ({
                   );
                 }}
               </Datasource>
-            </CollapsibleFilterSection>
-          )}
+              </CollapsibleFilterSection>
+            )}
 
           {filterVisibility.showTaxon && (
             <CollapsibleFilterSection
@@ -94,6 +94,7 @@ const GlobalFiltersUI = ({
               defaultExpanded={true}
               dataTour="filter-taxon">
               <Datasource
+                key={`taxon-datasource-${(filters.filteredGroupes || []).join("-")}`}
                 name="taxonsDatasource"
                 datatype="wfs"
                 lazyloading={true}
@@ -168,137 +169,182 @@ const GlobalFiltersUI = ({
       )}
 
       {/* Section Géographique */}
-      {(filterVisibility.showDepartment || filterVisibility.showCommune) && (
+      {(filterVisibility.showDepartment ||
+        filterVisibility.showCommune ||
+        visibleEnvironmentalLayers.length > 0 ||
+        selectionMode) && (
         <CollapsibleFilterSection
           title="Localisation"
           icon="fa-map-marker-alt"
           defaultExpanded={true}
           badge={
-            filters.filteredCommunes?.length ||
-            filters.filteredDepartments?.length ||
-            null
+            selectionMode
+              ? hasValidSelection
+                ? 1
+                : null
+              : filters.filteredCommunes?.length ||
+                filters.filteredDepartments?.length ||
+                null
           }
           dataTour="filter-location">
-          <Datasource
-            name="departmentsDatasource"
-            datatype="json"
-            datasource="apps/sinp_hdf/data/departements_hdf.json">
-            {({ data: departments, loading, error }) => {
-              if (loading) return <p className="loading-message">Chargement...</p>;
-              if (error) return <p className="error-message">Erreur de chargement</p>;
+          <div
+            className={`mv-location-standard-filters ${
+              selectionMode ? "is-disabled" : ""
+            }`}
+            aria-disabled={selectionMode}>
+            <Datasource
+              name="departmentsDatasource"
+              datatype="json"
+              datasource="apps/sinp_hdf/data/departements_hdf.json">
+              {({ data: departments, loading, error }) => {
+                if (loading) return <p className="loading-message">Chargement...</p>;
+                if (error)
+                  return <p className="error-message">Erreur de chargement</p>;
 
-              return (
-                <>
-                  {filterVisibility.showDepartment && (
-                    <div data-tour="filter-department">
-                      <MultiSelectSearchComponent
-                        datasource={departments || []}
-                        selectedValues={filters.filteredDepartments || []}
-                        returnValueKey="code_dpt"
-                        title="Département"
-                        label={(item) => `${item.code_dpt} - ${item.libelle}`}
-                        minCharacters={1}
-                        maxResults={10}
-                        multiselect={false}
-                        onChange={handleDptChange}
-                      />
-                    </div>
-                  )}
+                return (
+                  <>
+                    {filterVisibility.showDepartment && (
+                      <div data-tour="filter-department">
+                        <MultiSelectSearchComponent
+                          datasource={departments || []}
+                          selectedValues={filters.filteredDepartments || []}
+                          returnValueKey="code_dpt"
+                          title="Département"
+                          label={(item) => `${item.code_dpt} - ${item.libelle}`}
+                          minCharacters={1}
+                          maxResults={10}
+                          multiselect={false}
+                          onChange={handleDptChange}
+                          disabled={selectionMode}
+                        />
+                      </div>
+                    )}
 
-                  {filterVisibility.showCommune && (
-                    <Datasource
-                      name="communesDatasource"
-                      datatype="json"
-                      datasource="apps/sinp_hdf/data/communes_hdf.json">
-                      {({
-                        data: communes,
-                        loading: loadingCommunes,
-                        error: errorCommunes,
-                      }) => {
-                        if (loadingCommunes)
-                          return <p className="loading-message">Chargement...</p>;
-                        if (errorCommunes) return <p className="error-message">Erreur</p>;
+                    {filterVisibility.showCommune && (
+                      <Datasource
+                        name="communesDatasource"
+                        datatype="json"
+                        datasource="apps/sinp_hdf/data/communes_hdf.json">
+                        {({
+                          data: communes,
+                          loading: loadingCommunes,
+                          error: errorCommunes,
+                        }) => {
+                          if (loadingCommunes)
+                            return <p className="loading-message">Chargement...</p>;
+                          if (errorCommunes)
+                            return <p className="error-message">Erreur</p>;
 
-                        return (
-                          <div data-tour="filter-commune">
-                            <MultiSelectSearchComponent
-                              datasource={communes || []}
-                              selectedValues={filters.filteredCommunes || []}
-                              parentDatasource={filters.filteredDepartments}
-                              parentDatasourceKey="code_dpt"
-                              searchKey="code_dpt"
-                              returnValueKey="code_insee"
-                              minCharacters={1}
-                              maxResults={10}
-                              maxSelections={5}
-                              title="Commune (5 max.)"
-                              label={(item) =>
-                                `${item.code_insee} - ${item.libelle_commune}`
-                              }
-                              multiselect={true}
-                              onChange={handleComChange}
-                            />
-                          </div>
-                        );
-                      }}
-                    </Datasource>
-                  )}
-                </>
-              );
-            }}
-          </Datasource>
-        </CollapsibleFilterSection>
-      )}
+                          return (
+                            <div data-tour="filter-commune">
+                              <MultiSelectSearchComponent
+                                datasource={communes || []}
+                                selectedValues={filters.filteredCommunes || []}
+                                parentDatasource={filters.filteredDepartments}
+                                parentDatasourceKey="code_dpt"
+                                searchKey="code_dpt"
+                                returnValueKey="code_insee"
+                                minCharacters={1}
+                                maxResults={10}
+                                maxSelections={5}
+                                title="Commune (5 max.)"
+                                label={(item) =>
+                                  `${item.code_insee} - ${item.libelle_commune}`
+                                }
+                                multiselect={true}
+                                onChange={handleComChange}
+                                disabled={selectionMode}
+                              />
+                            </div>
+                          );
+                        }}
+                      </Datasource>
+                    )}
+                  </>
+                );
+              }}
+            </Datasource>
+          </div>
 
-      {restitutionLayers.length > 0 && (
-        <CollapsibleFilterSection
-          title="Couche de restitution"
-          icon="fa-layer-group"
-          defaultExpanded={true}
-          dataTour="filter-restitution-layer">
-          <div className="btn-group btn-group-sm mv-restitution-switch" role="group">
-            {restitutionLayers.map((restitutionLayer) => {
-              const isSelected = restitutionLayer.id === selectedRestitutionLayerId;
+          <div className="mv-selection-filter">
+            <div className="multi-select-header">
+              <div className="multi-select-label mv-selection-filter__label">
+                Couche de zonage
+              </div>
+            </div>
 
-              return (
-                <button
-                  key={restitutionLayer.id}
-                  type="button"
-                  className={`btn ${isSelected ? "btn-primary" : "btn-outline-primary"}`}
-                  disabled={isLoading || isSelected}
-                  aria-pressed={isSelected}
-                  onClick={() => onRestitutionChange?.(restitutionLayer.id)}>
-                  {restitutionLayer.label}
-                </button>
-              );
-            })}
+            <div className="form-check">
+              <input
+                id="sinp-selection-filter-toggle"
+                className="form-check-input"
+                type="checkbox"
+                checked={selectionMode}
+                disabled={isLoading || visibleEnvironmentalLayers.length === 0}
+                onChange={(event) => onSelectionModeChange?.(event.target.checked)}
+              />
+              <label
+                className="form-check-label"
+                htmlFor="sinp-selection-filter-toggle">
+                Utiliser un zonage sélectionné
+              </label>
+            </div>
+
+            <select
+              id="sinp-selection-layer"
+              className="form-select form-select-sm"
+              aria-label="Couche de zonage"
+              value={selectedSelectionLayerId || ""}
+              disabled={
+                !selectionMode ||
+                isLoading ||
+                visibleEnvironmentalLayers.length === 0
+              }
+              onChange={(event) => onSelectionLayerChange?.(event.target.value)}>
+              <option value="">Sélectionner une couche visible</option>
+              {visibleEnvironmentalLayers.map((layer) => (
+                <option key={layer.id} value={layer.id}>
+                  {layer.label}
+                </option>
+              ))}
+            </select>
+
+            {selectionMode && hasValidSelection ? (
+              <div className="mv-selection-filter__status is-valid" role="status">
+                <i className="fas fa-draw-polygon" aria-hidden="true"></i>
+                <span>
+                  Zonage utilisé : <strong>{selectionLabel}</strong>
+                </span>
+              </div>
+            ) : null}
+
+            {selectionMode && !hasValidSelection ? (
+              <div className="mv-selection-filter__status is-pending" role="status">
+                <span>
+                  Cliquez sur un zonage de cette couche, puis sur « Afficher le
+                  détail des observations ».
+                </span>
+              </div>
+            ) : null}
+
+            {!selectionMode && visibleEnvironmentalLayers.length === 0 ? (
+              <div className="mv-selection-filter__status is-pending" role="status">
+                Activez au moins une couche de zonage environnemental pour utiliser
+                ce mode.
+              </div>
+            ) : null}
+
+            {selectionMode ? (
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary mv-selection-filter__change"
+                onClick={() => onRequestSelectionChange?.()}>
+                Changer de zonage
+              </button>
+            ) : null}
           </div>
         </CollapsibleFilterSection>
       )}
 
-      {/* Actions */}
-      {showActions && (
-        <div className="filter-actions" data-tour="filter-actions">
-          <button className="btn btn-reset" onClick={onReset} disabled={isLoading}>
-            <i className="fas fa-undo"></i> {actionLabels.reset}
-          </button>
-          <button
-            className="btn btn-apply"
-            onClick={onSubmit}
-            disabled={isLoading || !hasActiveFilters}
-            title={!hasActiveFilters ? "Veuillez sélectionner au moins un filtre" : ""}>
-            {isLoading ? (
-              <>
-                <i className="fas fa-spinner fa-spin"></i> Chargement...
-              </>
-            ) : (
-              <>
-                <i className="fas fa-check"></i> {actionLabels.submit}
-              </>
-            )}
-          </button>
-        </div>
-      )}
     </div>
   );
 };

@@ -1,8 +1,9 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import BaseModal from "../../components/BaseModal/BaseModal";
 import GlobalFilters from "../GlobalFilters/GlobalFilters";
 import { useFilters } from "../../providers/FilterProvider";
 import { getSearchLayer, resolveSearchLayerId } from "../../configs/filtersConfig";
+import FilterActionsBar from "../FilterActionsBar/FilterActionsBar";
 import "./GlobalFilterModal.css";
 
 const GlobalFilterModal = ({
@@ -11,20 +12,41 @@ const GlobalFilterModal = ({
   onSubmit,
   activeLayerId,
   filterProfile,
+  selectionContext,
+  onSelectionSubmit,
   closeButton,
   density,
+  openRequestId,
   initialFilters,
   onFiltersChange,
   onAnchorToSidebar,
   isMobile = false,
+  filterActionsState = null,
+  onFilterReset,
+  onFilterSubmit,
 }) => {
-  const { pushFilterError } = useFilters();
+  const { pushFilterError, clearSelectionContext } = useFilters();
   const modalRef = useRef(null);
   const globalFiltersRef = useRef(null);
   const [appliedFilters, setAppliedFilters] = useState(() => initialFilters || null);
   const filtersStateRef = useRef(initialFilters || null); // Pour sauvegarder l'état complet des filtres
 
-  const executeSearch = async (params, layerId = activeLayerId) => {
+  useEffect(() => {
+    modalRef.current?.restore?.();
+  }, [openRequestId]);
+
+  const executeSearch = async (
+    params,
+    layerId = activeLayerId,
+    filtersState = null
+  ) => {
+    if (filtersState?.selectionMode) {
+      if (typeof onSelectionSubmit !== "function") {
+        throw new Error("La recherche sur le zonage sélectionné est indisponible.");
+      }
+      return onSelectionSubmit(params, layerId);
+    }
+
     if (typeof onSubmit === "function") {
       return onSubmit(params, layerId);
     }
@@ -61,10 +83,16 @@ const GlobalFilterModal = ({
           typeof t === "object" && t.cd_ref ? t.cd_ref : t
         );
       }
-      if (Array.isArray(effectiveFilters.filteredCommunes)) {
+      if (
+        !effectiveFilters.selectionMode &&
+        Array.isArray(effectiveFilters.filteredCommunes)
+      ) {
         finalParams.communes = effectiveFilters.filteredCommunes;
       }
-      if (Array.isArray(effectiveFilters.filteredDepartments)) {
+      if (
+        !effectiveFilters.selectionMode &&
+        Array.isArray(effectiveFilters.filteredDepartments)
+      ) {
         finalParams.departements = effectiveFilters.filteredDepartments;
       }
       if (Array.isArray(effectiveFilters.filteredGroupes)) {
@@ -80,7 +108,7 @@ const GlobalFilterModal = ({
 
     try {
       // 1. Appel au code mviewer / callback configuré
-      await executeSearch(finalParams, layerId);
+      await executeSearch(finalParams, layerId, effectiveFilters);
 
       // Sauvegarder l'état complet des filtres pour le rebinding
       // Use effectiveFilters (the most recent known state)
@@ -121,6 +149,17 @@ const GlobalFilterModal = ({
     if (onFiltersChange) {
       onFiltersChange(null);
     }
+    clearSelectionContext();
+    window.externalLayersObs?.clearSelection?.();
+  };
+
+  const handleSelectionInvalidated = () => {
+    clearSelectionContext();
+    window.externalLayersObs?.clearSelection?.();
+    pushFilterError(
+      "Le zonage sélectionné a été retiré de la carte. Le filtrage par localisation standard a été réactivé.",
+      { title: "Zonage désélectionné" }
+    );
   };
 
   const handleClose = () => {
@@ -154,6 +193,21 @@ const GlobalFilterModal = ({
     }
   };
 
+  useEffect(() => {
+    const handleSelectionRequest = () => {
+      if (isMobile) {
+        onClose?.();
+      }
+    };
+
+    window.addEventListener("sinp:request-zoning-selection", handleSelectionRequest);
+    return () =>
+      window.removeEventListener(
+        "sinp:request-zoning-selection",
+        handleSelectionRequest
+      );
+  }, [isMobile, onClose]);
+
   if (!isOpen) return null;
 
   return (
@@ -163,9 +217,12 @@ const GlobalFilterModal = ({
       title="Filtres avancés"
       onMinimize={handleModalToggle}
       closeButton={isMobile ? { visible: true, enabled: true } : closeButton}
-      contentClassName={`${density || ""} ${isMobile ? "mobile-global-filter-modal" : ""}`.trim()}
+      contentClassName={`global-filter-modal ${density || ""} ${
+        isMobile ? "mobile-global-filter-modal" : ""
+      }`.trim()}
       showMinimize={!isMobile}
       draggable={!isMobile}
+      nonBlocking={!isMobile}
       headerActions={
         isMobile
           ? []
@@ -188,11 +245,12 @@ const GlobalFilterModal = ({
           initialFilters={appliedFilters}
           activeLayerId={resolveSearchLayerId(activeLayerId)}
           filterProfile={filterProfile}
-          showActions={true}
-          actionLabels={{
-            submit: "Appliquer les filtres",
-            reset: "Réinitialiser",
+          selectionContext={selectionContext}
+          onSelectionClear={() => {
+            clearSelectionContext();
+            window.externalLayersObs?.clearSelection?.();
           }}
+          onSelectionInvalidated={handleSelectionInvalidated}
           onSubmitError={(error) => {
             pushFilterError(
               error?.userMessage ||
@@ -202,6 +260,15 @@ const GlobalFilterModal = ({
           }}
         />
       </div>
+      {filterActionsState ? (
+        <div className="global-filter-modal-actions">
+          <FilterActionsBar
+            {...filterActionsState}
+            onReset={onFilterReset}
+            onSubmit={onFilterSubmit}
+          />
+        </div>
+      ) : null}
     </BaseModal>
   );
 };

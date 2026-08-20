@@ -76,80 +76,111 @@
 					visible="false"
 					name="APB"
 					queryable="true"
-					infoformat="text/html"
+					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
+					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
+					filter="operateur = 'DREAL HAUTS-DE-FRANCE'"
+					infoformat="application/vnd.ogc.gml"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
 				<layer
 					id="Patrinat_RNN_France"
 					visible="false"
 					name="RNN"
 					queryable="true"
-					infoformat="text/html"
+					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
+					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
+					filter="operateur = 'DREAL HAUTS-DE-FRANCE'"
+					infoformat="application/vnd.ogc.gml"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
 				<layer
 					id="Patrinat_RNR_France"
 					visible="false"
 					name="RNR"
 					queryable="true"
-					infoformat="text/html"
+					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
+					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
+					infoformat="application/vnd.ogc.gml"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
 				<layer
 					id="Patrinat_SIC_France"
 					visible="false"
 					name="Natura 2000 - ZSC"
 					queryable="true"
-					infoformat="text/html"
+					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
+					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
+					filter="operateur = 'DREAL HAUTS-DE-FRANCE'"
+					infoformat="application/vnd.ogc.gml"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
 				<layer
 					id="Patrinat_ZPS_France"
 					visible="false"
 					name="Natura 2000 - ZPS"
 					queryable="true"
-					infoformat="text/html"
+					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
+					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
+					filter="operateur = 'DREAL HAUTS-DE-FRANCE'"
+					infoformat="application/vnd.ogc.gml"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
 				<layer
 					id="Patrinat_RAMSAR_France"
 					visible="false"
 					name="RAMSAR"
 					queryable="true"
-					infoformat="text/html"
+					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
+					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
+					filter="operateur = 'DREAL HAUTS-DE-FRANCE'"
+					infoformat="application/vnd.ogc.gml"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
 				<layer
 					id="Patrinat_ZNIEFF1_France"
 					visible="false"
 					name="ZNIEFF 1 Terrestre"
 					queryable="true"
-					infoformat="text/html"
+					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
+					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
+					filter="operateur = 'DREAL HAUTS DE FRANCE'"
+					infoformat="application/vnd.ogc.gml"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
 				<layer
 					id="Patrinat_ZNIEFF2_France"
 					visible="false"
 					name="ZNIEFF 2 Terrestre"
 					queryable="true"
-					infoformat="text/html"
+					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
+					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
+					filter="operateur = 'DREAL HAUTS DE FRANCE'"
+					infoformat="application/vnd.ogc.gml"
 					featurecount="1"
 					url="https://data.geopf.fr/wms-v/wms"
 				>
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
 			</group>
 		</theme>

@@ -447,6 +447,7 @@ describe("SinpBaseCustom - Scopage des détails", () => {
       })
     ).toEqual({
       communes: ["62041", "62165", "62225"],
+      mailles: [],
       departements: ["62"],
       epcis: [],
       groupes: [],
@@ -775,6 +776,66 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     fetchGeoServerDataSpy.mockRestore();
   });
 
+  test("Charge uniquement le détail de l'entité courante pour plusieurs communes", async () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      mainTypeName: "fn_get_stats",
+      detailsTypeName: "fn_get_obs_detaillee",
+      targetLocCode: "2",
+    });
+    const feature = new ol.Feature({ code: "62002" });
+    const fetchGeoServerDataSpy = jest
+      .spyOn(control, "fetchGeoServerData")
+      .mockResolvedValue({
+        type: "FeatureCollection",
+        features: [],
+      });
+
+    await control._ensureEntityData([feature], {
+      communes: ["62001", "62002", "62003"],
+      dateDeb: "2021-01-01",
+      dateFin: "2026-03-10",
+      targetLocCode: "2",
+    });
+
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        VIEWPARAMS: expect.stringContaining("CODE_INSEES:62002"),
+      })
+    );
+    expect(fetchGeoServerDataSpy.mock.calls[0][0].VIEWPARAMS).not.toContain(
+      "62001,62002,62003"
+    );
+
+    fetchGeoServerDataSpy.mockRestore();
+  });
+
+  test("Navigue dans les entités de restitution préchargées", async () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      targetLocCode: "2",
+    });
+    const firstFeature = new ol.Feature({ code: "62001", libelle: "Commune A" });
+    const secondFeature = new ol.Feature({ code: "62002", libelle: "Commune B" });
+    control._lastSearchParams = {
+      communes: ["62001", "62002"],
+      targetLocCode: "2",
+    };
+    control._setLastResultFeatures([firstFeature, secondFeature]);
+    const handleSpy = jest.spyOn(control, "handle").mockResolvedValue();
+
+    expect(control.getEntityNavigationState(firstFeature)).toEqual({
+      currentIndex: 0,
+      total: 2,
+      entityLabel: "Commune A",
+    });
+
+    await control.selectEntityByIndex(1);
+
+    expect(handleSpy).toHaveBeenCalledWith([secondFeature]);
+    handleSpy.mockRestore();
+  });
+
   test("Les variantes de clés de maille reconnaissent le suffixe cd_sig", () => {
     const control = new SinpBaseCustom({
       layerId: "testControl",
@@ -788,6 +849,24 @@ describe("SinpBaseCustom - Scopage des détails", () => {
 });
 
 describe("sinpRepository - GET/POST GeoServer", () => {
+  test("normalise les URL de service GeoServer vers WFS", () => {
+    expect(
+      sinpRepository.resolveWfsUrl(
+        "http://localhost:8080/geoserver/preprod_sinp/wms"
+      )
+    ).toBe("http://localhost:8080/geoserver/preprod_sinp/wfs");
+    expect(
+      sinpRepository.resolveWfsUrl(
+        "http://localhost:8080/geoserver/preprod_sinp/ows/"
+      )
+    ).toBe("http://localhost:8080/geoserver/preprod_sinp/wfs");
+    expect(
+      sinpRepository.resolveWfsUrl(
+        "http://localhost:8080/geoserver/preprod_sinp"
+      )
+    ).toBe("http://localhost:8080/geoserver/preprod_sinp/wfs");
+  });
+
   test("construit un body POST x-www-form-urlencoded pour les fonctions PostgreSQL", () => {
     const request = sinpRepository.buildPostRequest({
       TYPENAME: "sinp_diffusion:fn_get_stats",
@@ -867,6 +946,33 @@ describe("sinpRepository - GET/POST GeoServer", () => {
 
     const [, requestOptions] = global.fetch.mock.calls[0];
     expect(requestOptions?.method).toBeUndefined();
+
+    global.fetch = previousFetch;
+    mviewer.getProxy = previousGetProxy;
+  });
+
+  test("remonte le détail et l'URL des erreurs GeoServer", async () => {
+    const previousFetch = global.fetch;
+    const previousGetProxy = mviewer.getProxy;
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      statusText: "Not Found",
+      url: "https://example.test/geoserver/sinp/wfs",
+      text: async () => "<html><body>Workspace introuvable</body></html>",
+    });
+    mviewer.getProxy = jest.fn(() => "");
+
+    await expect(
+      sinpRepository.fetchGeoServerDataPost({
+        BASEURL: "https://example.test/geoserver/sinp/wms",
+        TYPENAME: "sinp_diffusion:fn_get_stats",
+        VIEWPARAMS: "DATE_DEB:2006-05-28;DATE_FIN:2026-05-28",
+      })
+    ).rejects.toThrow(
+      "GeoServer HTTP 404 Not Found sur https://example.test/geoserver/sinp/wfs : Workspace introuvable"
+    );
 
     global.fetch = previousFetch;
     mviewer.getProxy = previousGetProxy;
@@ -1382,16 +1488,33 @@ describe("CommuneSearchLayer", () => {
     expect(instance._serverRenderLayer).toBeDefined();
   });
 
-  test("Le contrôle communeSearch lance directement le WMS sans WFS fn_get_stats", async () => {
+  test("Le contrôle communeSearch ajuste la vue avec les géométries WFS", async () => {
     const control = mviewer.customControls.communeSearch;
     const layerInstance = mviewer.customLayers.communeSearch._instance;
     const renderServerOnlySpy = jest
       .spyOn(layerInstance, "renderServerOnly")
       .mockResolvedValue(undefined);
+    const fitToFeaturesSpy = jest.spyOn(layerInstance, "fitToFeatures");
+    const showSelectionPromptPanelSpy = jest.spyOn(
+      layerInstance,
+      "showSelectionPromptPanel"
+    );
     const fetchGeoServerDataSpy = jest.spyOn(
       SinpBaseCustom.prototype,
       "fetchGeoServerData"
-    ).mockResolvedValue({ type: "FeatureCollection", features: [] });
+    ).mockResolvedValue({
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: { code_insee: "62001" },
+          geometry: {
+            type: "Point",
+            coordinates: [650000, 7050000],
+          },
+        },
+      ],
+    });
 
     await control.submit({
       filteredDepartments: ["62"],
@@ -1404,13 +1527,25 @@ describe("CommuneSearchLayer", () => {
         TYPENAME: "sinp_diffusion:fn_get_stats",
       })
     );
-    expect(fetchGeoServerDataSpy).not.toHaveBeenCalled();
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        TYPENAME: "sinp_diffusion:fn_get_stats",
+      })
+    );
     expect(fetchGeoServerDataSpy).not.toHaveBeenCalledWith(
       expect.objectContaining({
         TYPENAME: "sinp_diffusion:fn_get_obs_detaillee",
       })
     );
+    expect(fitToFeaturesSpy).toHaveBeenCalledWith([
+      expect.objectContaining({
+        getGeometry: expect.any(Function),
+      }),
+    ]);
+    expect(showSelectionPromptPanelSpy).toHaveBeenCalled();
     renderServerOnlySpy.mockRestore();
+    fitToFeaturesSpy.mockRestore();
+    showSelectionPromptPanelSpy.mockRestore();
     fetchGeoServerDataSpy.mockRestore();
   });
 
@@ -1439,7 +1574,11 @@ describe("CommuneSearchLayer", () => {
         TYPENAME: "sinp_diffusion:fn_get_stats",
       })
     );
-    expect(fetchGeoServerDataSpy).not.toHaveBeenCalled();
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        TYPENAME: "sinp_diffusion:fn_get_stats",
+      })
+    );
     expect(showLegendSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         TYPENAME: "sinp_diffusion:fn_get_stats",
@@ -1793,7 +1932,7 @@ describe("sinpQueryBuilder - Configurations nouvelles", () => {
     expect(options.VIEWPARAMS).toContain("DATE_DEB:2020-01-01");
     expect(options.VIEWPARAMS).toContain("DATE_FIN:2026-03-10");
     expect(options.VIEWPARAMS).toContain("CD_REF:2440,2442");
-    expect(options.VIEWPARAMS).toContain("GRP_IDS:13,15");
+    expect(options.VIEWPARAMS).not.toContain("GRP_IDS:");
     expect(options.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
   });
 
@@ -1877,7 +2016,7 @@ describe("sinpQueryBuilder - Configurations nouvelles", () => {
     expect(options.VIEWPARAMS).toContain("DATE_FIN:2026-03-10");
     expect(options.VIEWPARAMS).toContain("DEPT_IDS:62");
     expect(options.VIEWPARAMS).toContain("CODE_INSEES:62225");
-    expect(options.VIEWPARAMS).toContain("GRP_IDS:13");
+    expect(options.VIEWPARAMS).not.toContain("GRP_IDS:");
     expect(options.VIEWPARAMS).toContain("CD_REF:2440");
     expect(options.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
   });

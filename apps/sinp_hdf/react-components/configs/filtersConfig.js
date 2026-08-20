@@ -56,6 +56,16 @@ export const FILTER_PROFILES = {
     ],
   },
 
+  GEOMETRY_OBSERVATIONS: {
+    name: 'Observations dans le zonage',
+    allowSubmitWithoutActiveFilters: true,
+    filters: [
+      FILTER_TYPES.TAXON,
+      FILTER_TYPES.TAXONOMIC_GROUP,
+      FILTER_TYPES.DATE,
+    ],
+  },
+
   // Profil synthèse communale : pour la couche SOPC
   COMMUNE_SYNTHESIS: {
     name: 'Synthèse communale',
@@ -148,7 +158,37 @@ export const SEARCH_RESTITUTION_LAYERS = [
     label: 'Grille 10x10',
     targetLocCode: '6',
   },
+  {
+    id: 'selection',
+    label: 'Zonage complet',
+    selectionOnly: true,
+  },
 ];
+
+export const getEnvironmentalSelectionLayers = () => {
+  const configuredLayers = window.mviewer?.env?.EXTERNAL_LAYERS_OBS;
+
+  if (!Array.isArray(configuredLayers)) {
+    console.error(
+      "La configuration EXTERNAL_LAYERS_OBS est absente de sinp_hdf.json."
+    );
+    return [];
+  }
+
+  return configuredLayers
+    .filter(
+      (layer) =>
+        layer &&
+        typeof layer.id === "string" &&
+        layer.id.trim() !== "" &&
+        typeof layer.label === "string" &&
+        layer.label.trim() !== ""
+    )
+    .map(({ id, label }) => ({
+      id: id.trim(),
+      label: label.trim(),
+    }));
+};
 
 const SEARCH_LAYER_PRIORITY = [
   'communeSearch',
@@ -193,6 +233,49 @@ export const getSearchLayer = (preferredLayerId = null) => {
   }
 
   return window.mviewer?.customLayers?.[resolvedLayerId] || null;
+};
+
+export const getVisibleEnvironmentalLayers = () => {
+  const configuredLayers = window.mviewer?.getLayers?.() || {};
+
+  return getEnvironmentalSelectionLayers().filter(({ id }) =>
+    configuredLayers[id]?.layer?.getVisible?.()
+  );
+};
+
+export const subscribeToEnvironmentalLayerVisibility = (onChange) => {
+  let subscriptions = [];
+
+  const unbind = () => {
+    subscriptions.forEach(({ layer, handler }) => {
+      layer.un("change:visible", handler);
+    });
+    subscriptions = [];
+  };
+
+  const bind = () => {
+    unbind();
+    const configuredLayers = window.mviewer?.getLayers?.() || {};
+    subscriptions = getEnvironmentalSelectionLayers().map(({ id }) => {
+      const layer = configuredLayers[id]?.layer;
+      if (!layer?.on || !layer?.un) {
+        return null;
+      }
+
+      const handler = () => onChange(getVisibleEnvironmentalLayers());
+      layer.on("change:visible", handler);
+      return { layer, handler };
+    }).filter(Boolean);
+
+    onChange(getVisibleEnvironmentalLayers());
+  };
+
+  bind();
+  document.addEventListener("map-ready", bind);
+  return () => {
+    document.removeEventListener("map-ready", bind);
+    unbind();
+  };
 };
 
 /**

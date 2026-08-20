@@ -1,0 +1,84 @@
+{{#features}}
+	<li class="item external-layer-feature" id="{{feature_ol_uid}}">
+		<h3 class="external-layer-feature__title">{{nom_site}}</h3>
+
+		<dl class="external-layer-feature__details">
+			{{#id_mnhn}}
+				<dt>Identifiant national</dt>
+				<dd>{{id_mnhn}}</dd>
+			{{/id_mnhn}}
+			{{#date_crea}}
+				<dt>Date de création</dt>
+				<dd>{{date_crea}}</dd>
+			{{/date_crea}}
+			{{#operateur}}
+				<dt>Opérateur</dt>
+				<dd>{{operateur}}</dd>
+			{{/operateur}}
+			{{#area_sig}}
+				<dt>Surface</dt>
+				<dd>{{area_sig}} ha</dd>
+			{{/area_sig}}
+		</dl>
+
+		{{#url_fiche}}
+			<a class="external-layer-feature__link" href="{{url_fiche}}" target="_blank" rel="noopener noreferrer">
+				Consulter la fiche INPN
+			</a>
+		{{/url_fiche}}
+
+		<mv-external-layer-observation-results
+			data-feature-uid="{{feature_ol_uid}}">
+		</mv-external-layer-observation-results>
+	</li>
+{{/features}}
+
+<style>
+	.external-layer-feature {
+		padding: 0.75rem;
+	}
+
+	.external-layer-feature__title {
+		margin: 0 0 1rem;
+		color: #2d5948;
+		font-size: 1.35rem;
+		line-height: 1.2;
+	}
+
+	.external-layer-feature__details {
+		display: grid;
+		grid-template-columns: minmax(8rem, auto) 1fr;
+		gap: 0.4rem 0.75rem;
+		margin-bottom: 1rem;
+	}
+
+	.external-layer-feature__details dt,
+	.external-layer-feature__details dd {
+		margin: 0;
+	}
+
+	.external-layer-feature__details dt {
+		font-weight: 600;
+	}
+
+	.external-layer-feature__link {
+		display: inline-block;
+		padding: 0.5rem 0.75rem;
+		border-radius: 0.25rem;
+		color: #fff;
+		background-color: #2d5948;
+		text-decoration: none;
+	}
+
+	.external-layer-feature__link:hover,
+	.external-layer-feature__link:focus {
+		color: #fff;
+		background-color: #1f4033;
+		text-decoration: none;
+	}
+
+	mv-external-layer-observation-results {
+		display: block;
+		margin-top: 1rem;
+	}
+</style>

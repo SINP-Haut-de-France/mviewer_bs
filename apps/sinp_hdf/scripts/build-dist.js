@@ -25,7 +25,7 @@ const ROOT_FILES_TO_PACKAGE = [
 
 const FILES_TO_PACKAGE = [
   {
-    source: "react-components/sinp_components/GlobalFilters/GlobalFiltersSidebar.css",
+    source: "react-components/sinp_components/SidebarFilterPanel/SidebarFilterPanel.css",
     destination: "addons/reactInjector/dist/GlobalFiltersSidebar.css",
   },
 ];

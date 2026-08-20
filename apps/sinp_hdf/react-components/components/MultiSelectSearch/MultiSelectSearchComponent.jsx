@@ -252,6 +252,8 @@ const MultiSelectSearchComponent = ({
 
   // Gestion de la suppression des éléments sélectionnés
   const handleRemove = (itemValue) => {
+    if (disabled) return;
+
     const newSelected = selected.filter((item) => item[returnValueKey] !== itemValue);
     setSelected(newSelected);
 

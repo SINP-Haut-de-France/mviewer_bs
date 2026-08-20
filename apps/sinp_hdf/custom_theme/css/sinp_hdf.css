@@ -3,13 +3,126 @@
    Bootstrap 5 Compatible
    ======================================== */
 
+/* ========================================
+   Typographies de la charte graphique ARB HdF
+   ========================================
+   Geologica : typographie principale
+     - Black (900)    : accroches et titres événementiels
+     - Bold (700)     : accroches secondaires et sous-titres
+     - Regular (400)  : texte courant
+   Aptos : typographie secondaire, utilisée en repli
+   ======================================== */
+
+@font-face {
+  font-family: "Geologica";
+  src: url("../fonts/Geologica/static/Geologica-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geologica";
+  src: url("../fonts/Geologica/static/Geologica-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geologica";
+  src: url("../fonts/Geologica/static/Geologica-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geologica";
+  src: url("../fonts/Geologica/static/Geologica-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geologica";
+  src: url("../fonts/Geologica/static/Geologica-ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geologica";
+  src: url("../fonts/Geologica/static/Geologica-Black.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Aptos est installée par défaut sur les postes : la copie locale est
+   privilégiée, les fichiers du thème servent de repli. */
+@font-face {
+  font-family: "Aptos";
+  src: local("Aptos"), url("../fonts/Microsoft%20Aptos%20Fonts/Aptos.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Aptos";
+  src: local("Aptos Italic"), url("../fonts/Microsoft%20Aptos%20Fonts/Aptos-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Aptos";
+  src: local("Aptos SemiBold"), url("../fonts/Microsoft%20Aptos%20Fonts/Aptos-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Aptos";
+  src: local("Aptos ExtraBold"), url("../fonts/Microsoft%20Aptos%20Fonts/Aptos-ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Aptos";
+  src: local("Aptos Black"), url("../fonts/Microsoft%20Aptos%20Fonts/Aptos-Black.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Variables personnalisées héritées de mviewer */
 :root {
-  /* Utilisation des variables mviewer pour cohérence */
-  --sinp-primary: var(--mvcustom-color-primary, var(--mv-color-primary, #191c36));
-  --sinp-secondary: var(--mvcustom-color-secondary, #0d6efd);
+  /* Typographies de la charte graphique */
+  --sinp-font-primary: "Geologica", "Aptos", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --sinp-font-heading: var(--sinp-font-primary);
+  --sinp-font-weight-title: 900;    /* Geologica Black : titres */
+  --sinp-font-weight-subtitle: 700; /* Geologica Bold : sous-titres */
+  --sinp-font-weight-body: 400;     /* Geologica Regular : texte courant */
+  --mvcustom-font: var(--sinp-font-primary); /* Point d'extension mviewer */
+  --bs-body-font-family: var(--sinp-font-primary);
+  --bs-font-sans-serif: var(--sinp-font-primary);
+
+  /* Palette de l'identité visuelle Observatoire de la biodiversité. */
+  --sinp-primary: #1889a8;
+  --sinp-secondary: #8bc53f;
+  --mvcustom-color-primary: var(--sinp-primary);
+  --mvcustom-color-secondary: var(--sinp-secondary);
   --sinp-navbar-height: var(--mvcustom-navbar-h, 80px);
   --sinp-border-radius: var(--mvcustom-border-radius, 4px);
+
   
   /* Dimensions des panneaux */
   --sinp-rightpanel-width: 30vw;
@@ -22,11 +135,69 @@
   --bs-primary: var(--sinp-primary);
   --bs-primary-hover: var(--sinp-primary);
   --bs-primary-border: var(--sinp-primary);
+
+
 }
 
 /* Redéfinir la variable en mode toggled-2 */
 #wrapper.toggled-2 {
   --sinp-sidebar-width: 50px; /* 👈 Sidebar réduite */
+}
+
+/* ========================================
+   Application de la typographie
+   ======================================== */
+
+body,
+button,
+input,
+optgroup,
+select,
+textarea,
+.btn,
+.form-control,
+.form-select,
+.modal,
+.dropdown-menu,
+.tooltip,
+.popover {
+  font-family: var(--sinp-font-primary);
+}
+
+/* Titres : Geologica Black */
+h1,
+h2,
+.h1,
+.h2 {
+  font-family: var(--sinp-font-heading);
+  font-weight: var(--sinp-font-weight-title);
+}
+
+/* Sous-titres et accroches secondaires : Geologica Bold */
+h3,
+h4,
+h5,
+h6,
+.h3,
+.h4,
+.h5,
+.h6,
+.modal-title,
+.section-title {
+  font-family: var(--sinp-font-heading);
+  font-weight: var(--sinp-font-weight-subtitle);
+}
+
+/* Titre des modales React (compact : reste sur la graisse Bold) */
+.base-modal-drag-handle h2 {
+  font-family: var(--sinp-font-heading);
+  font-weight: var(--sinp-font-weight-subtitle);
+}
+
+/* Titre de l'application dans la navbar */
+.mv-title {
+  font-family: var(--sinp-font-heading);
+  font-weight: var(--sinp-font-weight-subtitle);
 }
 
 /* ========================================
@@ -216,6 +387,57 @@
   border-color: #86b7fe;
   outline: 0;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.mv-selection-filter {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.625rem;
+  border: 1px solid var(--sinp-border-color);
+  border-radius: var(--sinp-border-radius);
+  background: var(--sinp-bg-light);
+}
+
+.mv-selection-filter .form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.mv-selection-filter__label {
+  margin-bottom: 0.25rem;
+}
+
+.mv-selection-filter__status {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  border-radius: var(--sinp-border-radius);
+}
+
+.mv-selection-filter__status.is-valid {
+  color: #155724;
+  background: #d4edda;
+}
+
+.mv-selection-filter__status.is-pending {
+  color: #664d03;
+  background: #fff3cd;
+}
+
+.mv-selection-filter__change {
+  justify-self: start;
+}
+
+.mv-location-standard-filters {
+  transition: opacity 0.15s ease;
+}
+
+.mv-location-standard-filters.is-disabled {
+  opacity: 0.45;
 }
 
 /* Tags sélectionnés avec couleur primaire */
@@ -1186,6 +1408,112 @@
   white-space: normal !important;
 }
 
+#react-sidebar-filter-panel .filter-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  width: 100% !important;
+  margin-top: 1rem !important;
+  padding-top: 0.75rem !important;
+  border-top: 1px solid var(--sinp-border-color, #dee2e6) !important;
+}
+
+#react-sidebar-filter-panel .filter-actions .btn {
+  flex: 0 1 auto !important;
+  width: auto !important;
+  min-width: 7.5rem !important;
+  padding: 0.55rem 0.8rem !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--sinp-border-radius, 4px) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+#react-sidebar-filter-panel .filter-actions .btn-reset {
+  color: #fff !important;
+  background-color: #6c757d !important;
+  border-color: #6c757d !important;
+}
+
+#react-sidebar-filter-panel .filter-actions .btn-apply {
+  color: #fff !important;
+  background-color: var(--sinp-secondary, #0d6efd) !important;
+  border-color: var(--sinp-secondary, #0d6efd) !important;
+}
+
+#react-sidebar-filter-panel .filter-actions .btn-reset:hover:not(:disabled) {
+  background-color: #5c636a !important;
+  border-color: #565e64 !important;
+}
+
+#react-sidebar-filter-panel .filter-actions .btn-apply:hover:not(:disabled) {
+  filter: brightness(0.9);
+}
+
+#react-sidebar-filter-panel .filter-actions .btn:disabled {
+  opacity: 0.6 !important;
+}
+
+/* Barre d'actions des filtres, dans la sidebar et la modale mobile. */
+.react-filter-actions-section,
+#react-sidebar-filter-actions {
+  background-color: #fff !important;
+}
+
+#react-sidebar-filter-actions .mv-filter-actions-bar,
+.global-filter-modal-actions .mv-filter-actions-bar {
+  border: 1px solid var(--sinp-border-color, #dee2e6);
+  background-color: #fff !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+}
+
+.global-filter-modal .base-modal-header {
+  color: #fff;
+  background-color: var(--sinp-primary, #1889a8) !important;
+  border-bottom-color: var(--sinp-primary, #1889a8) !important;
+}
+
+.global-filter-modal .base-modal-header h2,
+.global-filter-modal .base-modal-header-button,
+.global-filter-modal .minimize-button,
+.global-filter-modal .close-button {
+  color: #fff !important;
+}
+
+.mv-filter-actions-bar__count {
+  color: #212529 !important;
+}
+
+.mv-filter-actions-bar .btn {
+  border: 1px solid transparent;
+  background-image: none !important;
+}
+
+.mv-filter-actions-bar__reset {
+  color: #fff !important;
+  background-color: #6c757d !important;
+  border-color: #6c757d !important;
+}
+
+.mv-filter-actions-bar__reset:hover:not(:disabled),
+.mv-filter-actions-bar__reset:focus-visible:not(:disabled) {
+  background-color: #5c636a !important;
+  border-color: #565e64 !important;
+}
+
+.mv-filter-actions-bar__submit {
+  color: #fff !important;
+  background-color: var(--sinp-secondary, #0d6efd) !important;
+  border-color: var(--sinp-secondary, #0d6efd) !important;
+}
+
+.mv-filter-actions-bar .btn:disabled {
+  opacity: 0.6 !important;
+}
+
 /* ========================================
    Sidebar reduite - correctif legacy Bootstrap 3
    ======================================== */
@@ -1339,6 +1667,76 @@
   display: inline-flex !important;
   align-items: stretch;
   margin-bottom: 0.5em;
+}
+
+.mv-restitution-header-control {
+  position: fixed;
+  top: calc(var(--sinp-navbar-height, 80px) + 10px);
+  right: 0;
+  left: var(--sinp-sidebar-width, 350px);
+  z-index: 1000;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: center;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+}
+
+.mv-restitution-header-control__button {
+  min-height: 2.5rem;
+  padding: 0.45rem 0.8rem !important;
+  border: 1px solid var(--sinp-primary, #191c36) !important;
+  border-radius: 0 !important;
+  color: var(--sinp-primary, #191c36) !important;
+  background: #fff !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap;
+  pointer-events: auto;
+}
+
+.mv-restitution-header-control__button:first-child {
+  border-radius: var(--sinp-border-radius) 0 0 var(--sinp-border-radius) !important;
+}
+
+.mv-restitution-header-control__button:last-child {
+  border-radius: 0 var(--sinp-border-radius) var(--sinp-border-radius) 0 !important;
+}
+
+.mv-restitution-header-control__button + .mv-restitution-header-control__button {
+  border-left-width: 0 !important;
+}
+
+.mv-restitution-header-control__button:hover:not(:disabled),
+.mv-restitution-header-control__button.is-selected {
+  color: #fff !important;
+  background: var(--sinp-primary, #191c36) !important;
+}
+
+.mv-restitution-header-control__button:disabled:not(.is-selected) {
+  color: #6c757d !important;
+  background: #e9ecef !important;
+  border-color: #adb5bd !important;
+  opacity: 0.75;
+}
+
+.mv-restitution-header-control__button.is-selected {
+  opacity: 1;
+}
+
+@media (max-width: 767.98px) {
+  .mv-restitution-header-control {
+    left: 0;
+    max-width: calc(100vw - 1rem);
+    margin-inline: auto;
+  }
+
+  .mv-restitution-header-control__button {
+    padding-inline: 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
 }
 
 #layers-container-box-header > .btn {

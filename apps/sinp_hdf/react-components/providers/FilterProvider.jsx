@@ -34,7 +34,10 @@ export const FilterProvider = ({ children }) => {
     activeLayerId: null,
     filterProfile: null,
     currentFilters: null,
+    selectionContext: null,
+    onSelectionSubmit: null,
     uiConfig: DEFAULT_FILTER_UI_CONFIG,
+    modalOpenRequestId: 0,
   });
   const [toasts, setToasts] = useState([]);
 
@@ -96,9 +99,19 @@ export const FilterProvider = ({ children }) => {
   const mergeConfig = useCallback(
     (prevState, config = {}) => ({
       ...prevState,
-      onSubmit: config.onSubmit ?? prevState.onSubmit,
+      onSubmit: Object.prototype.hasOwnProperty.call(config, "onSubmit")
+        ? config.onSubmit
+        : prevState.onSubmit,
       activeLayerId: config.activeLayerId ?? prevState.activeLayerId,
-      filterProfile: config.filterProfile ?? prevState.filterProfile,
+      filterProfile: Object.prototype.hasOwnProperty.call(config, "filterProfile")
+        ? config.filterProfile
+        : prevState.filterProfile,
+      selectionContext: Object.prototype.hasOwnProperty.call(config, "selectionContext")
+        ? config.selectionContext
+        : prevState.selectionContext,
+      onSelectionSubmit: Object.prototype.hasOwnProperty.call(config, "onSelectionSubmit")
+        ? config.onSelectionSubmit
+        : prevState.onSelectionSubmit,
       uiConfig: mergeUIConfig(prevState.uiConfig, config),
     }),
     [mergeUIConfig]
@@ -112,6 +125,7 @@ export const FilterProvider = ({ children }) => {
       ...mergeConfig(prev, config),
       displayMode: "modal",
       isModalOpen: true,
+      modalOpenRequestId: prev.modalOpenRequestId + 1,
     }));
   }, [mergeConfig]);
 
@@ -166,13 +180,43 @@ export const FilterProvider = ({ children }) => {
     }));
   }, []);
 
+  const clearSelectionContext = useCallback(() => {
+    setFilterState((prev) => ({
+      ...prev,
+      selectionContext: null,
+      onSelectionSubmit: null,
+    }));
+  }, []);
+
+  const setSelectionContext = useCallback(
+    (selectionContext, onSelectionSubmit = null) => {
+      setFilterState((prev) => ({
+        ...prev,
+        activeLayerId: "communeSearch",
+        selectionContext,
+        onSelectionSubmit,
+        currentFilters: {
+          ...(prev.currentFilters || {}),
+          selectionMode: Boolean(selectionContext),
+          selectedSelectionLayerId: selectionContext?.layerId || null,
+          selectionFeatureUid: selectionContext?.featureUid || null,
+          selectionLabel: selectionContext?.featureLabel || null,
+        },
+      }));
+    },
+    []
+  );
+
   const modalState = useMemo(
     () => ({
       isOpen: filterState.displayMode === "modal" && filterState.isModalOpen,
       onSubmit: filterState.onSubmit,
       activeLayerId: filterState.activeLayerId,
       filterProfile: filterState.filterProfile,
+      selectionContext: filterState.selectionContext,
+      onSelectionSubmit: filterState.onSelectionSubmit,
       uiConfig: filterState.uiConfig,
+      openRequestId: filterState.modalOpenRequestId,
     }),
     [filterState]
   );
@@ -183,6 +227,8 @@ export const FilterProvider = ({ children }) => {
       activeLayerId: filterState.activeLayerId,
       filterProfile: filterState.filterProfile,
       onSubmit: filterState.onSubmit,
+      selectionContext: filterState.selectionContext,
+      onSelectionSubmit: filterState.onSelectionSubmit,
       uiConfig: filterState.uiConfig,
     }),
     [filterState]
@@ -210,6 +256,8 @@ export const FilterProvider = ({ children }) => {
       currentFilters: filterState.currentFilters,
       setCurrentFilters,
       clearCurrentFilters,
+      clearSelectionContext,
+      setSelectionContext,
 
       // Notifications globales
       toasts,
@@ -230,6 +278,8 @@ export const FilterProvider = ({ children }) => {
       setSidebarLayer,
       setCurrentFilters,
       clearCurrentFilters,
+      clearSelectionContext,
+      setSelectionContext,
       toasts,
       dismissToast,
       pushToast,

@@ -385,6 +385,124 @@ class SinpBaseCustom {
     return this._lastResultFeatures;
   }
 
+  _getFeatureNavigationIndex(feature) {
+    if (!feature) {
+      return -1;
+    }
+
+    const directIndex = this._getLastResultFeatures().indexOf(feature);
+    if (directIndex >= 0) {
+      return directIndex;
+    }
+
+    const joinConfig = this._getResultJoinConfig(this._lastSearchParams || {});
+    if (!joinConfig) {
+      return -1;
+    }
+
+    const featureKeys = new Set(
+      this._getEntityJoinValues(
+        feature,
+        joinConfig.featureKey,
+        (source, candidate) => source?.get?.(candidate),
+        this._lastSearchParams || {}
+      )
+    );
+
+    return this._getLastResultFeatures().findIndex((candidateFeature) => {
+      return this._getEntityJoinValues(
+        candidateFeature,
+        joinConfig.featureKey,
+        (source, candidate) => source?.get?.(candidate),
+        this._lastSearchParams || {}
+      ).some((key) => featureKeys.has(key));
+    });
+  }
+
+  getEntityNavigationState(feature) {
+    const features = this._getLastResultFeatures();
+    if (features.length <= 1) {
+      return null;
+    }
+
+    const currentIndex = this._getFeatureNavigationIndex(feature);
+    if (currentIndex < 0) {
+      return null;
+    }
+
+    const properties = features[currentIndex]?.getProperties?.() || {};
+    const entityLabel =
+      properties.libelle ||
+      properties.nom_commune ||
+      properties.code_insee ||
+      properties.code_maille ||
+      properties.code ||
+      "";
+
+    return {
+      currentIndex,
+      total: features.length,
+      entityLabel: String(entityLabel),
+    };
+  }
+
+  async selectEntityByIndex(index) {
+    const features = this._getLastResultFeatures();
+    if (!Number.isInteger(index) || index < 0 || index >= features.length) {
+      return;
+    }
+
+    this.getLayerInstance()?.fitToFeatures?.([features[index]]);
+    await this.handle([features[index]]);
+  }
+
+  _hasExplicitEntityNavigationScope(params = {}) {
+    const targetLocCode = this._getResolvedTargetLocCode(params);
+    if (targetLocCode === "2") {
+      return Array.isArray(params.communes) && params.communes.length > 1;
+    }
+
+    if (targetLocCode === "6" || targetLocCode === "7") {
+      return Array.isArray(params.mailles) && params.mailles.length > 1;
+    }
+
+    return false;
+  }
+
+  async _loadExplicitNavigationFeatures(params = {}, options = {}) {
+    const scopeConfig = this._getDetailRequestScopeConfig(params);
+    if (!scopeConfig) {
+      return [];
+    }
+
+    const scopedValues =
+      scopeConfig.paramName === "communes"
+        ? this._normalizeCommuneCodes(params.communes || [])
+        : this._normalizeGridCodes(params.mailles || []);
+    const features = [];
+
+    for (let index = 0; index < scopedValues.length; index += 6) {
+      const batchValues = scopedValues.slice(index, index + 6);
+      const batchResults = await Promise.all(
+        batchValues.map((value) =>
+          this._loadSearchResultInMemory(
+            {
+              ...params,
+              communes: [],
+              mailles: [],
+              [scopeConfig.paramName]: [value],
+            },
+            options
+          )
+        )
+      );
+
+      batchResults.forEach((result) => features.push(...result.features));
+    }
+
+    return features;
+  }
+
   async _fetchProperties(params, typeName) {
     if (!typeName) {
       return [];
@@ -426,6 +544,9 @@ class SinpBaseCustom {
     const communes = this._normalizeCommuneCodes(
       params.filteredCommunes || params.communes || []
     );
+    const mailles = this._normalizeGridCodes(
+      params.filteredMailles || params.mailles || []
+    );
 
     if (departements.length > this.constructor.MAX_SELECTED_DEPARTMENTS) {
       throw new Error("Un seul département peut être sélectionné.");
@@ -453,6 +574,7 @@ class SinpBaseCustom {
 
     return {
       communes,
+      mailles,
       departements,
       epcis,
       groupes: params.filteredGroupes || params.groupes || [],
@@ -855,7 +977,9 @@ class SinpBaseCustom {
   }
 
   _buildMetadataRequestParams(features = [], params = this._lastSearchParams || {}) {
-    return params;
+    return this._buildDetailRequestParams(features, params, {
+      preferFeatureScope: true,
+    });
   }
 
   _attachMetadataPropertiesToFeatures(features = [], metadataProperties = []) {
@@ -1026,7 +1150,9 @@ class SinpBaseCustom {
 
   async _ensureEntityData(features = [], params = this._lastSearchParams || {}) {
     const normalizedFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
-    const detailParams = this._buildDetailRequestParams(normalizedFeatures, params);
+    const detailParams = this._buildDetailRequestParams(normalizedFeatures, params, {
+      preferFeatureScope: true,
+    });
     const joinConfig = this._getResultJoinConfig(detailParams);
 
     await this._attachPropertiesToFeatures(
@@ -1337,6 +1463,21 @@ class SinpBaseCustom {
     };
   }
 
+  async _loadSearchExtentFeatures(params = {}) {
+    const layerInstance = this.getLayerInstance();
+    const normalizedParams = this._normalizeInputParams(params);
+    const mainTypeName = this._resolveRequestTypeName(
+      this.mainTypeName,
+      layerInstance?.typeName
+    );
+    const mainOptions = this.buildRequestOptions(normalizedParams, mainTypeName);
+    const mainData = await this.fetchGeoServerData(mainOptions);
+
+    return this.format.readFeatures(
+      mainData || { type: "FeatureCollection", features: [] }
+    );
+  }
+
   async submit(params = {}, options = {}) {
     const layerInstance = this.getLayerInstance();
     if (!layerInstance) {
@@ -1391,8 +1532,10 @@ class SinpBaseCustom {
       if (layerInstance.serverRenderOnly) {
         layerInstance.beforeLoad();
         this._prepareServerRenderLayer(layerInstance, mainOptions);
-        layerInstance.fitToDefaultSearchExtent?.();
-        await layerInstance.renderServerOnly(mainOptions);
+        const [, extentFeatures] = await Promise.all([
+          layerInstance.renderServerOnly(mainOptions),
+          this._loadSearchExtentFeatures(normalizedParams),
+        ]);
         this.constructor._debug(refreshId, "WMS render completed", {
           layerId: this.layerId,
           isCurrentRefresh: SinpBaseCustom._isCurrentSearchRefresh(refreshId),
@@ -1403,6 +1546,20 @@ class SinpBaseCustom {
             layerInstance.clear();
           }
           return undefined;
+        }
+        layerInstance.fitToFeatures?.(extentFeatures);
+        if (this._hasExplicitEntityNavigationScope(normalizedParams)) {
+          const navigationFeatures = await this._loadExplicitNavigationFeatures(
+            normalizedParams,
+            options
+          );
+          if (!SinpBaseCustom._isCurrentSearchRefresh(refreshId)) {
+            return undefined;
+          }
+          this._setLastResultFeatures(navigationFeatures);
+        }
+        if (extentFeatures.length > 0) {
+          layerInstance.showSelectionPromptPanel?.();
         }
         this._showSearchLayerLegend(mainOptions);
         return undefined;

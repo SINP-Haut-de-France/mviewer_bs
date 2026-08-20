@@ -17,7 +17,8 @@ import {
   FILTER_TYPES,
   getFilterProfileForLayer,
   resolveSearchLayerId,
-  SEARCH_RESTITUTION_LAYERS,
+  getVisibleEnvironmentalLayers,
+  subscribeToEnvironmentalLayerVisibility,
 } from "../../configs/filtersConfig";
 
 const GlobalFiltersComponent = (
@@ -25,13 +26,11 @@ const GlobalFiltersComponent = (
     onSubmit,
     onReset,
     initialFilters = null,
-    showActions = true,
-    actionLabels = {
-      submit: "Appliquer les filtres",
-      reset: "Réinitialiser",
-    },
     filterProfile = null,
     activeLayerId = null,
+    selectionContext = null,
+    onSelectionClear = null,
+    onSelectionInvalidated = null,
     onFiltersChange = null, // NEW: callback quand les filtres changent localement
     onSubmitError = null,
   },
@@ -42,7 +41,7 @@ const GlobalFiltersComponent = (
     typeof onSubmit,
     onSubmit !== undefined
   );
-  console.log("🔍 [GlobalFilters] Props:", { showActions, activeLayerId });
+  console.log("🔍 [GlobalFilters] Props:", { activeLayerId });
 
   // Initialize WFS cache ONLY for taxons (WFS data)
   // Departments and communes are loaded from static JSON files, no need to cache
@@ -62,13 +61,30 @@ const GlobalFiltersComponent = (
         "yyyy-MM-dd"
       ),
       dateFin: format(new Date(), "yyyy-MM-dd"),
+      selectionMode: false,
+      selectedSelectionLayerId: null,
+      selectionFeatureUid: null,
+      selectionLabel: null,
     };
   }, []);
 
+  const requestedInitialRestitutionLayerId = initialFilters?.restitutionLayerId;
   const initialRestitutionLayerId =
-    initialFilters?.restitutionLayerId || resolveSearchLayerId(activeLayerId);
+    requestedInitialRestitutionLayerId === "selection" && !selectionContext
+      ? resolveSearchLayerId(activeLayerId)
+      : requestedInitialRestitutionLayerId || resolveSearchLayerId(activeLayerId);
   const initialFilterState = {
-    ...(initialFilters || defaultFilters),
+    ...defaultFilters,
+    ...(initialFilters || {}),
+    selectionMode: Boolean(selectionContext),
+    selectedSelectionLayerId:
+      selectionContext?.layerId ||
+      initialFilters?.selectedSelectionLayerId ||
+      null,
+    selectionFeatureUid:
+      selectionContext?.featureUid || initialFilters?.selectionFeatureUid || null,
+    selectionLabel:
+      selectionContext?.featureLabel || initialFilters?.selectionLabel || null,
     restitutionLayerId: initialRestitutionLayerId,
   };
   const [filters, setFilters] = useState(initialFilterState);
@@ -79,6 +95,9 @@ const GlobalFiltersComponent = (
   );
   const selectedRestitutionLayerIdRef = useRef(initialRestitutionLayerId);
   const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
+  const [visibleEnvironmentalLayers, setVisibleEnvironmentalLayers] = useState(
+    () => getVisibleEnvironmentalLayers()
+  );
   const lastSubmittedFiltersRef = useRef(null);
 
   const updateFilters = useCallback((updater) => {
@@ -108,6 +127,64 @@ const GlobalFiltersComponent = (
       setSelectedRestitutionLayerId(resolvedLayerId);
     }
   }, [activeLayerId]);
+
+  useEffect(() => {
+    return subscribeToEnvironmentalLayerVisibility(setVisibleEnvironmentalLayers);
+  }, []);
+
+  useEffect(() => {
+    if (!selectionContext) {
+      return;
+    }
+
+    updateFilters((prev) => ({
+      ...prev,
+      selectionMode: true,
+      selectedSelectionLayerId: selectionContext.layerId,
+      selectionFeatureUid: selectionContext.featureUid,
+      selectionLabel: selectionContext.featureLabel,
+    }));
+  }, [selectionContext, updateFilters]);
+
+  const hasValidSelection =
+    Boolean(filters.selectionMode) &&
+    Boolean(filters.selectionFeatureUid) &&
+    Boolean(filters.selectedSelectionLayerId) &&
+    visibleEnvironmentalLayers.some(
+      ({ id }) => id === filters.selectedSelectionLayerId
+    );
+
+  useEffect(() => {
+    if (
+      !filters.selectionMode ||
+      !filters.selectedSelectionLayerId ||
+      visibleEnvironmentalLayers.some(
+        ({ id }) => id === filters.selectedSelectionLayerId
+      )
+    ) {
+      return;
+    }
+
+    const fallbackLayerId = resolveSearchLayerId(activeLayerId);
+    selectedRestitutionLayerIdRef.current = fallbackLayerId;
+    setSelectedRestitutionLayerId(fallbackLayerId);
+    updateFilters((prev) => ({
+      ...prev,
+      selectionMode: false,
+      selectedSelectionLayerId: null,
+      selectionFeatureUid: null,
+      selectionLabel: null,
+      restitutionLayerId: fallbackLayerId,
+    }));
+    onSelectionInvalidated?.();
+  }, [
+    activeLayerId,
+    filters.selectedSelectionLayerId,
+    filters.selectionMode,
+    onSelectionInvalidated,
+    updateFilters,
+    visibleEnvironmentalLayers,
+  ]);
 
   // Déterminer quel profil utiliser
   const activeProfile = useMemo(() => {
@@ -249,15 +326,67 @@ const GlobalFiltersComponent = (
 
     // Extraire les id des nœuds les plus profonds uniquement
     // CheckBoxTreeView retourne maintenant seulement les feuilles/nœuds les plus profonds
-    const selectedIds = selectedNodes.map((node) => node.id);
+    const selectedIds = (selectedNodes || []).map((node) => node.id);
 
     console.log("🆔 id sélectionnés:", selectedIds);
 
     updateFilters((prev) => ({
       ...prev,
       filteredGroupes: selectedIds, // Stocker les IDs pour l'UI et la soumission
+      filteredTaxons: [],
     }));
   }, [updateFilters]);
+
+  const handleSelectionModeChange = useCallback(
+    (enabled) => {
+      let restitutionLayerId = selectedRestitutionLayerIdRef.current;
+      if (!enabled && restitutionLayerId === "selection") {
+        restitutionLayerId = resolveSearchLayerId(activeLayerId);
+        selectedRestitutionLayerIdRef.current = restitutionLayerId;
+        setSelectedRestitutionLayerId(restitutionLayerId);
+      }
+
+      updateFilters((prev) => ({
+        ...prev,
+        selectionMode: enabled,
+        restitutionLayerId,
+      }));
+      window.externalLayersObs?.setSelectionActive?.(
+        enabled && Boolean(filtersRef.current.selectionFeatureUid)
+      );
+    },
+    [activeLayerId, updateFilters]
+  );
+
+  const handleSelectionLayerChange = useCallback(
+    (layerId) => {
+      const matchesCurrentSelection = selectionContext?.layerId === layerId;
+      window.externalLayersObs?.setSelectionActive?.(
+        Boolean(matchesCurrentSelection)
+      );
+      updateFilters((prev) => ({
+        ...prev,
+        selectedSelectionLayerId: layerId || null,
+        selectionFeatureUid: matchesCurrentSelection
+          ? selectionContext.featureUid
+          : null,
+        selectionLabel: matchesCurrentSelection
+          ? selectionContext.featureLabel
+          : null,
+      }));
+    },
+    [selectionContext, updateFilters]
+  );
+
+  const handleRequestSelectionChange = useCallback(() => {
+    window.dispatchEvent(
+      new CustomEvent("sinp:request-zoning-selection", {
+        detail: {
+          layerId: filtersRef.current.selectedSelectionLayerId || null,
+        },
+      })
+    );
+  }, []);
 
   const buildSubmitParams = useCallback((filtersSnapshot = filtersRef.current) => {
     // Extract cd_ref from complete taxon objects for URL generation
@@ -276,14 +405,17 @@ const GlobalFiltersComponent = (
           taxons: taxonsForURL, // Send only cd_ref values to URL builder
         }),
       ...(filterVisibility.showDepartment &&
+        !filtersSnapshot.selectionMode &&
         (filtersSnapshot.filteredDepartments || []).length > 0 && {
           departements: filtersSnapshot.filteredDepartments,
         }),
       ...(filterVisibility.showCommune &&
+        !filtersSnapshot.selectionMode &&
         (filtersSnapshot.filteredCommunes || []).length > 0 && {
           communes: filtersSnapshot.filteredCommunes,
         }),
       ...(filterVisibility.showTaxonomicGroup &&
+        taxonsForURL.length === 0 &&
         (filtersSnapshot.filteredGroupes || []).length > 0 && {
           groupes: filtersSnapshot.filteredGroupes, // Envoyer directement les IDs sélectionnés
         }),
@@ -300,6 +432,14 @@ const GlobalFiltersComponent = (
 
     // Use the synchronous ref to avoid stale state when submit is immediate
     const currentFilters = filtersSnapshot;
+    if (currentFilters.selectionMode && !hasValidSelection) {
+      const error = new Error(
+        "Sélectionnez un zonage avant d'appliquer les filtres."
+      );
+      onSubmitError?.(error);
+      return;
+    }
+
     const params = buildSubmitParams(currentFilters);
     console.log("===== 📤 SOUMISSION DES PARAMETRES =====");
     console.log("État complet des filtres (ref):", currentFilters);
@@ -327,7 +467,7 @@ const GlobalFiltersComponent = (
     } else {
       console.error("❌ [GlobalFilters] onSubmit est undefined !");
     }
-  }, [buildSubmitParams, onSubmit, onSubmitError]);
+  }, [buildSubmitParams, hasValidSelection, onSubmit, onSubmitError]);
 
   const handleSubmit = useCallback(() => {
     return submitForLayer(selectedRestitutionLayerIdRef.current);
@@ -336,6 +476,9 @@ const GlobalFiltersComponent = (
   const handleRestitutionChange = useCallback(
     async (layerId) => {
       if (!layerId || layerId === selectedRestitutionLayerId) {
+        return;
+      }
+      if (layerId === "selection" && !hasValidSelection) {
         return;
       }
 
@@ -357,21 +500,64 @@ const GlobalFiltersComponent = (
 
       await submitForLayer(layerId, lastSubmittedFilters);
     },
-    [hasSubmittedSearch, selectedRestitutionLayerId, submitForLayer, updateFilters]
+    [
+      hasSubmittedSearch,
+      hasValidSelection,
+      selectedRestitutionLayerId,
+      submitForLayer,
+      updateFilters,
+    ]
   );
+
+  useEffect(() => {
+    const handleExternalRestitutionChange = (event) => {
+      handleRestitutionChange(event.detail?.layerId);
+    };
+
+    window.addEventListener(
+      "sinp:restitution-layer-change",
+      handleExternalRestitutionChange
+    );
+    return () =>
+      window.removeEventListener(
+        "sinp:restitution-layer-change",
+        handleExternalRestitutionChange
+      );
+  }, [handleRestitutionChange]);
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("sinp:filter-loading-state", {
+        detail: { isLoading },
+      })
+    );
+  }, [isLoading]);
 
   const handleReset = useCallback(() => {
     console.log("🔄 Réinitialisation des filtres");
+    const fallbackLayerId =
+      selectedRestitutionLayerIdRef.current === "selection"
+        ? resolveSearchLayerId(activeLayerId)
+        : selectedRestitutionLayerIdRef.current;
+    selectedRestitutionLayerIdRef.current = fallbackLayerId;
+    setSelectedRestitutionLayerId(fallbackLayerId);
     updateFilters({
       ...defaultFilters,
-      restitutionLayerId: selectedRestitutionLayerIdRef.current,
+      restitutionLayerId: fallbackLayerId,
     });
     setHasSubmittedSearch(false);
     lastSubmittedFiltersRef.current = null;
     if (onReset) {
       onReset();
     }
-  },   [defaultFilters, onReset, updateFilters]);
+    onSelectionClear?.();
+  }, [
+    activeLayerId,
+    defaultFilters,
+    onReset,
+    onSelectionClear,
+    updateFilters,
+  ]);
 
   // Vérifier si au moins un filtre est actif (différent des valeurs par défaut)
   const hasActiveFilters = useMemo(() => {
@@ -386,8 +572,75 @@ const GlobalFiltersComponent = (
       filters.dateDeb !== defaultFilters.dateDeb ||
       filters.dateFin !== defaultFilters.dateFin;
 
-    return hasNonEmptyArrays || hasDifferentDates;
-  }, [filters, defaultFilters]);
+    return hasNonEmptyArrays || hasDifferentDates || hasValidSelection;
+  }, [filters, defaultFilters, hasValidSelection]);
+
+  const activeFilterCount = useMemo(() => {
+    const standardLocationCount = filters.selectionMode
+      ? 0
+      : (filters.filteredDepartments || []).length +
+        (filters.filteredCommunes || []).length;
+    const dateCount =
+      filters.dateDeb !== defaultFilters.dateDeb ||
+      filters.dateFin !== defaultFilters.dateFin
+        ? 1
+        : 0;
+
+    return (
+      standardLocationCount +
+      (filters.filteredTaxons || []).length +
+      (filters.filteredGroupes || []).length +
+      dateCount +
+      (hasValidSelection ? 1 : 0)
+    );
+  }, [defaultFilters, filters, hasValidSelection]);
+
+  const canSubmit =
+    filters.selectionMode
+      ? hasValidSelection
+      : hasActiveFilters ||
+        activeProfile?.allowSubmitWithoutActiveFilters === true;
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("sinp:filter-actions-state", {
+        detail: {
+          filterCount: activeFilterCount,
+          canReset: !isLoading,
+          canSubmit: !isLoading && canSubmit,
+          hasSubmittedSearch,
+        },
+      })
+    );
+  }, [
+    activeFilterCount,
+    canSubmit,
+    hasSubmittedSearch,
+    isLoading,
+  ]);
+
+  useEffect(() => {
+    const handleSubmitRequest = () => {
+      if (!isLoading && canSubmit) {
+        handleSubmit();
+      }
+    };
+    const handleResetRequest = () => {
+      if (!isLoading) {
+        handleReset();
+      }
+    };
+
+    window.addEventListener("sinp:filter-submit-request", handleSubmitRequest);
+    window.addEventListener("sinp:filter-reset-request", handleResetRequest);
+    return () => {
+      window.removeEventListener(
+        "sinp:filter-submit-request",
+        handleSubmitRequest
+      );
+      window.removeEventListener("sinp:filter-reset-request", handleResetRequest);
+    };
+  }, [canSubmit, handleReset, handleSubmit, isLoading]);
 
   // Expose imperative method for modal to force rebind filters
   useImperativeHandle(
@@ -426,8 +679,21 @@ const GlobalFiltersComponent = (
           updateFilters(restoredFilters);
         }
       },
+      invalidateSelection: () => {
+        const fallbackLayerId = resolveSearchLayerId(activeLayerId);
+        selectedRestitutionLayerIdRef.current = fallbackLayerId;
+        setSelectedRestitutionLayerId(fallbackLayerId);
+        updateFilters((prev) => ({
+          ...prev,
+          selectionMode: false,
+          selectedSelectionLayerId: null,
+          selectionFeatureUid: null,
+          selectionLabel: null,
+          restitutionLayerId: fallbackLayerId,
+        }));
+      },
     }),
-    [restoreMultipleFromCache]
+    [activeLayerId, restoreMultipleFromCache, updateFilters]
   );
 
   return (
@@ -440,15 +706,15 @@ const GlobalFiltersComponent = (
       handleDptChange={handleDptChange}
       handleComChange={handleComChange}
       handleGrpChange={handleGrpChange}
-      onSubmit={handleSubmit}
-      onReset={handleReset}
-      showActions={showActions}
-      actionLabels={actionLabels}
+      selectionMode={Boolean(filters.selectionMode)}
+      hasValidSelection={hasValidSelection}
+      selectionLabel={filters.selectionLabel}
+      visibleEnvironmentalLayers={visibleEnvironmentalLayers}
+      selectedSelectionLayerId={filters.selectedSelectionLayerId}
+      onSelectionModeChange={handleSelectionModeChange}
+      onSelectionLayerChange={handleSelectionLayerChange}
+      onRequestSelectionChange={handleRequestSelectionChange}
       isLoading={isLoading}
-      hasActiveFilters={hasActiveFilters}
-      restitutionLayers={SEARCH_RESTITUTION_LAYERS}
-      selectedRestitutionLayerId={selectedRestitutionLayerId}
-      onRestitutionChange={handleRestitutionChange}
     />
   );
 };

@@ -68,9 +68,19 @@
      TYPOGRAPHIE
      ================================= */
   
-  /* Police principale (héritée de Bootstrap 5 par défaut) */
-  /* --bs-body-font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; */
-  
+  /* Police principale : Geologica (charte graphique ARB HdF), repli Aptos.
+     Les @font-face sont déclarées dans sinp_hdf.css (fichiers dans custom_theme/fonts).
+     Décommenter pour surcharger la pile de polices */
+  /* --sinp-font-primary: "Geologica", "Aptos", system-ui, sans-serif; */
+
+  /* Police des titres (identique à la police principale par défaut) */
+  /* --sinp-font-heading: "Geologica", "Aptos", system-ui, sans-serif; */
+
+  /* Graisses de la charte : titres / sous-titres / texte courant */
+  /* --sinp-font-weight-title: 900; */
+  /* --sinp-font-weight-subtitle: 700; */
+  /* --sinp-font-weight-body: 400; */
+
   /* Taille de police de base */
   /* --bs-body-font-size: 1rem; */
   

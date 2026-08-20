@@ -1184,3 +1184,15 @@ SinpBaseLayer.STATS_STYLE_NAMES = Object.freeze([
   "fn_get_stats_50000",
 ]);
 mviewer.customLayers.SinpBaseLayer = SinpBaseLayer;
+
+if (typeof document !== "undefined") {
+  document.addEventListener("infopanel-ready", (event) => {
+    const panelType = event.detail?.panel;
+    const layerInstance =
+      mviewer.customLayers?.communeSearch?._instance ||
+      mviewer.customLayers?.gridSearch5x5?._instance ||
+      mviewer.customLayers?.grid10x10search?._instance;
+
+    layerInstance?._syncPanelRevealHandle?.(panelType);
+  });
+}

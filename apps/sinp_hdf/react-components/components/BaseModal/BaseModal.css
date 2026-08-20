@@ -33,6 +33,14 @@
   z-index: var(--modal-backdrop-z-index);
 }
 
+.base-modal-overlay-non-blocking {
+  position: fixed;
+  inset: 0;
+  z-index: var(--modal-backdrop-z-index);
+  background: transparent;
+  pointer-events: none;
+}
+
 /* Modal principale avec design Bootstrap 5 */
 .base-modal-content {
   position: fixed;
@@ -177,6 +185,10 @@
   flex: 1;
   min-height: 0;
   box-sizing: border-box;
+}
+
+.base-modal-body[hidden] {
+  display: none !important;
 }
 
 /* Responsive - Tablettes */

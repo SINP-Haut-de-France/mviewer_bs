@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import EntityNavigationControls from "./EntityNavigationControls";
 import SearchResultsTabs from "./SearchResultsTabs";
 import "./SearchResults.css";
 import {
@@ -129,9 +130,28 @@ const SearchResultsComponent = ({
   const datasetErrorMessage =
     typeof properties.jdd_data_error === "string" ? properties.jdd_data_error : "";
   const selectionPrompt = promptOnly === true;
+  const navigationController = window.mviewer?.customControls?.[layerId];
+  const navigationState =
+    !selectionPrompt && feature
+      ? navigationController?.getEntityNavigationState?.(feature) || null
+      : null;
+
+  const selectEntity = (index) => {
+    navigationController?.selectEntityByIndex?.(index);
+  };
 
   return (
     <div className="mv-sr-root">
+      {navigationState ? (
+        <EntityNavigationControls
+          currentIndex={navigationState.currentIndex}
+          total={navigationState.total}
+          entityLabel={navigationState.entityLabel}
+          disabled={loadingState || datasetLoadingState}
+          onPrevious={() => selectEntity(navigationState.currentIndex - 1)}
+          onNext={() => selectEntity(navigationState.currentIndex + 1)}
+        />
+      ) : null}
       <SearchResultsTabs
         activeTab={activeTab}
         onTabChange={setActiveTab}
