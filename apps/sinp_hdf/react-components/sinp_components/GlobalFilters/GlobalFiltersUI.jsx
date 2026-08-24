@@ -187,6 +187,54 @@ const GlobalFiltersUI = ({
                 null
           }
           dataTour="filter-location">
+          <div className="mv-selection-filter">
+            <div className="multi-select-header">
+              <div className="multi-select-label mv-selection-filter__label">
+                Recherche par sélection
+              </div>
+            </div>
+
+            <div className="form-check">
+              <input
+                id="sinp-selection-filter-toggle"
+                className="form-check-input"
+                type="checkbox"
+                checked={selectionMode}
+                disabled={isLoading || visibleEnvironmentalLayers.length === 0}
+                onChange={(event) => onSelectionModeChange?.(event.target.checked)}
+              />
+              <label
+                className="form-check-label"
+                htmlFor="sinp-selection-filter-toggle">
+                Recherche par sélection
+              </label>
+            </div>
+
+            {selectionMode && hasValidSelection ? (
+              <div className="mv-selection-filter__status is-valid" role="status">
+                <i className="fas fa-draw-polygon" aria-hidden="true"></i>
+                <span>
+                  Zonage utilisé : <strong>{selectionLabel}</strong>
+                </span>
+              </div>
+            ) : null}
+
+            {selectionMode && !hasValidSelection ? (
+              <div className="mv-selection-filter__status is-pending" role="status">
+                <span>
+                  Cliquez sur un zonage visible sur la carte, puis cliquez sur « Appliquer le filtrage ».
+                </span>
+              </div>
+            ) : null}
+
+            {!selectionMode && visibleEnvironmentalLayers.length === 0 ? (
+              <div className="mv-selection-filter__status is-pending" role="status">
+                Activez au moins une couche de zonage environnemental pour utiliser
+                ce mode.
+              </div>
+            ) : null}
+          </div>
+
           <div
             className={`mv-location-standard-filters ${
               selectionMode ? "is-disabled" : ""
@@ -264,83 +312,6 @@ const GlobalFiltersUI = ({
                 );
               }}
             </Datasource>
-          </div>
-
-          <div className="mv-selection-filter">
-            <div className="multi-select-header">
-              <div className="multi-select-label mv-selection-filter__label">
-                Couche de zonage
-              </div>
-            </div>
-
-            <div className="form-check">
-              <input
-                id="sinp-selection-filter-toggle"
-                className="form-check-input"
-                type="checkbox"
-                checked={selectionMode}
-                disabled={isLoading || visibleEnvironmentalLayers.length === 0}
-                onChange={(event) => onSelectionModeChange?.(event.target.checked)}
-              />
-              <label
-                className="form-check-label"
-                htmlFor="sinp-selection-filter-toggle">
-                Recherche par sélection
-              </label>
-            </div>
-
-            <select
-              id="sinp-selection-layer"
-              className="form-select form-select-sm"
-              aria-label="Couche de zonage"
-              value={selectedSelectionLayerId || ""}
-              disabled={
-                !selectionMode ||
-                isLoading ||
-                visibleEnvironmentalLayers.length === 0
-              }
-              onChange={(event) => onSelectionLayerChange?.(event.target.value)}>
-              <option value="">Sélectionner une couche visible</option>
-              {visibleEnvironmentalLayers.map((layer) => (
-                <option key={layer.id} value={layer.id}>
-                  {layer.label}
-                </option>
-              ))}
-            </select>
-
-            {selectionMode && hasValidSelection ? (
-              <div className="mv-selection-filter__status is-valid" role="status">
-                <i className="fas fa-draw-polygon" aria-hidden="true"></i>
-                <span>
-                  Zonage utilisé : <strong>{selectionLabel}</strong>
-                </span>
-              </div>
-            ) : null}
-
-            {selectionMode && !hasValidSelection ? (
-              <div className="mv-selection-filter__status is-pending" role="status">
-                <span>
-                  Cliquez sur un zonage de cette couche, puis sur « Afficher le
-                  détail des observations ».
-                </span>
-              </div>
-            ) : null}
-
-            {!selectionMode && visibleEnvironmentalLayers.length === 0 ? (
-              <div className="mv-selection-filter__status is-pending" role="status">
-                Activez au moins une couche de zonage environnemental pour utiliser
-                ce mode.
-              </div>
-            ) : null}
-
-            {selectionMode ? (
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary mv-selection-filter__change"
-                onClick={() => onRequestSelectionChange?.()}>
-                Changer de zonage
-              </button>
-            ) : null}
           </div>
         </CollapsibleFilterSection>
       )}

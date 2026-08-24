@@ -55,7 +55,7 @@
 					if(detail.hasSubmittedSearch){
 						btn.innerHTML = 'Rafraîchir';
 					}else{
-						btn.innerHTML = 'Appliquer';
+						btn.innerHTML = 'Appliquer le filtrage';
 					}
 				};
 				window.addEventListener('sinp:filter-actions-state', function(e){ update(e.detail || {}); });

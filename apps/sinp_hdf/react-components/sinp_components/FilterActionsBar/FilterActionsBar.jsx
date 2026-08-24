@@ -27,7 +27,7 @@ const FilterActionsBar = ({
       disabled={!canSubmit}
       onClick={onSubmit}>
       <i className="fas fa-check" aria-hidden="true"></i>
-      <span>{hasSubmittedSearch ? "Rafraîchir" : "Appliquer"}</span>
+      <span>{hasSubmittedSearch ? "Rafraîchir" : "Appliquer le filtrage"}</span>
     </button>
   </div>
 );
