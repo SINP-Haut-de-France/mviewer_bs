@@ -27,11 +27,42 @@
 			</a>
 
 			<button
+				id="external-layer-apply-{{feature_ol_uid}}"
 				class="external-layer-feature__apply btn btn-sm btn-outline-primary"
 				type="button"
-				onclick="(function(uid){window.dispatchEvent(new CustomEvent('sinp:external-layer-apply',{detail:{featureUid:uid}}));})('{{feature_ol_uid}}')">
+				onclick="(function(uid){
+					try{
+						// Ensure selectionContext is set (legacy bridge)
+						if (window.reactComponentManager && typeof window.reactComponentManager.setZoningSelection === 'function') {
+							// best-effort: set selection context with feature uid; react side will resolve full context
+							window.reactComponentManager.setZoningSelection({ featureUid: uid }, null);
+						}
+						// Dispatch the same submit request as the main 'Appliquer' button
+						window.dispatchEvent(new CustomEvent('sinp:filter-submit-request'));
+					}catch(e){console.error(e);} 
+				})('{{feature_ol_uid}}')">
 				Afficher le détail des observations
 			</button>
+
+			<script>(function(btnId){
+				var btn = document.getElementById(btnId);
+				if(!btn) return;
+				var defaultLabel = btn.innerHTML;
+				var update = function(detail){
+					if(!detail) return;
+					btn.disabled = detail.canSubmit === false;
+					// Reflect submitted state to keep labels in sync
+					if(detail.hasSubmittedSearch){
+						btn.innerHTML = 'Rafraîchir';
+					}else{
+						btn.innerHTML = 'Appliquer';
+					}
+				};
+				window.addEventListener('sinp:filter-actions-state', function(e){ update(e.detail || {}); });
+				window.addEventListener('sinp:filter-loading-state', function(e){ btn.disabled = Boolean(e.detail?.isLoading); });
+				// Try to get initial state if available
+				try{ var evt = new CustomEvent('sinp:request-filter-actions-state'); window.dispatchEvent(evt);}catch(e){}
+			})('external-layer-apply-{{feature_ol_uid}}');</script>
 		{{/url_fiche}}
 
 		<mv-external-layer-observation-results
