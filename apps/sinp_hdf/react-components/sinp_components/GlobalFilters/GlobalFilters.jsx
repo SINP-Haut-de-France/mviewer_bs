@@ -274,10 +274,19 @@ const GlobalFiltersComponent = (
 
     console.log("🏘️ Changement de département - nouvelle sélection:", selectedCodes);
 
+    // Selecting a department/commune must disable selection-based search
+    window.externalLayersObs?.clearSelection?.();
+    window.externalLayersObs?.setSelectionActive?.(false);
+
     updateFilters((prev) => ({
       ...prev,
       filteredDepartments: selectedCodes,
       filteredCommunes: [],
+      // Ensure selection mode is disabled when user chooses departments
+      selectionMode: false,
+      selectedSelectionLayerId: null,
+      selectionFeatureUid: null,
+      selectionLabel: null,
     }));
   }, [updateFilters]);
 
@@ -304,6 +313,10 @@ const GlobalFiltersComponent = (
       filtersRef.current?.filteredCommunes
     );
 
+    // Selecting a commune must disable selection-based search
+    window.externalLayersObs?.clearSelection?.();
+    window.externalLayersObs?.setSelectionActive?.(false);
+
     updateFilters((prev) => {
       console.log(
         "🏠 updateFilters callback - prev state had communes:",
@@ -312,6 +325,11 @@ const GlobalFiltersComponent = (
       const newState = {
         ...prev,
         filteredCommunes: communesArray,
+        // Ensure selection mode is disabled when user chooses communes
+        selectionMode: false,
+        selectedSelectionLayerId: null,
+        selectionFeatureUid: null,
+        selectionLabel: null,
       };
       console.log(
         "🏠 updateFilters callback - new state communes:",
@@ -346,11 +364,23 @@ const GlobalFiltersComponent = (
         setSelectedRestitutionLayerId(restitutionLayerId);
       }
 
+      // When enabling selection-based search, clear any explicit department/commune filters
       updateFilters((prev) => ({
         ...prev,
         selectionMode: enabled,
         restitutionLayerId,
+        filteredDepartments: enabled ? [] : prev.filteredDepartments,
+        filteredCommunes: enabled ? [] : prev.filteredCommunes,
+        // If enabling, keep selection-related fields as-is; disabling will keep them nullified above
+        ...(enabled
+          ? {
+              selectedSelectionLayerId: prev.selectedSelectionLayerId || null,
+              selectionFeatureUid: prev.selectionFeatureUid || null,
+              selectionLabel: prev.selectionLabel || null,
+            }
+          : {}),
       }));
+
       window.externalLayersObs?.setSelectionActive?.(
         enabled && Boolean(filtersRef.current.selectionFeatureUid)
       );

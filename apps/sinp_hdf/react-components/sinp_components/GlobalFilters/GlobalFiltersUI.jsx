@@ -285,7 +285,7 @@ const GlobalFiltersUI = ({
               <label
                 className="form-check-label"
                 htmlFor="sinp-selection-filter-toggle">
-                Utiliser un zonage sélectionné
+                Recherche par sélection
               </label>
             </div>
 

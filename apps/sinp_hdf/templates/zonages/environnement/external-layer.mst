@@ -25,6 +25,13 @@
 			<a class="external-layer-feature__link" href="{{url_fiche}}" target="_blank" rel="noopener noreferrer">
 				Consulter la fiche INPN
 			</a>
+
+			<button
+				class="external-layer-feature__apply btn btn-sm btn-outline-primary"
+				type="button"
+				onclick="(function(uid){window.dispatchEvent(new CustomEvent('sinp:external-layer-apply',{detail:{featureUid:uid}}));})('{{feature_ol_uid}}')">
+				Afficher le détail des observations
+			</button>
 		{{/url_fiche}}
 
 		<mv-external-layer-observation-results
