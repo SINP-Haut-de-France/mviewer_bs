@@ -779,52 +779,6 @@ window.externalLayersObs = (function () {
   if (typeof document !== "undefined") {
     document.addEventListener("infopanel-ready", handleInfoPanelReady);
 
-    // Listener permettant d'ouvrir un zonage et d'appliquer immédiatement la recherche
-    // avec les filtres courants (ex: dates, taxons, départements/communes, ...)
-    document.addEventListener("sinp:external-layer-apply", async function (event) {
-      try {
-        const featureUid = event?.detail?.featureUid;
-        if (!featureUid) return;
-
-        // Ouvrir le zonage (cela va enregistrer la selectionContext et onSelectionSubmit)
-        open(featureUid);
-
-        // Attendre brièvement que l'API des filtres expose onSelectionSubmit
-        const waitForOnSel = () =>
-          new Promise((resolve) => {
-            const start = Date.now();
-            const attempt = () => {
-              const onSel = window.__filterAPI?.onSelectionSubmit;
-              if (typeof onSel === "function") {
-                resolve(onSel);
-                return;
-              }
-              if (Date.now() - start > 1000) {
-                resolve(null);
-                return;
-              }
-              setTimeout(attempt, 50);
-            };
-            attempt();
-          });
-
-        const onSelectionSubmit = await waitForOnSel();
-        if (!onSelectionSubmit) {
-          console.warn("[EXTERNAL LAYERS OBS] onSelectionSubmit indisponible.");
-          return;
-        }
-
-        // Récupérer les filtres courants exposés par le provider React
-        const currentFilters = window.__filterAPI?.currentFilters || {};
-        const restitutionLayerId =
-          currentFilters?.restitutionLayerId || "communeSearch";
-
-        // Appeler onSelectionSubmit avec les filtres courants pour lancer l'application
-        await onSelectionSubmit(currentFilters, restitutionLayerId);
-      } catch (err) {
-        console.error("[EXTERNAL LAYERS OBS] Erreur lors du traitement de external-layer-apply:", err);
-      }
-    });
   }
 
   return {
