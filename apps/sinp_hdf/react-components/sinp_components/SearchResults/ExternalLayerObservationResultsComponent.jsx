@@ -78,6 +78,17 @@ const ExternalLayerObservationResultsComponent = ({ featureUid }) => {
           window.externalLayersObs?.selectEntity?.(featureUid, currentIndex + 1)
         }
       />
+
+      {/* Résumé de sélection au niveau supérieur */}
+      {selectionSummary ? (
+        <React.Suspense fallback={null}>
+          {(() => {
+            const SelectionSummary = require("./SelectionSummary").default;
+            return <SelectionSummary selectionSummary={selectionSummary} />;
+          })()}
+        </React.Suspense>
+      ) : null}
+
       <SearchResultsTabs
         activeTab={activeTab}
         onTabChange={setActiveTab}

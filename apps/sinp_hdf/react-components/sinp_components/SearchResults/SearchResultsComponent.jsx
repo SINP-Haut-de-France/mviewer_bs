@@ -152,6 +152,18 @@ const SearchResultsComponent = ({
           onNext={() => selectEntity(navigationState.currentIndex + 1)}
         />
       ) : null}
+
+      {/* Afficher le résumé de sélection au même niveau que les infos de fonds de carte */}
+      {selectionSummary && !selectionPrompt ? (
+        <React.Suspense fallback={null}>
+          {/* importer localement pour garder dépendances claires */}
+          {(() => {
+            const SelectionSummary = require("./SelectionSummary").default;
+            return <SelectionSummary selectionSummary={selectionSummary} />;
+          })()}
+        </React.Suspense>
+      ) : null}
+
       <SearchResultsTabs
         activeTab={activeTab}
         onTabChange={setActiveTab}

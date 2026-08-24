@@ -59,25 +59,6 @@ const TaxonDetailComponent = ({
 }) => {
   return (
     <div className="mv-sr-section">
-      {!selectionPrompt && selectionSummary ? (
-        <div className="mv-sr-selection-summary" aria-live="polite">
-          <strong>Sélection courante :</strong> {selectionSummary.selectionLabel}
-          <span className="mv-sr-selection-summary-separator" aria-hidden="true">
-            -
-          </span>
-          <strong>Évènement(s) rattaché(s) :</strong> {selectionSummary.eventCount}
-          <span className="mv-sr-selection-summary-separator" aria-hidden="true">
-            -
-          </span>
-          <strong>Taxon(s) distinct(s) :</strong> {selectionSummary.taxonCount}
-          <span className="mv-sr-selection-summary-separator" aria-hidden="true">
-            -
-          </span>
-          <strong>Dernière observation :</strong>{" "}
-          {formatDisplayDate(selectionSummary.lastObservationDate)}
-        </div>
-      ) : null}
-
       <SearchResultsTable
         items={details}
         columns={TAXON_COLUMNS}
