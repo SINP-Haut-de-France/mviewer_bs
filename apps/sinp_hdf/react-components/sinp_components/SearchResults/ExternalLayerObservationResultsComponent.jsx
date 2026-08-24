@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import SelectionSummary from "./SelectionSummary";
 import EntityNavigationControls from "./EntityNavigationControls";
 import SearchResultsTabs from "./SearchResultsTabs";
 import { TAB_IDS } from "./searchResults.utils";
@@ -81,12 +82,7 @@ const ExternalLayerObservationResultsComponent = ({ featureUid }) => {
 
       {/* Résumé de sélection au niveau supérieur */}
       {selectionSummary ? (
-        <React.Suspense fallback={null}>
-          {(() => {
-            const SelectionSummary = require("./SelectionSummary").default;
-            return <SelectionSummary selectionSummary={selectionSummary} />;
-          })()}
-        </React.Suspense>
+        <SelectionSummary selectionSummary={selectionSummary} />
       ) : null}
 
       <SearchResultsTabs

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import SelectionSummary from "./SelectionSummary";
 import EntityNavigationControls from "./EntityNavigationControls";
 import SearchResultsTabs from "./SearchResultsTabs";
 import "./SearchResults.css";
@@ -155,13 +156,7 @@ const SearchResultsComponent = ({
 
       {/* Afficher le résumé de sélection au même niveau que les infos de fonds de carte */}
       {selectionSummary && !selectionPrompt ? (
-        <React.Suspense fallback={null}>
-          {/* importer localement pour garder dépendances claires */}
-          {(() => {
-            const SelectionSummary = require("./SelectionSummary").default;
-            return <SelectionSummary selectionSummary={selectionSummary} />;
-          })()}
-        </React.Suspense>
+        <SelectionSummary selectionSummary={selectionSummary} />
       ) : null}
 
       <SearchResultsTabs
