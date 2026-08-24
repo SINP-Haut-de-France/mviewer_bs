@@ -779,6 +779,22 @@ window.externalLayersObs = (function () {
   if (typeof document !== "undefined") {
     document.addEventListener("infopanel-ready", handleInfoPanelReady);
 
+    // Listener: ouvrir un zonage puis déclencher le submit global
+    document.addEventListener("sinp:external-layer-request-open", function (event) {
+      try {
+        const featureUid = event?.detail?.featureUid;
+        if (!featureUid) return;
+
+        open(featureUid);
+
+        // Laisser la React API propager la selectionContext, puis déclencher la soumission
+        setTimeout(function () {
+          window.dispatchEvent(new CustomEvent("sinp:filter-submit-request"));
+        }, 150);
+      } catch (err) {
+        console.error("[EXTERNAL LAYERS OBS] Erreur lors du traitement de external-layer-request-open:", err);
+      }
+    });
   }
 
   return {

@@ -146,13 +146,16 @@ const GlobalFiltersComponent = (
     }));
   }, [selectionContext, updateFilters]);
 
-  const hasValidSelection =
+  // Indique si une sélection a été faite (même si la couche n'est pas visible)
+  const hasSelectionChosen =
     Boolean(filters.selectionMode) &&
     Boolean(filters.selectionFeatureUid) &&
-    Boolean(filters.selectedSelectionLayerId) &&
-    visibleEnvironmentalLayers.some(
-      ({ id }) => id === filters.selectedSelectionLayerId
-    );
+    Boolean(filters.selectedSelectionLayerId);
+
+  // Validation stricte: la sélection est considérée "valide" si la couche est visible
+  const hasValidSelection = hasSelectionChosen &&
+    visibleEnvironmentalLayers.some(({ id }) => id === filters.selectedSelectionLayerId);
+
 
   useEffect(() => {
     if (
@@ -462,7 +465,11 @@ const GlobalFiltersComponent = (
 
     // Use the synchronous ref to avoid stale state when submit is immediate
     const currentFilters = filtersSnapshot;
-    if (currentFilters.selectionMode && !hasValidSelection) {
+    // If selection mode is active, ensure a selection has been chosen
+    if (currentFilters.selectionMode && !(
+      Boolean(currentFilters.selectionFeatureUid) &&
+      Boolean(currentFilters.selectedSelectionLayerId)
+    )) {
       const error = new Error(
         "Sélectionnez un zonage avant d'appliquer les filtres."
       );
@@ -621,13 +628,13 @@ const GlobalFiltersComponent = (
       (filters.filteredTaxons || []).length +
       (filters.filteredGroupes || []).length +
       dateCount +
-      (hasValidSelection ? 1 : 0)
+      (hasSelectionChosen ? 1 : 0)
     );
   }, [defaultFilters, filters, hasValidSelection]);
 
   const canSubmit =
     filters.selectionMode
-      ? hasValidSelection
+      ? hasSelectionChosen
       : hasActiveFilters ||
         activeProfile?.allowSubmitWithoutActiveFilters === true;
 

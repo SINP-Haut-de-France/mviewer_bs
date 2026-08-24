@@ -141,6 +141,32 @@ const SearchResultsComponent = ({
     navigationController?.selectEntityByIndex?.(index);
   };
 
+  React.useEffect(() => {
+    // Mettre à jour le header du panneau droit : h6 -> 'Résultat'
+    try {
+      const headerH6 = document.querySelector('#right-panel .mv-header h6');
+      if (headerH6) {
+        headerH6.textContent = 'Résultat';
+      }
+
+      // Créer ou mettre à jour un sous-titre sous le header pour l'entité sélectionnée
+      const header = document.querySelector('#right-panel .mv-header');
+      if (header) {
+        let subtitle = header.querySelector('.mv-header-subtitle');
+        if (!subtitle) {
+          subtitle = document.createElement('div');
+          subtitle.className = 'mv-header-subtitle';
+          subtitle.style.fontSize = '0.95rem';
+          subtitle.style.marginTop = '0.25rem';
+          header.appendChild(subtitle);
+        }
+        subtitle.textContent = selectionSummary?.selectionLabel || '';
+      }
+    } catch (e) {
+      // Ignore si DOM non disponible
+    }
+  }, [selectionSummary]);
+
   return (
     <div className="mv-sr-root">
       {navigationState ? (

@@ -30,15 +30,10 @@
 				id="external-layer-apply-{{feature_ol_uid}}"
 				class="external-layer-feature__apply btn btn-sm btn-outline-primary"
 				type="button"
-				onclick="(function(uid){
+				onclick="				(function(uid){
 					try{
-						// Ensure selectionContext is set (legacy bridge)
-						if (window.reactComponentManager && typeof window.reactComponentManager.setZoningSelection === 'function') {
-							// best-effort: set selection context with feature uid; react side will resolve full context
-							window.reactComponentManager.setZoningSelection({ featureUid: uid }, null);
-						}
-						// Dispatch the same submit request as the main 'Appliquer' button
-						window.dispatchEvent(new CustomEvent('sinp:filter-submit-request'));
+						// Request externalLayersObs to open the zonage and then trigger the global submit
+						window.dispatchEvent(new CustomEvent('sinp:external-layer-request-open',{detail:{featureUid:uid}}));
 					}catch(e){console.error(e);} 
 				})('{{feature_ol_uid}}')">
 				Afficher le détail des observations
