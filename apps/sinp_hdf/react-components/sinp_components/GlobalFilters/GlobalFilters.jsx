@@ -387,6 +387,9 @@ const GlobalFiltersComponent = (
       window.externalLayersObs?.setSelectionActive?.(
         enabled && Boolean(filtersRef.current.selectionFeatureUid)
       );
+      if (enabled) {
+        window.dispatchEvent(new CustomEvent("sinp:selection-mode-enabled"));
+      }
     },
     [activeLayerId, updateFilters]
   );
@@ -504,7 +507,7 @@ const GlobalFiltersComponent = (
     } else {
       console.error("❌ [GlobalFilters] onSubmit est undefined !");
     }
-  }, [buildSubmitParams, hasValidSelection, onSubmit, onSubmitError]);
+  }, [buildSubmitParams, onSubmit, onSubmitError]);
 
   const handleSubmit = useCallback(() => {
     return submitForLayer(selectedRestitutionLayerIdRef.current);

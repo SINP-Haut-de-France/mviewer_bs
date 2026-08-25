@@ -760,14 +760,21 @@ window.externalLayersObs = (function () {
 
   const handleInfoPanelReady = function () {
     const filters = window.__filterAPI?.currentFilters;
-    if (!filters?.selectionMode || !filters.selectedSelectionLayerId) {
+    if (!filters?.selectionMode) {
       return;
     }
 
-    const feature = (window.info?.getQueriedFeatures?.() || []).find(
-      (candidate) =>
-        candidate?.get?.("mviewerid") === filters.selectedSelectionLayerId
-    );
+    const configuredLayerIds = _getConfiguredLayerIds();
+    const feature = (window.info?.getQueriedFeatures?.() || []).find((candidate) => {
+      const layerId = candidate?.get?.("mviewerid");
+      const layer = mviewer.getLayers?.()?.[layerId]?.layer;
+      return (
+        configuredLayerIds.has(layerId) &&
+        layer?.getVisible?.() &&
+        (!filters.selectedSelectionLayerId ||
+          layerId === filters.selectedSelectionLayerId)
+      );
+    });
     const featureUid = feature?.ol_uid || feature?.get?.("feature_ol_uid");
     if (!featureUid || _normalizeFeatureUid(featureUid) === selectedFeatureUid) {
       return;
@@ -778,9 +785,10 @@ window.externalLayersObs = (function () {
 
   if (typeof document !== "undefined") {
     document.addEventListener("infopanel-ready", handleInfoPanelReady);
+    window.addEventListener("sinp:selection-mode-enabled", handleInfoPanelReady);
 
     // Listener: ouvrir un zonage puis déclencher le submit global
-    document.addEventListener("sinp:external-layer-request-open", function (event) {
+    window.addEventListener("sinp:external-layer-request-open", function (event) {
       try {
         const featureUid = event?.detail?.featureUid;
         if (!featureUid) return;
