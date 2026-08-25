@@ -29,6 +29,7 @@ const GlobalFiltersUI = ({
   onSelectionModeChange = null,
   onSelectionLayerChange = null,
   onRequestSelectionChange = null,
+  onSelectionChangeRequest = null,
 }) => {
   const selectedTaxonFilterCount =
     (filters.filteredTaxons || []).length + (filters.filteredGroupes || []).length;
@@ -216,6 +217,12 @@ const GlobalFiltersUI = ({
                 <span>
                   Zonage utilisé : <strong>{selectionLabel}</strong>
                 </span>
+                <button
+                  type="button"
+                  className="btn btn-link btn-sm p-0 ms-2"
+                  onClick={() => onSelectionChangeRequest?.()}>
+                  Modifier la sélection
+                </button>
               </div>
             ) : null}
 

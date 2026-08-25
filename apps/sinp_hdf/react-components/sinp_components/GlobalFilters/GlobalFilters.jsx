@@ -367,6 +367,11 @@ const GlobalFiltersComponent = (
         setSelectedRestitutionLayerId(restitutionLayerId);
       }
 
+      if (!enabled) {
+        window.externalLayersObs?.clearSelection?.();
+        window.externalLayersObs?.setSelectionActive?.(false, { locked: false });
+      }
+
       // When enabling selection-based search, clear any explicit department/commune filters
       updateFilters((prev) => ({
         ...prev,
@@ -374,22 +379,26 @@ const GlobalFiltersComponent = (
         restitutionLayerId,
         filteredDepartments: enabled ? [] : prev.filteredDepartments,
         filteredCommunes: enabled ? [] : prev.filteredCommunes,
-        // If enabling, keep selection-related fields as-is; disabling will keep them nullified above
         ...(enabled
           ? {
               selectedSelectionLayerId: prev.selectedSelectionLayerId || null,
               selectionFeatureUid: prev.selectionFeatureUid || null,
               selectionLabel: prev.selectionLabel || null,
             }
-          : {}),
+          : {
+              selectedSelectionLayerId: null,
+              selectionFeatureUid: null,
+              selectionLabel: null,
+            }),
       }));
 
-      window.externalLayersObs?.setSelectionActive?.(
-        enabled && Boolean(filtersRef.current.selectionFeatureUid)
-      );
       if (enabled) {
+        window.externalLayersObs?.setSelectionActive?.(false, { locked: false });
         window.dispatchEvent(new CustomEvent("sinp:selection-mode-enabled"));
+        return;
       }
+
+      window.externalLayersObs?.setSelectionActive?.(false, { locked: false });
     },
     [activeLayerId, updateFilters]
   );
@@ -423,6 +432,25 @@ const GlobalFiltersComponent = (
       })
     );
   }, []);
+
+  const handleSelectionChangeRequest = useCallback(() => {
+    const fallbackLayerId = resolveSearchLayerId(activeLayerId);
+    selectedRestitutionLayerIdRef.current = fallbackLayerId;
+    setSelectedRestitutionLayerId(fallbackLayerId);
+
+    window.externalLayersObs?.clearSelection?.();
+    window.externalLayersObs?.setSelectionActive?.(true, { locked: false });
+    onSelectionClear?.();
+
+    updateFilters((prev) => ({
+      ...prev,
+      selectionMode: true,
+      selectedSelectionLayerId: null,
+      selectionFeatureUid: null,
+      selectionLabel: null,
+      restitutionLayerId: fallbackLayerId,
+    }));
+  }, [activeLayerId, onSelectionClear, updateFilters]);
 
   const buildSubmitParams = useCallback((filtersSnapshot = filtersRef.current) => {
     // Extract cd_ref from complete taxon objects for URL generation
@@ -754,6 +782,7 @@ const GlobalFiltersComponent = (
       onSelectionModeChange={handleSelectionModeChange}
       onSelectionLayerChange={handleSelectionLayerChange}
       onRequestSelectionChange={handleRequestSelectionChange}
+      onSelectionChangeRequest={handleSelectionChangeRequest}
       isLoading={isLoading}
     />
   );

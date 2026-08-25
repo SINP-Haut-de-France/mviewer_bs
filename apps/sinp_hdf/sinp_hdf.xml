@@ -1,267 +1,106 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
-	<application
-		id="sinp_hdf"
-		title="SINP Hauts-de-France"
-		logo='apps/sinp_hdf/custom_theme/img/logo/logo-obsbiodiv-hdf.svg'
-		help="apps/sinp_hdf/custom_theme/sinp_aide.html"
-		showhelp="true"
-		titlehelp="SINP Hauts-de-France"
-		favicon='apps/sinp_hdf/custom_theme/img/logo/logo-arb-vertpng.ico'
-		style='apps/sinp_hdf/custom_theme/css/sinp_hdf.css'
-		measuretools="true"
-		addlayerstools="true"
-	/>
+	<application id="sinp_hdf" title="SINP Hauts-de-France" logo='apps/sinp_hdf/custom_theme/img/logo/logo-obsbiodiv-hdf.svg' help="apps/sinp_hdf/custom_theme/sinp_aide.html" showhelp="true" titlehelp="SINP Hauts-de-France" favicon='apps/sinp_hdf/custom_theme/img/logo/logo-arb-vertpng.ico' style='apps/sinp_hdf/custom_theme/css/sinp_hdf.css' measuretools="true" />
 	<extensions>
 		<extension type="javascript" src="apps/sinp_hdf/customlayers/SinpBaseLayer.js" />
 		<extension type="javascript" src="apps/sinp_hdf/customcontrols/SinpBaseCustom.js" />
 		<extension type="component" id="reactInjector" path="apps/sinp_hdf/addons"/>
 		<extension type="component" id="sinpOverriding" path="apps/sinp_hdf/addons"/>
 	</extensions>
-    <mapoptions maxzoom="19" projection="EPSG:2154" center="700000,7000000" zoom="9" projextent="-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244" />
-    <baselayers style="gallery">
-        <baselayer  type="WMS" id="osm" label="OpenStreetMap" title="Plan OSM Géobretagne" thumbgallery="img/basemap/osm.png"
-            url="https://osm.geo2france.fr/mapcache/" layers="naturaliste" format="image/png" visible="true"
-            attribution="GéoBretagne. Données : les contributeurs d'&lt;a href='https://www.openstreetmap.org/' target='_blank'>OpenStreetMap &lt;/a>,  &lt;a href='https://www.openstreetmap.org/copyright' target='_blank'>ODbL &lt;/a>" />
-		<baselayer type="WMS" id="ortho" label="Photo aérienne" title="Géo2france" opacity="0.8" thumbgallery="img/basemap/ortho.jpg"
-				   url="https://www.geo2france.fr/geoserver/ign/ows?service=WMS" layers="2024_R32_Ortho_0m20_RVB_COG" format="image/png" visible="false"
-				   attribution="Géo2France"/>
-		<baselayer type="WMS" id="scan25" label="Scan 25 IGN/Géo2france" title="Scan 25" opacity="0.8" thumbgallery="img/basemap/scan25.jpg"
-				   url="https://www.geo2france.fr/geoserver/ign/ows?service=WMS" layers="2025_R32_SCAN25_TOUR_COG" format="image/png" visible="false"
-				   attribution="SCAN 25 sur les Hauts-de-France optimisé par Géo2France"/>
+	<mapoptions maxzoom="19" projection="EPSG:2154" center="700000,7000000" zoom="9" projextent="-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244" />
+	<baselayers style="gallery">
+		<baselayer type="WMS" id="osm" label="OpenStreetMap" title="Plan OSM Géobretagne" thumbgallery="img/basemap/osm.png" url="https://osm.geo2france.fr/mapcache/" layers="naturaliste" format="image/png" visible="true" attribution="GéoBretagne. Données : les contributeurs d'&lt;a href='https://www.openstreetmap.org/' target='_blank'>OpenStreetMap &lt;/a>,  &lt;a href='https://www.openstreetmap.org/copyright' target='_blank'>ODbL &lt;/a>" />
+		<baselayer type="WMS" id="ortho" label="Photo aérienne" title="Géo2france" opacity="0.8" thumbgallery="img/basemap/ortho.jpg" url="https://www.geo2france.fr/geoserver/ign/ows?service=WMS" layers="2024_R32_Ortho_0m20_RVB_COG" format="image/png" visible="false" attribution="Géo2France"/>
+		<baselayer type="WMS" id="scan25" label="Scan 25 IGN/Géo2france" title="Scan 25" opacity="0.8" thumbgallery="img/basemap/scan25.jpg" url="https://www.geo2france.fr/geoserver/ign/ows?service=WMS" layers="2025_R32_SCAN25_TOUR_COG" format="image/png" visible="false" attribution="SCAN 25 sur les Hauts-de-France optimisé par Géo2France"/>
 
 	</baselayers>
 	<olscompletion url="https://data.geopf.fr/geocodage/search/" type="ban" attribution="La recherche d'adresse est un service proposé par la geoplateforme IGN"/>
-    <proxy url=""/>
-    <searchparameters bbox="false" localities="true" features="false" />
-    <themes>
+	<proxy url=""/>
+	<searchparameters bbox="false" localities="true" features="false" />
+	<themes>
 		<theme name="Fonds de cartes" collapsed="false" id="environnement" icon="fa fa-layer-group">
 			<group name="Limites administratives" id="limites_adm">
-				<layer
-					id="communes"
-					name="Communes"
-					visible="false"
-					queryable="false"
-					url="https://www.geo2france.fr/geoserver/spld/ows"
-				>
+				<layer id="communes" name="Communes" visible="false" queryable="false" url="https://www.geo2france.fr/geoserver/spld/ows">
 				</layer>
-			<layer
-				id="epci"
-				name="EPCI"
-				visible="false"
-				queryable="false"
-				url="https://www.geo2france.fr/geoserver/spld/ows"
-			>
-			</layer>
-			<layer
-				id="DEPARTEMENT"
-				name="Départements"
-				visible="false"
-				queryable="false"
-				url="https://www.geo2france.fr/geoserver/spld/ows"
-			>
-			</layer>
-			<layer
-				id="bassinversanttopographique_fxx"
-				visible="false"
-				name="Bassins versants Topage 2025"
-				queryable="false"
-				url="https://www.geo2france.fr/geoserver/sandre/ows"
-			>
-			</layer>
-		</group>
-			<group name="Zonages environnementaux" id="environnement">
-				<layer
-					id="Patrinat_APB_France"
-					visible="false"
-					name="APB"
-					queryable="true"
-					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
-					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
-					filter="operateur = 'DREAL HAUTS-DE-FRANCE'"
-					infoformat="application/vnd.ogc.gml"
-					featurecount="1"
-					url="https://data.geopf.fr/wms-v/wms"
-				>
+				<layer id="epci" name="EPCI" visible="false" queryable="true" infoformat="application/vnd.ogc.gml" url="https://www.geo2france.fr/geoserver/spld/ows">
+				</layer>
+				<layer id="DEPARTEMENT" name="Départements" visible="false" queryable="false" url="https://www.geo2france.fr/geoserver/spld/ows">
+				</layer>
+				<layer id="bassinversanttopographique_fxx" visible="false" name="Bassins versants Topage 2025" queryable="false" url="https://www.geo2france.fr/geoserver/sandre/ows">
+				</layer>
+			</group>
+			<group name="Aires protégées" id="environnement">
+				<layer id="Patrinat_APB_France" visible="false" name="APPB - Arrêté de protection de biotope" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
 					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
-				<layer
-					id="Patrinat_RNN_France"
-					visible="false"
-					name="RNN"
-					queryable="true"
-					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
-					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
-					filter="operateur = 'DREAL HAUTS-DE-FRANCE'"
-					infoformat="application/vnd.ogc.gml"
-					featurecount="1"
-					url="https://data.geopf.fr/wms-v/wms"
-				>
+				<layer id="Patrinat_APHN_France" visible="false" name="APPHN - Arrêté de protection d'habitats naturels" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
 					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
-				<layer
-					id="Patrinat_RNR_France"
-					visible="false"
-					name="RNR"
-					queryable="true"
-					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
-					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
-					infoformat="application/vnd.ogc.gml"
-					featurecount="1"
-					url="https://data.geopf.fr/wms-v/wms"
-				>
+				<layer id="Patrinat_APG_France" visible="false" name="APPG - Arrêté de protection de géotope" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
 					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
-				<layer
-					id="Patrinat_SIC_France"
-					visible="false"
-					name="Natura 2000 - ZSC"
-					queryable="true"
-					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
-					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
-					filter="operateur = 'DREAL HAUTS-DE-FRANCE'"
-					infoformat="application/vnd.ogc.gml"
-					featurecount="1"
-					url="https://data.geopf.fr/wms-v/wms"
-				>
+				<layer id="Patrinat_APLG_France" visible="false" name="APLG - Liste de sites d'intérêt géologique" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
 					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
-				<layer
-					id="Patrinat_ZPS_France"
-					visible="false"
-					name="Natura 2000 - ZPS"
-					queryable="true"
-					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
-					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
-					filter="operateur = 'DREAL HAUTS-DE-FRANCE'"
-					infoformat="application/vnd.ogc.gml"
-					featurecount="1"
-					url="https://data.geopf.fr/wms-v/wms"
-				>
+				<layer id="Patrinat_RNN_France" visible="false" name="RNN - Réserve naturelle nationale" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
 					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
-				<layer
-					id="Patrinat_RAMSAR_France"
-					visible="false"
-					name="RAMSAR"
-					queryable="true"
-					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
-					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
-					filter="operateur = 'DREAL HAUTS-DE-FRANCE'"
-					infoformat="application/vnd.ogc.gml"
-					featurecount="1"
-					url="https://data.geopf.fr/wms-v/wms"
-				>
+				<layer id="Patrinat_PPRNN_France" visible="false" name="PPRNN - Périmètre de protection de réserve naturelle nationale" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
 					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
-				<layer
-					id="Patrinat_ZNIEFF1_France"
-					visible="false"
-					name="ZNIEFF 1 Terrestre"
-					queryable="true"
-					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
-					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
-					filter="operateur = 'DREAL HAUTS DE FRANCE'"
-					infoformat="application/vnd.ogc.gml"
-					featurecount="1"
-					url="https://data.geopf.fr/wms-v/wms"
-				>
+				<layer id="Patrinat_RNR_France" visible="false" name="RNR - Réserve naturelle régionale" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
 					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
-				<layer
-					id="Patrinat_ZNIEFF2_France"
-					visible="false"
-					name="ZNIEFF 2 Terrestre"
-					queryable="true"
-					fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche"
-					aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN"
-					filter="operateur = 'DREAL HAUTS DE FRANCE'"
-					infoformat="application/vnd.ogc.gml"
-					featurecount="1"
-					url="https://data.geopf.fr/wms-v/wms"
-				>
+				<layer id="Patrinat_RB_France" visible="false" name="RB - Réserves biologiques" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
+				</layer>
+				<layer id="Patrinat_SC_France" visible="false" name="Sites classés" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
+				</layer>
+				<layer id="Patrinat_CEN_France" visible="false" name="Terrains acquis des Conservatoires d'espaces naturels" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
+				</layer>
+				<layer id="Patrinat_Conservatoire_littoral" visible="false" name="Terrains du Conservatoire du littoral" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
+				</layer>
+				<layer id="Patrinat_SIC_France" visible="false" name="Natura 2000 - ZSC" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
+				</layer>
+				<layer id="Patrinat_ZPS_France" visible="false" name="Natura 2000 - ZPS" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
+				</layer>
+				<layer id="Patrinat_PNR_France" visible="false" name="PNR - Parc naturel régional" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
+				</layer>
+				<layer id="Patrinat_BIOS_France" visible="false" name="Réserve de biosphère" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
+				</layer>
+				<layer id="Patrinat_RAMSAR_France" visible="false" name="Site RAMSAR" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
+				</layer>
+			</group>
+			<group name="Inventaires du patrimoine naturel" id="inventaires">
+				<layer id="Patrinat_ZNIEFF1_France" visible="false" name="ZNIEFF de type I" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
+				</layer>
+				<layer id="Patrinat_ZNIEFF2_France" visible="false" name="ZNIEFF de type II" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
+					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
+				</layer>
+				<layer id="Patrinat_INPG_France" visible="false" name="INPG" queryable="true" fields="nom_site,date_crea,operateur,id_mnhn,area_sig,url_fiche" aliases="Nom du site,Date de création,Opérateur,Identifiant national,Surface (ha),Fiche INPN" infoformat="application/vnd.ogc.gml" featurecount="1" url="https://data.geopf.fr/wms-v/wms">
 					<template url="apps/sinp_hdf/templates/zonages/environnement/external-layer.mst"/>
 				</layer>
 			</group>
 		</theme>
-		<theme
-			name="Couches de restitution"
-			visible="false"
-			collapsed="true"
-			id="searchTheme"
-			icon="fa fa-search-minus">
-			<layer
-				id="communeSearch"
-				name="Nombre de données par communes"
-				visible="false"
-				opacity="0.7"
-				queryable="false"
-				tiled="true"
-				exclusive="true"
-				type="customlayer"
-				url="apps/sinp_hdf/customlayers/communeSearch.js"
-				legendurl="https://dev.geo2france.fr/geoserver/sinp/wms?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetLegendGraphic&amp;SLD_VERSION=1.1.0&amp;FORMAT=image/png&amp;WIDTH=30&amp;HEIGHT=20&amp;LEGEND_OPTIONS=fontName%3AOpen%20Sans%3BfontAntiAliasing%3Atrue%3BfontColor%3A0x777777%3BfontSize%3A10%3Bdpi%3A96&amp;TRANSPARENT=true&amp;LAYER=sinp_diffusion%3Afn_get_stats&amp;STYLE="
-				customcontrol="true"
-				customcontrolpath="apps/sinp_hdf/customcontrols/communeSearch"
-				expanded="true"
-				fields=""
-				attribution="Source: SINP Hauts-de-France. Synthèse des données naturalistes."
-				nohighlight="false"
-				jsonfields="details"
-				infopanel="right-panel"
-				metadata=""
-				metadata-csw=""
-				tooltip="true" tooltipenabled="true" tooltipcontent="{{code_insee}} ({{nb_observations}})"
-				>
+		<theme name="Couches de restitution" visible="false" collapsed="true" id="searchTheme" icon="fa fa-search-minus">
+			<layer id="communeSearch" name="Nombre de données par communes" visible="false" opacity="0.7" queryable="false" tiled="true" exclusive="true" type="customlayer" url="apps/sinp_hdf/customlayers/communeSearch.js" legendurl="https://dev.geo2france.fr/geoserver/sinp/wms?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetLegendGraphic&amp;SLD_VERSION=1.1.0&amp;FORMAT=image/png&amp;WIDTH=30&amp;HEIGHT=20&amp;LEGEND_OPTIONS=fontName%3AOpen%20Sans%3BfontAntiAliasing%3Atrue%3BfontColor%3A0x777777%3BfontSize%3A10%3Bdpi%3A96&amp;TRANSPARENT=true&amp;LAYER=sinp_diffusion%3Afn_get_stats&amp;STYLE=" customcontrol="true" customcontrolpath="apps/sinp_hdf/customcontrols/communeSearch" expanded="true" fields="" attribution="Source: SINP Hauts-de-France. Synthèse des données naturalistes." nohighlight="false" jsonfields="details" infopanel="right-panel" metadata="" metadata-csw="" tooltip="true" tooltipenabled="true" tooltipcontent="{{code_insee}} ({{nb_observations}})">
 				<template url="apps/sinp_hdf/customlayers/communeSearch.mst"/>
 			</layer>
-			<layer
-				id="gridSearch5x5"
-				name="Nombre de données - grille 5x5"
-				visible="false"
-				opacity="0.7"
-				queryable="false"
-				tiled="true"
-				exclusive="true"
-				type="customlayer"
-				url="apps/sinp_hdf/customlayers/grid5x5search.js"
-				legendurl="https://dev.geo2france.fr/geoserver/sinp/wms?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetLegendGraphic&amp;SLD_VERSION=1.1.0&amp;FORMAT=image/png&amp;WIDTH=30&amp;HEIGHT=20&amp;LEGEND_OPTIONS=fontName%3AOpen%20Sans%3BfontAntiAliasing%3Atrue%3BfontColor%3A0x777777%3BfontSize%3A10%3Bdpi%3A96&amp;TRANSPARENT=true&amp;LAYER=sinp_diffusion%3Afn_get_stats&amp;STYLE="
-				customcontrol="true"
-				customcontrolpath="apps/sinp_hdf/customcontrols/grid5x5search"
-				fields=""
-				attribution="Source: SINP Hauts-de-France. Synthèse des données naturalistes."
-				nohighlight="false"
-				jsonfields="details"
-				infopanel="right-panel"
-				metadata=""
-				metadata-csw=""
-				minzoom="10"
-				>
+			<layer id="gridSearch5x5" name="Nombre de données - grille 5x5" visible="false" opacity="0.7" queryable="false" tiled="true" exclusive="true" type="customlayer" url="apps/sinp_hdf/customlayers/grid5x5search.js" legendurl="https://dev.geo2france.fr/geoserver/sinp/wms?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetLegendGraphic&amp;SLD_VERSION=1.1.0&amp;FORMAT=image/png&amp;WIDTH=30&amp;HEIGHT=20&amp;LEGEND_OPTIONS=fontName%3AOpen%20Sans%3BfontAntiAliasing%3Atrue%3BfontColor%3A0x777777%3BfontSize%3A10%3Bdpi%3A96&amp;TRANSPARENT=true&amp;LAYER=sinp_diffusion%3Afn_get_stats&amp;STYLE=" customcontrol="true" customcontrolpath="apps/sinp_hdf/customcontrols/grid5x5search" fields="" attribution="Source: SINP Hauts-de-France. Synthèse des données naturalistes." nohighlight="false" jsonfields="details" infopanel="right-panel" metadata="" metadata-csw="" minzoom="10">
 				<template url="apps/sinp_hdf/customlayers/grid5x5search.mst"/>
 			</layer>
-			<layer
-				id="grid10x10search"
-				name="Nombre de données - grille 10x10"
-				visible="false"
-				opacity="0.7"
-				queryable="false"
-				tiled="true"
-				exclusive="true"
-				type="customlayer"
-				url="apps/sinp_hdf/customlayers/gridSearch10x10.js"
-				legendurl="https://dev.geo2france.fr/geoserver/sinp/wms?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetLegendGraphic&amp;SLD_VERSION=1.1.0&amp;FORMAT=image/png&amp;WIDTH=30&amp;HEIGHT=20&amp;LEGEND_OPTIONS=fontName%3AOpen%20Sans%3BfontAntiAliasing%3Atrue%3BfontColor%3A0x777777%3BfontSize%3A10%3Bdpi%3A96&amp;TRANSPARENT=true&amp;LAYER=sinp_diffusion%3Afn_get_stats&amp;STYLE="
-				expanded="true"
-				customcontrol="true"
-				customcontrolpath="apps/sinp_hdf/customcontrols/grid10x10search"
-				fields=""
-				nohighlight="false"
-				jsonfields="details"
-				infopanel="right-panel"
-				metadata=""
-				metadata-csw=""
-				>
+			<layer id="grid10x10search" name="Nombre de données - grille 10x10" visible="false" opacity="0.7" queryable="false" tiled="true" exclusive="true" type="customlayer" url="apps/sinp_hdf/customlayers/gridSearch10x10.js" legendurl="https://dev.geo2france.fr/geoserver/sinp/wms?SERVICE=WMS&amp;VERSION=1.3.0&amp;REQUEST=GetLegendGraphic&amp;SLD_VERSION=1.1.0&amp;FORMAT=image/png&amp;WIDTH=30&amp;HEIGHT=20&amp;LEGEND_OPTIONS=fontName%3AOpen%20Sans%3BfontAntiAliasing%3Atrue%3BfontColor%3A0x777777%3BfontSize%3A10%3Bdpi%3A96&amp;TRANSPARENT=true&amp;LAYER=sinp_diffusion%3Afn_get_stats&amp;STYLE=" expanded="true" customcontrol="true" customcontrolpath="apps/sinp_hdf/customcontrols/grid10x10search" fields="" nohighlight="false" jsonfields="details" infopanel="right-panel" metadata="" metadata-csw="">
 				<template url="apps/sinp_hdf/customlayers/gridSearch10x10.mst"/>
 			</layer>
 		</theme>
-  </themes>
+	</themes>
 </config>

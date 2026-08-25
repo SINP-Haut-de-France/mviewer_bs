@@ -897,6 +897,26 @@ class SinpBaseLayer {
       panel.find(".btn-close").on("click.mvRevealHandle", () => {
         window.setTimeout(() => this._syncPanelRevealHandle(panelType), 0);
       });
+
+      const sync = () => this._syncPanelRevealHandle(panelType);
+      const panelElement = panel.get(0);
+      const observer = new MutationObserver(sync);
+      observer.observe(panelElement, {
+        attributes: true,
+        attributeFilter: ["class", "style"],
+        childList: true,
+        subtree: true,
+      });
+      panelElement.addEventListener("transitionend", sync);
+
+      if (typeof ResizeObserver === "function") {
+        const resizeObserver = new ResizeObserver(sync);
+        resizeObserver.observe(panelElement);
+        panel.data("mvRevealResizeObserver", resizeObserver);
+      }
+
+      panel.data("mvRevealObserver", observer);
+      panel.data("mvRevealTransitionHandler", sync);
       panel.data("mvRevealBound", true);
     }
 
@@ -914,15 +934,24 @@ class SinpBaseLayer {
     const panelContent = panel.find(".popup-content");
     const hasContent = Boolean(panelContent.length && panelContent.html()?.trim());
     const isExpanded = panel.hasClass("active");
-    const actionLabel = isExpanded ? "Réduire" : "Réafficher";
     const handleConfig = PANEL_REVEAL_HANDLE_CONFIG[panelType];
 
+    const panelWidth = isExpanded ? panel.outerWidth() || 0 : 0;
     handle.toggleClass("is-visible", hasContent);
-    handle.toggleClass("is-expanded", isExpanded);
+    handle.toggleClass("is-expanded", isExpanded && panelWidth > 0);
     handle.attr("aria-hidden", hasContent ? "false" : "true");
-    handle.attr("aria-expanded", isExpanded ? "true" : "false");
-    handle.attr("aria-label", `${actionLabel} le ${handleConfig.panelLabel}`);
-    handle.attr("title", `${actionLabel} le ${handleConfig.panelLabel}`);
+    handle.attr("aria-expanded", isExpanded && panelWidth > 0 ? "true" : "false");
+    handle.css("right", handleConfig.positionClass === "mv-panel-reveal-handle--right"
+      ? `${panelWidth}px`
+      : "");
+    handle.attr(
+      "aria-label",
+      `${isExpanded && panelWidth > 0 ? "Réduire" : "Réafficher"} le ${handleConfig.panelLabel}`
+    );
+    handle.attr(
+      "title",
+      `${isExpanded && panelWidth > 0 ? "Réduire" : "Réafficher"} le ${handleConfig.panelLabel}`
+    );
   }
 
   _hideLocationMarkers() {

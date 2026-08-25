@@ -29,7 +29,68 @@ window.externalLayersObs = (function () {
   let overlayClickHandler = null;
   let selectedLayerVisibilitySubscription = null;
   let selectedFeatureUid = null;
+  let selectionLocked = false;
+  let guardedMapViewport = null;
+  let guardedMapClickHandler = null;
   let requestSequence = 0;
+
+  const _setMapClickGuardActive = function (active) {
+    const map = mviewer.getMap?.();
+    const viewport = map?.getViewport?.();
+    if (!viewport) {
+      return;
+    }
+
+    if (guardedMapViewport && guardedMapClickHandler) {
+      guardedMapViewport.removeEventListener(
+        "click",
+        guardedMapClickHandler,
+        true
+      );
+      guardedMapViewport.removeEventListener(
+        "dblclick",
+        guardedMapClickHandler,
+        true
+      );
+    }
+
+    guardedMapViewport = null;
+    guardedMapClickHandler = null;
+
+    if (!active) {
+      return;
+    }
+
+    guardedMapClickHandler = (event) => {
+      if (!selectionLocked || !window.__filterAPI?.currentFilters?.selectionMode) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    };
+    viewport.addEventListener("click", guardedMapClickHandler, true);
+    viewport.addEventListener("dblclick", guardedMapClickHandler, true);
+    guardedMapViewport = viewport;
+  };
+
+  const _setLegacyInfoClickActive = function (active) {
+    const infoTool = window.info || window.mviewer?.tools?.info;
+    if (!infoTool) {
+      return;
+    }
+
+    if (active) {
+      if (!infoTool.enabled?.()) {
+        infoTool.enable?.();
+      }
+      return;
+    }
+
+    if (infoTool.enabled?.()) {
+      infoTool.disable?.();
+    }
+  };
 
   const _getConfiguredLayers = function () {
     const configuredLayers = window.mviewer?.env?.EXTERNAL_LAYERS_OBS;
@@ -194,6 +255,43 @@ window.externalLayersObs = (function () {
     }
 
     return name || code || typeLabel;
+  };
+
+  const _getLayerName = function (feature) {
+    const layerId = feature?.get?.("mviewerid");
+    return mviewer.getLayers?.()?.[layerId]?.name || "Zonage environnemental";
+  };
+
+  const _whenReactFilterManagerReady = function (callback) {
+    const managerIsReady = () =>
+      typeof window.reactComponentManager?.setZoningSelection === "function" &&
+      typeof window.reactComponentManager?.openFilterModal === "function";
+
+    if (managerIsReady()) {
+      callback();
+      return;
+    }
+
+    let attempts = 0;
+    const retry = () => {
+      if (managerIsReady()) {
+        callback();
+        return;
+      }
+
+      attempts += 1;
+      if (attempts < 50) {
+        window.setTimeout(retry, 100);
+        return;
+      }
+
+      mviewer.alert(
+        "La fenêtre de filtrage est indisponible.",
+        "alert-danger"
+      );
+    };
+
+    retry();
   };
 
   const _groupDetailsByEntity = function (details = []) {
@@ -563,6 +661,8 @@ window.externalLayersObs = (function () {
     _publishState(featureUid, {
       status: "loading",
       siteName: feature.get("nom_site") || "Zonage environnemental",
+      layerName: _getLayerName(feature),
+      selectionMode: true,
       entities: [],
       currentIndex: 0,
       currentEntity: null,
@@ -596,6 +696,8 @@ window.externalLayersObs = (function () {
         _publishState(featureUid, {
           status: "success",
           siteName,
+          layerName: _getLayerName(feature),
+          selectionMode: true,
           entities: [entity],
           currentIndex: 0,
           currentEntity: entity,
@@ -604,6 +706,9 @@ window.externalLayersObs = (function () {
           metadata,
           errorMessage: "",
         });
+        selectionLocked = true;
+        _setLegacyInfoClickActive(false);
+        _setMapClickGuardActive(true);
         _fitFeatures([feature]);
         _expandRightPanel();
         return;
@@ -635,6 +740,8 @@ window.externalLayersObs = (function () {
       _publishState(featureUid, {
         status: "success",
         siteName: feature.get("nom_site") || "Zonage environnemental",
+        layerName: _getLayerName(feature),
+        selectionMode: true,
         entities,
         currentIndex: 0,
         currentEntity: entities[0] || null,
@@ -643,6 +750,9 @@ window.externalLayersObs = (function () {
         metadata,
         errorMessage: "",
       });
+      selectionLocked = true;
+      _setLegacyInfoClickActive(false);
+      _setMapClickGuardActive(true);
       _expandRightPanel();
     } catch (error) {
       if (activeRequests.get(normalizedUid) === requestId) {
@@ -651,6 +761,8 @@ window.externalLayersObs = (function () {
         _publishState(featureUid, {
           status: "error",
           siteName: feature.get("nom_site") || "Zonage environnemental",
+          layerName: _getLayerName(feature),
+          selectionMode: true,
           entities: [],
           currentIndex: 0,
           currentEntity: null,
@@ -687,11 +799,6 @@ window.externalLayersObs = (function () {
       return;
     }
 
-    if (!window.reactComponentManager?.openFilterModal) {
-      mviewer.alert("La fenêtre de filtrage est indisponible.", "alert-danger");
-      return;
-    }
-
     const layerId = feature.get("mviewerid");
     const layerLabel =
       mviewer.getLayers?.()?.[layerId]?.name || "Zonage environnemental";
@@ -717,23 +824,21 @@ window.externalLayersObs = (function () {
       }
     };
 
-    if (window.reactComponentManager.setZoningSelection) {
+    selectionLocked = false;
+    _setLegacyInfoClickActive(true);
+    _setMapClickGuardActive(false);
+    _whenReactFilterManagerReady(() => {
       window.reactComponentManager.setZoningSelection(
         selectionContext,
         onSelectionSubmit
       );
-      return;
-    }
-
-    window.reactComponentManager.openFilterModal({
-      activeLayerId: "communeSearch",
-      filterProfile: null,
-      selectionContext,
-      onSelectionSubmit,
     });
   };
 
   const clearSelection = function () {
+    selectionLocked = false;
+    _setLegacyInfoClickActive(true);
+    _setMapClickGuardActive(false);
     _stopWatchingSelectedLayer();
     selectionLayer?.getSource?.()?.clear?.();
     overlayLayer?.getSource?.()?.clear?.();
@@ -754,13 +859,38 @@ window.externalLayersObs = (function () {
     selectedFeatureUid = null;
   };
 
-  const setSelectionActive = function (active) {
+  const setSelectionActive = function (active, options = {}) {
+    if (options.locked === true) {
+      selectionLocked = true;
+    } else if (options.locked === false) {
+      selectionLocked = false;
+    }
     selectionLayer?.setVisible?.(Boolean(active));
+    if (active && !selectionLocked) {
+      _setLegacyInfoClickActive(true);
+      _setMapClickGuardActive(false);
+    }
+    if (!active) {
+      _setLegacyInfoClickActive(true);
+      _setMapClickGuardActive(false);
+    }
+    if (active && selectionLocked) {
+      _setLegacyInfoClickActive(false);
+      _setMapClickGuardActive(true);
+    }
   };
 
   const handleMapClick = function (event) {
     const filters = window.__filterAPI?.currentFilters;
-    if (!filters?.selectionMode || !selectedFeatureUid || !overlayLayer) {
+    if (!filters?.selectionMode) {
+      return false;
+    }
+
+    if (selectionLocked) {
+      return true;
+    }
+
+    if (!selectedFeatureUid || !overlayLayer) {
       return false;
     }
 
@@ -771,7 +901,7 @@ window.externalLayersObs = (function () {
       { layerFilter: (layer) => layer === overlayLayer }
     );
     if (!feature) {
-      return false;
+      return true;
     }
 
     selectEntity(
@@ -783,7 +913,7 @@ window.externalLayersObs = (function () {
 
   const handleInfoPanelReady = function () {
     const filters = window.__filterAPI?.currentFilters;
-    if (!filters?.selectionMode) {
+    if (selectionLocked || !filters?.selectionMode) {
       return;
     }
 

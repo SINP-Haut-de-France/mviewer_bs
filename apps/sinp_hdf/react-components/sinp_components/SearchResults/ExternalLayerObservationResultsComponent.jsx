@@ -1,36 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
-import SelectionSummary from "./SelectionSummary";
+import React, { useEffect, useState } from "react";
 import EntityNavigationControls from "./EntityNavigationControls";
 import SearchResultsTabs from "./SearchResultsTabs";
-import { TAB_IDS } from "./searchResults.utils";
+import { getResultPanelTitle, TAB_IDS } from "./searchResults.utils";
 import "./SearchResults.css";
 
 const STATE_EVENT = "sinp:external-layer-observation-state";
-
-const buildSelectionSummary = (state) => {
-  const details = state?.currentDetails || [];
-  const eventCount = details.reduce((total, detail) => {
-    const count = Number(detail?.nb_observations);
-    return Number.isFinite(count) ? total + count : total;
-  }, 0);
-  const taxonCount = new Set(
-    details
-      .map((detail) => detail?.cd_ref || detail?.nom_valide)
-      .filter((value) => value !== null && value !== undefined)
-  ).size;
-  const lastObservationDate = details.reduce((latest, detail) => {
-    const candidate = detail?.last_date_obs;
-    return candidate && (!latest || candidate > latest) ? candidate : latest;
-  }, null);
-
-  return {
-    selectionLabel:
-      state?.currentEntity?.label || state?.siteName || "Zonage environnemental",
-    eventCount,
-    taxonCount,
-    lastObservationDate,
-  };
-};
 
 const ExternalLayerObservationResultsComponent = ({ featureUid }) => {
   const [activeTab, setActiveTab] = useState(TAB_IDS.OBSERVATIONS);
@@ -51,10 +25,18 @@ const ExternalLayerObservationResultsComponent = ({ featureUid }) => {
     return () => window.removeEventListener(STATE_EVENT, handleStateChange);
   }, [featureUid]);
 
-  const selectionSummary = useMemo(
-    () => (state?.status === "success" ? buildSelectionSummary(state) : null),
-    [state]
-  );
+  const panelTitle = getResultPanelTitle({
+    selectionMode: state?.selectionMode === true,
+    selectionLayerName: state?.layerName || state?.siteName,
+    selectionEntityLabel: state?.currentEntity?.label || state?.siteName,
+  });
+
+  React.useEffect(() => {
+    const headerH6 = document.querySelector("#right-panel .mv-header h6");
+    if (headerH6 && state?.status === "success") {
+      headerH6.textContent = panelTitle;
+    }
+  }, [panelTitle, state?.status]);
 
   if (!state || state.status === "cleared") {
     return null;
@@ -80,19 +62,13 @@ const ExternalLayerObservationResultsComponent = ({ featureUid }) => {
         }
       />
 
-      {/* Résumé de sélection au niveau supérieur */}
-      {selectionSummary ? (
-        <SelectionSummary selectionSummary={selectionSummary} />
-      ) : null}
-
       <SearchResultsTabs
         activeTab={activeTab}
         onTabChange={setActiveTab}
         properties={{}}
         details={state.currentDetails || []}
         jddDetails={state.currentMetadata || state.metadata || []}
-        selectionSummary={selectionSummary}
-        panelLabel={`Détails des observations de ${state.siteName || "ce site"}`}
+        panelLabel={panelTitle}
         selectionPrompt={false}
         selectionPromptMessage=""
         loadingState={loading}

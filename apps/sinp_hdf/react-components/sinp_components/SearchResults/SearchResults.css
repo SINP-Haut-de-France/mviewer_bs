@@ -385,7 +385,7 @@
 }
 
 .mv-panel-reveal-handle--right.is-expanded {
-  right: var(--sinp-rightpanel-width, var(--mv-rightpanel-size, 350px));
+  right: 0;
 }
 
 .mv-panel-reveal-handle--bottom {

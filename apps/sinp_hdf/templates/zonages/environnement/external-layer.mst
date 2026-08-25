@@ -36,27 +36,43 @@
 						window.dispatchEvent(new CustomEvent('sinp:external-layer-request-open',{detail:{featureUid:uid}}));
 					}catch(e){console.error(e);} 
 				})('{{feature_ol_uid}}')">
-				Afficher le détail des observations
+				Afficher les observations
 			</button>
 
 			<script>(function(btnId){
 				var btn = document.getElementById(btnId);
 				if(!btn) return;
-				var defaultLabel = btn.innerHTML;
-				var update = function(detail){
-					if(!detail) return;
-					btn.disabled = detail.canSubmit === false;
-					// Reflect submitted state to keep labels in sync
-					if(detail.hasSubmittedSearch){
-						btn.innerHTML = 'Rafraîchir';
-					}else{
-						btn.innerHTML = 'Appliquer';
+				var featureUid = btn.id.replace(/^external-layer-apply-/, '');
+				var buttonState = function(state){
+					if(!state || String(state.featureUid) !== String(featureUid)){
+						return;
 					}
+
+					var currentIndex = Number.isInteger(state.currentIndex) ? state.currentIndex : 0;
+					var total = Array.isArray(state.entities) ? state.entities.length : 0;
+					var isLoaded = state.status === 'success';
+					var isLocked = isLoaded && total > 0 && currentIndex === 0;
+
+					btn.disabled = isLocked || state.status === 'loading' || state.status === 'error';
+					btn.innerHTML = 'Afficher les observations';
 				};
-				window.addEventListener('sinp:filter-actions-state', function(e){ update(e.detail || {}); });
-				window.addEventListener('sinp:filter-loading-state', function(e){ btn.disabled = Boolean(e.detail?.isLoading); });
-				// Try to get initial state if available
-				try{ var evt = new CustomEvent('sinp:request-filter-actions-state'); window.dispatchEvent(evt);}catch(e){}
+
+				window.addEventListener('sinp:external-layer-observation-state', function(e){
+					buttonState(e && e.detail ? e.detail : null);
+				});
+				window.addEventListener('sinp:filter-loading-state', function(e){
+					if (Boolean(e.detail?.isLoading)) {
+						btn.disabled = true;
+						btn.innerHTML = 'Afficher les observations';
+					}
+				});
+
+				try {
+					var currentState = window.externalLayersObs && typeof window.externalLayersObs.getState === 'function'
+						? window.externalLayersObs.getState(featureUid)
+						: null;
+					buttonState(currentState);
+				} catch (e) {}
 			})('external-layer-apply-{{feature_ol_uid}}');</script>
 		{{/url_fiche}}
 

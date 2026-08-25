@@ -531,6 +531,21 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     querySelectedFeatureSpy.mockRestore();
   });
 
+  test("Bloque les clics carte quand la sélection est verrouillée par un résultat", () => {
+    const previousFilterApi = window.__filterAPI;
+    window.__filterAPI = {
+      currentFilters: {
+        selectionMode: true,
+      },
+    };
+
+    window.externalLayersObs?.setSelectionActive?.(true, { locked: true });
+
+    expect(window.externalLayersObs?.handleMapClick?.({ pixel: [10, 20] })).toBe(true);
+
+    window.__filterAPI = previousFilterApi;
+  });
+
   test("Nettoie toutes les restitutions avant un nouveau rendu", () => {
     const control = new SinpBaseCustom({
       layerId: "grid10x10search",

@@ -91,6 +91,41 @@ export const getFeatureProperties = (feature) => {
   return feature.getProperties() || {};
 };
 
+export const getResultPanelTitle = ({
+  layerId,
+  properties = {},
+  selectionSummary = null,
+  selectionMode = false,
+  selectionLayerName = "Zonage environnemental",
+  selectionEntityLabel = "",
+}) => {
+  if (selectionMode) {
+    const entityLabel = selectionEntityLabel || selectionSummary?.selectionLabel || "Entité";
+    return `Résultat pour : ${selectionLayerName} - ${entityLabel}`;
+  }
+
+  const entity =
+    selectionSummary?.selectionLabel ||
+    getFirstDefinedValue(
+      properties.nom_commune,
+      properties.libelle_commune,
+      properties.commune_name,
+      properties.nom_epci,
+      properties.libelle_epci,
+      properties.epci_name,
+      properties.libelle,
+      properties.nom_min,
+      properties.nom_maj,
+      properties.code_insee,
+      properties.code_maille,
+      properties.code
+    ) || getLayerConfig(layerId).panelLabel;
+
+  const normalizedEntity = String(entity).trim();
+
+  return `Résultat pour : ${normalizedEntity}`;
+};
+
 export const getSelectedEntitySummary = (layerId, properties = {}, layerConfig = null) => {
   const resolvedLayerConfig = layerConfig || getLayerConfig(layerId);
   const details = Array.isArray(properties.details) ? properties.details : [];

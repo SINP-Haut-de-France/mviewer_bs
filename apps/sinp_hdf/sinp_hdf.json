@@ -2,14 +2,25 @@
   "CURRENT_ENV": "DEV",
   "VERSION": "1.0.0.1",
   "EXTERNAL_LAYERS_OBS": [
-    { "id": "Patrinat_APB_France", "label": "APB" },
+    { "id": "Patrinat_APB_France", "label": "APPB" },
+    { "id": "Patrinat_APHN_France", "label": "APPHN" },
+    { "id": "Patrinat_APPG_France", "label": "APPG" },
+    { "id": "Patrinat_APLG_France", "label": "APLG" },
     { "id": "Patrinat_RNN_France", "label": "RNN" },
+    { "id": "Patrinat_PPRNN_France", "label": "PPRNN" },
     { "id": "Patrinat_RNR_France", "label": "RNR" },
+    { "id": "Patrinat_RB_France", "label": "RB" },
+    { "id": "Patrinat_SC_France", "label": "Sites classés" },
+    { "id": "Patrinat_CEN_France", "label": "Terrains CEN" },
+    { "id": "Patrinat_Conservatoire_littoral", "label": "Terrains CDL" },
     { "id": "Patrinat_SIC_France", "label": "Natura 2000 - ZSC" },
     { "id": "Patrinat_ZPS_France", "label": "Natura 2000 - ZPS" },
+    { "id": "Patrinat_PNR_France", "label": "PNR" },
+    { "id": "Patrinat_BIOS_France", "label": "Réserve de biosphère" },
     { "id": "Patrinat_RAMSAR_France", "label": "RAMSAR" },
-    { "id": "Patrinat_ZNIEFF1_France", "label": "ZNIEFF 1 Terrestre" },
-    { "id": "Patrinat_ZNIEFF2_France", "label": "ZNIEFF 2 Terrestre" }
+    { "id": "Patrinat_ZNIEFF1_France", "label": "ZNIEFF de type I" },
+    { "id": "Patrinat_ZNIEFF2_France", "label": "ZNIEFF de type II" },
+    { "id": "Patrinat_INPG_France", "label": "INPG" }
   ],
   "QUA": {
     "GEOSERVER_BASE_URL": "http://localhost:8080/geoserver/qua_sinp",

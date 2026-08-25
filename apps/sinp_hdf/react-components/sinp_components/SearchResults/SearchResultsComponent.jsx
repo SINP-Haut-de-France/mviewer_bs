@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import SelectionSummary from "./SelectionSummary";
 import EntityNavigationControls from "./EntityNavigationControls";
 import SearchResultsTabs from "./SearchResultsTabs";
 import "./SearchResults.css";
@@ -8,6 +7,7 @@ import {
   getFeatureProperties,
   getLayerConfig,
   getSelectedEntitySummary,
+  getResultPanelTitle,
   SELECTION_PROMPT_MESSAGE,
   TAB_IDS,
 } from "./searchResults.utils";
@@ -142,30 +142,20 @@ const SearchResultsComponent = ({
   };
 
   React.useEffect(() => {
-    // Mettre à jour le header du panneau droit : h6 -> 'Résultat'
     try {
       const headerH6 = document.querySelector('#right-panel .mv-header h6');
       if (headerH6) {
-        headerH6.textContent = 'Résultat';
-      }
-
-      // Créer ou mettre à jour un sous-titre sous le header pour l'entité sélectionnée
-      const header = document.querySelector('#right-panel .mv-header');
-      if (header) {
-        let subtitle = header.querySelector('.mv-header-subtitle');
-        if (!subtitle) {
-          subtitle = document.createElement('div');
-          subtitle.className = 'mv-header-subtitle';
-          subtitle.style.fontSize = '0.95rem';
-          subtitle.style.marginTop = '0.25rem';
-          header.appendChild(subtitle);
-        }
-        subtitle.textContent = selectionSummary?.selectionLabel || '';
+        headerH6.textContent = getResultPanelTitle({
+          layerId,
+          properties,
+          selectionSummary,
+          selectionMode: Boolean(window.__filterAPI?.currentFilters?.selectionMode),
+        });
       }
     } catch (e) {
-      // Ignore si DOM non disponible
+      // Ignore if the legacy panel is not mounted yet.
     }
-  }, [selectionSummary]);
+  }, [layerId, properties, selectionSummary]);
 
   return (
     <div className="mv-sr-root">
@@ -178,11 +168,6 @@ const SearchResultsComponent = ({
           onPrevious={() => selectEntity(navigationState.currentIndex - 1)}
           onNext={() => selectEntity(navigationState.currentIndex + 1)}
         />
-      ) : null}
-
-      {/* Afficher le résumé de sélection au même niveau que les infos de fonds de carte */}
-      {selectionSummary && !selectionPrompt ? (
-        <SelectionSummary selectionSummary={selectionSummary} />
       ) : null}
 
       <SearchResultsTabs
