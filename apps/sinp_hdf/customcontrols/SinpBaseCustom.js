@@ -361,6 +361,10 @@ class SinpBaseCustom {
       return;
     }
 
+    if (window.externalLayersObs?.handleMapClick?.(evt)) {
+      return;
+    }
+
     window.setTimeout(() => {
       this._querySelectedFeature(evt.coordinate);
     }, 0);

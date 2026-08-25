@@ -758,6 +758,29 @@ window.externalLayersObs = (function () {
     selectionLayer?.setVisible?.(Boolean(active));
   };
 
+  const handleMapClick = function (event) {
+    const filters = window.__filterAPI?.currentFilters;
+    if (!filters?.selectionMode || !selectedFeatureUid || !overlayLayer) {
+      return false;
+    }
+
+    const map = mviewer.getMap?.();
+    const feature = map?.forEachFeatureAtPixel?.(
+      event?.pixel,
+      (candidate, layer) => (layer === overlayLayer ? candidate : null),
+      { layerFilter: (layer) => layer === overlayLayer }
+    );
+    if (!feature) {
+      return false;
+    }
+
+    selectEntity(
+      feature.get("sinp_external_layer_feature_uid"),
+      feature.get("sinp_external_layer_entity_index")
+    );
+    return true;
+  };
+
   const handleInfoPanelReady = function () {
     const filters = window.__filterAPI?.currentFilters;
     if (!filters?.selectionMode) {
@@ -809,6 +832,7 @@ window.externalLayersObs = (function () {
     open,
     clearSelection,
     setSelectionActive,
+    handleMapClick,
     selectEntity,
     getState: (featureUid) => states.get(_normalizeFeatureUid(featureUid)) || null,
     stateEvent: STATE_EVENT,
