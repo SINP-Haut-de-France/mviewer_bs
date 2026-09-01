@@ -1,4 +1,4 @@
-name: "Auto package & release SINP HDF (conservative, dynamic default branch)"
+name: "Auto package & release SINP HDF (conservative, debug build:dist)"
 
 on:
   push:
@@ -19,70 +19,107 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Checkout repository (full history & tags)
+      - name: Checkout repo (full history & tags)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Determine repository default branch
-        id: default_branch
+      - name: Pre-build debug (repo state)
         run: |
-          DEFAULT=$(gh api -H "Accept: application/vnd.github+json" /repos/${GITHUB_REPOSITORY} --jq .default_branch)
-          echo "default_branch=${DEFAULT}" >> $GITHUB_OUTPUT
-          echo "Default branch: ${DEFAULT}"
+          echo "GITHUB_REPOSITORY=$GITHUB_REPOSITORY"
+          echo "GITHUB_REF=$GITHUB_REF"
+          echo "Runner pwd: $(pwd)"
+          echo "--- git status ---"
+          git status --porcelain || true
+          echo "--- top-level files ---"
+          ls -la || true
+          echo "--- apps/sinp_hdf listing (top) ---"
+          ls -la apps/sinp_hdf || true
+          echo "--- show package.json if present ---"
+          if [ -f apps/sinp_hdf/package.json ]; then
+            echo "package.json content (first 200 lines):"
+            sed -n '1,200p' apps/sinp_hdf/package.json || true
+          else
+            echo "apps/sinp_hdf/package.json NOT FOUND"
+          fi
 
-      - name: Setup Node.js
+      - name: Setup Node.js (debug)
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: apps/sinp_hdf/package-lock.json
 
-      - name: Install dependencies
-        working-directory: apps/sinp_hdf
-        run: npm ci
+      - name: Node/npm versions (after setup)
+        run: |
+          echo "node version:"; node -v || true
+          echo "npm version:"; npm -v || true
+          echo "which node: $(which node || true)"
 
-      - name: Build SINP HDF package
+      - name: Install dependencies (verbose)
         working-directory: apps/sinp_hdf
-        run: npm run build
+        run: |
+          set -x
+          echo "Working dir: $(pwd)"
+          echo "Listing before npm ci:"
+          ls -la
+          echo "package.json present: [ -f package.json ] ->" ; [ -f package.json ] && echo "yes" || echo "no"
+          npm ci --prefer-offline --no-audit --progress=false
+
+      - name: Build (explicit, verbose, force build:dist)
+        working-directory: apps/sinp_hdf
+        run: |
+          set -x
+          echo "--- ENV before build ---"
+          echo "CI=$CI"
+          echo "NODE_ENV=$NODE_ENV"
+          echo "BUILD_TARGET=${BUILD_TARGET:-<not-set>}"
+          echo "Forcing NODE_ENV=production and BUILD_TARGET=main for the build"
+          export NODE_ENV=production
+          export BUILD_TARGET=main
+          echo "Run: npm run build:dist (explicit)"
+          npm run build:dist
+
+      - name: Post-build debug (list outputs)
+        run: |
+          echo "=== After build: listing apps/sinp_hdf (depth 4) ==="
+          find apps/sinp_hdf -maxdepth 4 -type f -print || true
+          echo "--- du summary ---"
+          du -sh apps/sinp_hdf || true
+          if [ -d "apps/sinp_hdf/dist" ]; then
+            echo "--- dist exists: listing ---"
+            ls -la apps/sinp_hdf/dist || true
+            find apps/sinp_hdf/dist -maxdepth 4 -type f -print || true
+            du -sh apps/sinp_hdf/dist || true
+          fi
 
       - name: Create archive (prefer dist/sinp_hdf, then dist, then fallback)
         run: |
           set -euo pipefail
-          echo "Workspace: $GITHUB_WORKSPACE"
-          echo "Listing apps/sinp_hdf:"
-          ls -la "$GITHUB_WORKSPACE/apps/sinp_hdf" || true
-
-          # candidates in order of preference
+          echo "Selecting directory to archive..."
           C1="apps/sinp_hdf/dist/sinp_hdf"
           C2="apps/sinp_hdf/dist"
           C3="apps/sinp_hdf"
-
           SELECTED=""
-          if [ -d "$GITHUB_WORKSPACE/$C1" ] && find "$GITHUB_WORKSPACE/$C1" -mindepth 1 | read -r; then
+          if [ -d "$C1" ] && find "$C1" -mindepth 1 -print -quit | grep -q .; then
             SELECTED="$C1"
-          elif [ -d "$GITHUB_WORKSPACE/$C2" ] && find "$GITHUB_WORKSPACE/$C2" -mindepth 1 | read -r; then
+          elif [ -d "$C2" ] && find "$C2" -mindepth 1 -print -quit | grep -q .; then
             SELECTED="$C2"
-          elif [ -d "$GITHUB_WORKSPACE/$C3" ] && find "$GITHUB_WORKSPACE/$C3" -mindepth 1 | read -r; then
+          elif [ -d "$C3" ] && find "$C3" -mindepth 1 -print -quit | grep -q .; then
             SELECTED="$C3"
           fi
-
           if [ -z "$SELECTED" ]; then
             echo "::error::No build output found in expected locations: $C1, $C2, $C3"
-            echo "Full listing (3 levels) of apps/sinp_hdf:"
-            find "$GITHUB_WORKSPACE/apps/sinp_hdf" -maxdepth 3 -type f -print || true
+            echo "Full recursive listing (3 levels) of apps/sinp_hdf:"
+            find apps/sinp_hdf -maxdepth 3 -type f -print || true
             exit 1
           fi
-
-          echo "Selected directory to archive: $SELECTED"
-          # If selected is apps/sinp_hdf/dist/sinp_hdf we want to archive that directory itself (so tar -C dist sinp_hdf)
+          echo "Selected to archive: ${SELECTED}"
           if [ "$SELECTED" = "$C1" ]; then
-            tar -czf "$GITHUB_WORKSPACE/${ASSET_NAME}" -C "$GITHUB_WORKSPACE/apps/sinp_hdf/dist" "sinp_hdf"
+            tar -czf "$GITHUB_WORKSPACE/${ASSET_NAME}" -C "apps/sinp_hdf/dist" "sinp_hdf"
           else
-            tar -czf "$GITHUB_WORKSPACE/${ASSET_NAME}" -C "$GITHUB_WORKSPACE/$SELECTED" .
+            tar -czf "$GITHUB_WORKSPACE/${ASSET_NAME}" -C "${SELECTED}" .
           fi
-          echo "Created archive:"
+          echo "Archive created: $GITHUB_WORKSPACE/${ASSET_NAME}"
           ls -la "$GITHUB_WORKSPACE/${ASSET_NAME}"
 
       - name: Determine new tag from package.json and existing tags
@@ -99,6 +136,7 @@ jobs:
             exit 1
           fi
           base="${parts[0]}.${parts[1]}.${parts[2]}"
+          echo "Base (first 3 fields): $base"
           tags=$(git ls-remote --tags origin | awk '{print $2}' | sed 's@refs/tags/@@' | sed 's@\^{}@@')
           max=-1
           for t in $tags; do
@@ -129,8 +167,8 @@ jobs:
             fi
             newtag="${base}.${newnum}"
           fi
-          echo "tag=${newtag}" >> "$GITHUB_OUTPUT"
           echo "Calculated new tag: ${newtag}"
+          echo "tag=${newtag}" >> "$GITHUB_OUTPUT"
 
       - name: Create annotated git tag and push
         env:
@@ -139,6 +177,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          echo "Creating tag ${NEW_TAG}"
           git tag -a "${NEW_TAG}" -m "Release ${NEW_TAG} (created by CI run ${GITHUB_RUN_ID})"
           git push origin "refs/tags/${NEW_TAG}"
 
@@ -198,7 +237,6 @@ jobs:
       - name: Print final URLs and summary
         env:
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
-          ASSET_NAME: ${{ env.ASSET_NAME }}
         run: |
           echo "Release tag created: ${NEW_TAG}"
           echo "Versioned download URL (asset): https://github.com/${GITHUB_REPOSITORY}/releases/download/${NEW_TAG}/${ASSET_NAME}"
