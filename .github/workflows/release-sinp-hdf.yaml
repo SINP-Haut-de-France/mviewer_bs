@@ -23,6 +23,19 @@ jobs:
         working-directory: apps/sinp_hdf
 
     steps:
+      - name: "Create or get release"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          gh release view "${RELEASE_TAG}" || gh release create "${RELEASE_TAG}" --draft
+      
+      - name: "Upload package to release"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: gh release upload "${RELEASE_TAG}" dist/sinp_hdf.tar.gz --clobber
+    
       - name: "Checkout repository"
         uses: actions/checkout@v4
 
