@@ -1,51 +1,46 @@
-name: "Package SINP HDF release"
+name: "Auto package & release SINP HDF (versioned + Latest)"
 
 on:
-  release:
-    types:
-      - published
+  push:
+    branches:
+      - main
+      - master
   workflow_dispatch:
-    inputs:
-      tag:
-        description: "Existing release tag to attach the SINP HDF package to"
-        required: true
 
 permissions:
   contents: write
 
+env:
+  ASSET_NAME: sinp_hdf.tar.gz
+
 jobs:
-  package-sinp-hdf:
+  package-and-release:
     runs-on: ubuntu-latest
-    if: github.repository == 'SINP-Haut-de-France/mviewer_bs'
-
-    env:
-      ASSET_NAME: sinp_hdf.tar.gz
-
     steps:
-      - name: "Checkout repository"
+      - name: Checkout repository (full history & tags)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: true
 
-      - name: "Setup Node.js"
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: apps/sinp_hdf/package-lock.json
 
-      - name: "Install dependencies"
+      - name: Install dependencies
         working-directory: apps/sinp_hdf
         run: npm ci
 
-      - name: "Build SINP HDF package"
+      - name: Build SINP HDF package
         working-directory: apps/sinp_hdf
         run: npm run build
 
-      - name: "Create archive (content of apps/sinp_hdf only)"
+      - name: Create archive (content of apps/sinp_hdf only)
         run: |
           echo "Workspace: $GITHUB_WORKSPACE"
-          ls -la "$GITHUB_WORKSPACE" || true
           if [ -d "$GITHUB_WORKSPACE/apps/sinp_hdf" ]; then
             tar -czf "$GITHUB_WORKSPACE/${ASSET_NAME}" -C "$GITHUB_WORKSPACE/apps/sinp_hdf" .
             echo "Created archive:"
@@ -56,62 +51,131 @@ jobs:
             exit 1
           fi
 
-      - name: "Determine release tag"
-        id: get_tag
+      - name: Determine new tag from package.json and existing tags
+        id: compute_tag
         run: |
-          # priority: release event tag_name, otherwise workflow_dispatch input
-          if [ -n "${{ github.event.release.tag_name }}" ]; then
-            echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          repo="${GITHUB_REPOSITORY}"
+          echo "Repository: $repo"
+
+          # read version from package.json
+          version=$(node -e "console.log(require('./apps/sinp_hdf/package.json').version)")
+          version="${version#v}"
+          echo "package.json version: $version"
+
+          IFS='.' read -ra parts <<< "$version"
+          if [ "${#parts[@]}" -lt 3 ]; then
+            echo "ERROR: package.json version must be at least MAJOR.MINOR.PATCH"
+            exit 1
+          fi
+          base="${parts[0]}.${parts[1]}.${parts[2]}"
+          echo "Base (first 3 fields): $base"
+
+          # fetch tag list from remote
+          tags=$(git ls-remote --tags origin | awk '{print $2}' | sed 's@refs/tags/@@' | sed 's@\^{}@@')
+          max=-1
+          for t in $tags; do
+            tclean="${t#v}"
+            # if exactly base => treat as suffix 0
+            if [ "$tclean" = "$base" ]; then
+              num=0
+              if [ $num -gt $max ]; then max=$num; fi
+            else
+              # if matches base.N
+              if [[ "$tclean" =~ ^${base}\.([0-9]+)$ ]]; then
+                num="${BASH_REMATCH[1]}"
+                if [ "$num" -gt "$max" ]; then max="$num"; fi
+              fi
+            fi
+          done
+
+          # Decide new tag:
+          if [ "${#parts[@]}" -ge 4 ]; then
+            # package.json already has 4th field: increment it
+            last="${parts[3]}"
+            if ! [[ "$last" =~ ^[0-9]+$ ]]; then
+              echo "ERROR: 4th component is not numeric: $last"
+              exit 1
+            fi
+            newnum=$((last + 1))
+            newtag="${base}.${newnum}"
           else
-            echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+            # package.json has only 3 components: create/increment 4th suffix
+            if [ $max -lt 0 ]; then
+              # no existing tags with base -> start at 1
+              newnum=1
+            else
+              newnum=$((max + 1))
+            fi
+            newtag="${base}.${newnum}"
           fi
 
-      - name: "Ensure versioned release exists (fallback)"
+          echo "Calculated new tag: $newtag"
+          echo "tag=${newtag}" >> "$GITHUB_OUTPUT"
+
+      - name: Create annotated git tag and push
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.get_tag.outputs.tag }}
+          NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
         run: |
-          # If release doesn't exist for the tag, create it (target master). Usually release exists when triggered by release event.
-          if ! gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
-            echo "Release ${RELEASE_TAG} not found — creating draft targetting 'master'"
-            gh release create "${RELEASE_TAG}" --target main --notes "Release ${RELEASE_TAG} (auto-created by CI)" || true
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          echo "Creating tag ${NEW_TAG}"
+          git tag -a "${NEW_TAG}" -m "Release ${NEW_TAG} (created by CI run ${GITHUB_RUN_ID})"
+          # push the new tag
+          git push origin "refs/tags/${NEW_TAG}"
+
+      - name: Create versioned release and upload asset (release = ${TAG})
+        env:
+          NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
+          ASSET_PATH: ${{ github.workspace }}/$ASSET_NAME
+        run: |
+          set -euo pipefail
+          echo "Creating release ${NEW_TAG} with asset ${ASSET_PATH}"
+          # Create release and upload asset in one step (if it already exists, try to upload)
+          if gh release view "${NEW_TAG}" >/dev/null 2>&1; then
+            echo "Release ${NEW_TAG} already exists - uploading asset"
+            gh release upload "${NEW_TAG}" "${ASSET_PATH}" --clobber || {
+              echo "Upload to existing release failed"
+              exit 1
+            }
           else
-            echo "Release ${RELEASE_TAG} exists"
+            gh release create "${NEW_TAG}" --target main --title "${NEW_TAG}" --notes "Release ${NEW_TAG} (auto-created by CI)" "${ASSET_PATH}"
+          fi
+          echo "Versioned release ${NEW_TAG} created/updated."
+
+      - name: Update persistent 'Latest' release (upload or recreate if immutable)
+        env:
+          ASSET_PATH: ${{ github.workspace }}/${{ env.ASSET_NAME }}
+          NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          echo "Updating 'Latest' release with asset ${ASSET_PATH}"
+          # Try upload to existing 'Latest'
+          if gh release view "Latest" >/dev/null 2>&1; then
+            echo "Release 'Latest' exists, attempting upload"
+            if gh release upload "Latest" "${ASSET_PATH}" --clobber; then
+              echo "Uploaded asset to 'Latest' successfully"
+              gh release edit "Latest" --notes "Latest asset updated from release ${NEW_TAG} (workflow ${GITHUB_RUN_ID})" || true
+            else
+              echo "Upload to 'Latest' failed. Attempting recovery: delete + recreate 'Latest' and upload asset."
+              # destructive path: delete and recreate Latest
+              gh release delete "Latest" -y || true
+              gh release create "Latest" --target main --title "Latest" --notes "Persistent 'Latest' release recreated by CI (source ${NEW_TAG})" "${ASSET_PATH}"
+              echo "'Latest' recreated and asset uploaded."
+            fi
+          else
+            echo "Release 'Latest' not found. Creating it and uploading asset."
+            gh release create "Latest" --target main --title "Latest" --notes "Persistent 'Latest' release created by CI (source ${NEW_TAG})" "${ASSET_PATH}"
+            echo "'Latest' created and asset uploaded."
           fi
 
-      - name: "Upload package to versioned release"
+      - name: Print final URLs and summary
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.get_tag.outputs.tag }}
-        run: |
-          echo "Uploading ${ASSET_NAME} to release ${RELEASE_TAG}"
-          gh release upload "${RELEASE_TAG}" "$GITHUB_WORKSPACE/${ASSET_NAME}" --clobber
-
-      - name: "Upload package to persistent 'Latest' release (fixed URL)"
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.get_tag.outputs.tag }}
+          NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
           ASSET_NAME: ${{ env.ASSET_NAME }}
         run: |
-          # Goal: keep a release named "Latest" that always contains the most recent asset.
-          if gh release view "Latest" >/dev/null 2>&1; then
-            echo "Uploading ${ASSET_NAME} to existing release 'Latest'"
-            gh release upload "Latest" "$GITHUB_WORKSPACE/${ASSET_NAME}" --clobber
-            # update notes to reference the versioned release for traceability
-            gh release edit "Latest" --notes "Latest asset updated from release ${RELEASE_TAG} (uploaded by workflow run ${GITHUB_RUN_ID})" || true
-          else
-            echo "Release 'Latest' not found — creating it pointing to 'main' and uploading asset"
-            gh release create "Latest" --target main --notes "Persistent release for Latest asset. Initially created by CI." || true
-            gh release upload "Latest" "$GITHUB_WORKSPACE/${ASSET_NAME}" --clobber
-            gh release edit "Latest" --notes "Latest asset created from release ${RELEASE_TAG} (workflow run ${GITHUB_RUN_ID})" || true
-          fi
-
-      - name: "Verification (list release assets)"
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.get_tag.outputs.tag }}
-        run: |
-          echo "Assets for ${RELEASE_TAG}:"
-          gh release view "${RELEASE_TAG}" --json assets -q '.assets[].name' || true
-          echo "Assets for Latest:"
-          gh release view "Latest" --json assets -q '.assets[].name' || true
+          echo "Release tag created: ${NEW_TAG}"
+          echo "Versioned download URL (asset): https://github.com/${GITHUB_REPOSITORY}/releases/download/${NEW_TAG}/${ASSET_NAME}"
+          echo "Persistent Latest download URL: https://github.com/${GITHUB_REPOSITORY}/releases/download/Latest/${ASSET_NAME}"
