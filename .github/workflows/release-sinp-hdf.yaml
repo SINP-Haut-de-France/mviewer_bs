@@ -1,4 +1,4 @@
-name: "Auto package & release SINP HDF (conservative, non-destructive)"
+name: "Auto package & release SINP HDF (conservative, dynamic default branch)"
 
 on:
   push:
@@ -16,12 +16,24 @@ env:
 jobs:
   package-and-release:
     runs-on: ubuntu-latest
+    env:
+      # make github.token available as GH_TOKEN for gh CLI
+      GH_TOKEN: ${{ github.token }}
+      ASSET_NAME: ${{ env.ASSET_NAME }}
     steps:
       - name: Checkout repository (full history & tags)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: true
+
+      - name: Determine repository default branch
+        id: default_branch
+        run: |
+          # get default branch from GitHub API
+          DEFAULT=$(gh api -H "Accept: application/vnd.github+json" /repos/${GITHUB_REPOSITORY} --jq .default_branch)
+          echo "default_branch=${DEFAULT}" >> $GITHUB_OUTPUT
+          echo "Default branch: ${DEFAULT}"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -55,6 +67,7 @@ jobs:
         id: compute_tag
         run: |
           set -euo pipefail
+          echo "Reading version from apps/sinp_hdf/package.json"
           version=$(node -e "console.log(require('./apps/sinp_hdf/package.json').version)")
           version="${version#v}"
           echo "package.json version: $version"
@@ -64,7 +77,9 @@ jobs:
             exit 1
           fi
           base="${parts[0]}.${parts[1]}.${parts[2]}"
-          echo "Base: $base"
+          echo "Base (first 3 fields): $base"
+
+          # fetch tag list from remote and find max suffix for base
           tags=$(git ls-remote --tags origin | awk '{print $2}' | sed 's@refs/tags/@@' | sed 's@\^{}@@')
           max=-1
           for t in $tags; do
@@ -79,10 +94,11 @@ jobs:
               fi
             fi
           done
+
           if [ "${#parts[@]}" -ge 4 ]; then
             last="${parts[3]}"
             if ! [[ "$last" =~ ^[0-9]+$ ]]; then
-              echo "ERROR: 4th component not numeric: $last"
+              echo "ERROR: 4th component is not numeric: $last"
               exit 1
             fi
             newnum=$((last + 1))
@@ -95,6 +111,8 @@ jobs:
             fi
             newtag="${base}.${newnum}"
           fi
+
+          echo "Calculated new tag: $newtag"
           echo "tag=${newtag}" >> "$GITHUB_OUTPUT"
 
       - name: Create annotated git tag and push
@@ -104,45 +122,44 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          echo "Creating and pushing tag ${NEW_TAG}"
-          git tag -a "${NEW_TAG}" -m "Release ${NEW_TAG} (created by CI ${GITHUB_RUN_ID})"
+          echo "Creating tag ${NEW_TAG}"
+          git tag -a "${NEW_TAG}" -m "Release ${NEW_TAG} (created by CI run ${GITHUB_RUN_ID})"
           git push origin "refs/tags/${NEW_TAG}"
 
       - name: Create or update versioned release and upload asset (non-destructive)
         env:
-          GH_TOKEN: ${{ github.token }}
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
           ASSET_PATH: ${{ github.workspace }}/${{ env.ASSET_NAME }}
+          DEFAULT_BRANCH: ${{ steps.default_branch.outputs.default_branch }}
         run: |
           set -euo pipefail
-          echo "Creating release ${NEW_TAG} or uploading asset if already exists"
-          # Try to create the release with asset in one command
+          echo "Creating or updating release ${NEW_TAG} targeting ${DEFAULT_BRANCH}"
+          # If release exists, try to upload; otherwise create with asset using the repo default branch
           if gh release view "${NEW_TAG}" >/dev/null 2>&1; then
-            echo "Release ${NEW_TAG} already exists - attempt upload"
+            echo "Release ${NEW_TAG} already exists - attempting upload"
             if gh release upload "${NEW_TAG}" "${ASSET_PATH}" --clobber; then
               echo "Uploaded asset to ${NEW_TAG}"
             else
-              echo "Warning: upload to ${NEW_TAG} failed (immutable or permission). No destructive action will be taken."
+              echo "::warning::Upload to ${NEW_TAG} failed (immutable or permission). No destructive action will be taken."
             fi
           else
-            # create release and include the asset
-            if gh release create "${NEW_TAG}" --target main --title "${NEW_TAG}" --notes "Release ${NEW_TAG} (auto-created by CI)" "${ASSET_PATH}"; then
+            if gh release create "${NEW_TAG}" --target "${DEFAULT_BRANCH}" --title "${NEW_TAG}" --notes "Release ${NEW_TAG} (auto-created by CI)" "${ASSET_PATH}"; then
               echo "Release ${NEW_TAG} created with asset"
             else
-              echo "Warning: failed to create release ${NEW_TAG}. Attempting to upload if release exists."
+              echo "::warning::Failed to create release ${NEW_TAG}. Attempting upload if release exists"
               if gh release upload "${NEW_TAG}" "${ASSET_PATH}" --clobber; then
                 echo "Uploaded asset to ${NEW_TAG}"
               else
-                echo "Warning: upload still failed. No destructive action will be taken."
+                echo "::warning::upload still failed. Manual intervention may be required."
               fi
             fi
           fi
 
-      - name: Update persistent 'Latest' release (conservative)
+      - name: Update persistent 'Latest' release (conservative, non-destructive)
         env:
-          GH_TOKEN: ${{ github.token }}
           ASSET_PATH: ${{ github.workspace }}/${{ env.ASSET_NAME }}
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
+          DEFAULT_BRANCH: ${{ steps.default_branch.outputs.default_branch }}
         run: |
           set -euo pipefail
           echo "Attempting to update 'Latest' release with asset ${ASSET_PATH}"
@@ -153,14 +170,13 @@ jobs:
               gh release edit "Latest" --notes "Latest asset updated from release ${NEW_TAG} (workflow ${GITHUB_RUN_ID})" || true
             else
               echo "::warning::Cannot upload to 'Latest' (immutable or permission denied). Manual intervention required to update the 'Latest' release asset."
-              # do not delete or recreate — conservative policy: stop here
             fi
           else
-            echo "'Latest' release not found — creating it (non-destructive in the sense we only create when absent)"
-            if gh release create "Latest" --target main --title "Latest" --notes "Persistent 'Latest' release created by CI (source ${NEW_TAG})" "${ASSET_PATH}"; then
+            echo "'Latest' release not found — creating it targeting ${DEFAULT_BRANCH} (non-destructive: create only)"
+            if gh release create "Latest" --target "${DEFAULT_BRANCH}" --title "Latest" --notes "Persistent 'Latest' release created by CI (source ${NEW_TAG})" "${ASSET_PATH}"; then
               echo "'Latest' created and asset uploaded"
             else
-              echo "::warning::Failed to create 'Latest' release. Manual intervention required."
+              echo "::warning::Failed to create 'Latest' release. Likely permissions or invalid target branch. Manual intervention required."
             fi
           fi
 
