@@ -1,6 +1,6 @@
 {
   "name": "sinp_hdf",
-  "version": "1.0.1.15",
+  "version": "1.0.1.16",
   "description": "** React Addon",
   "main": "vite.config.js",
   "scripts": {

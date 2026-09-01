@@ -115,12 +115,12 @@ jobs:
           fi
           echo "Selected to archive: ${SELECTED}"
           if [ "$SELECTED" = "$C1" ]; then
-            tar -czf "$GITHUB_WORKSPACE/${ASSET_NAME}" -C "apps/sinp_hdf/dist" "sinp_hdf"
+            tar -czf "$GITHUB_WORKSPACE/${{ env.ASSET_NAME }}" -C "apps/sinp_hdf/dist" "sinp_hdf"
           else
-            tar -czf "$GITHUB_WORKSPACE/${ASSET_NAME}" -C "${SELECTED}" .
+            tar -czf "$GITHUB_WORKSPACE/${{ env.ASSET_NAME }}" -C "${SELECTED}" .
           fi
-          echo "Archive created: $GITHUB_WORKSPACE/${ASSET_NAME}"
-          ls -la "$GITHUB_WORKSPACE/${ASSET_NAME}"
+          echo "Archive created: $GITHUB_WORKSPACE/${{ env.ASSET_NAME }}"
+          ls -la "$GITHUB_WORKSPACE/${{ env.ASSET_NAME }}"
 
       - name: Determine new tag from package.json and existing tags
         id: compute_tag
@@ -170,6 +170,12 @@ jobs:
           echo "Calculated new tag: ${newtag}"
           echo "tag=${newtag}" >> "$GITHUB_OUTPUT"
 
+      - name: Get default branch
+        id: default_branch
+        run: |
+          default_branch=$(git rev-parse --abbrev-ref origin/HEAD | sed 's@origin/@@')
+          echo "default_branch=${default_branch}" >> "$GITHUB_OUTPUT"
+
       - name: Create annotated git tag and push
         env:
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
@@ -184,11 +190,16 @@ jobs:
       - name: Create or update versioned release and upload asset (non-destructive)
         env:
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
-          ASSET_PATH: ${{ github.workspace }}/$ASSET_NAME
+          ASSET_PATH: ${{ github.workspace }}/${{ env.ASSET_NAME }}
           DEFAULT_BRANCH: ${{ steps.default_branch.outputs.default_branch }}
         run: |
           set -euo pipefail
           echo "Creating or updating release ${NEW_TAG} targeting ${DEFAULT_BRANCH}"
+          echo "Asset path: ${ASSET_PATH}"
+          if [ ! -f "${ASSET_PATH}" ]; then
+            echo "::error::Asset file not found at ${ASSET_PATH}"
+            exit 1
+          fi
           if gh release view "${NEW_TAG}" >/dev/null 2>&1; then
             echo "Release ${NEW_TAG} exists - attempting upload"
             if gh release upload "${NEW_TAG}" "${ASSET_PATH}" --clobber; then
@@ -211,12 +222,17 @@ jobs:
 
       - name: Update persistent 'Release_latest' release (conservative, non-destructive)
         env:
-          ASSET_PATH: ${{ github.workspace }}/$ASSET_NAME
+          ASSET_PATH: ${{ github.workspace }}/${{ env.ASSET_NAME }}
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
           DEFAULT_BRANCH: ${{ steps.default_branch.outputs.default_branch }}
         run: |
           set -euo pipefail
           echo "Attempting to update 'Release_latest' release with asset ${ASSET_PATH}"
+          echo "Asset path: ${ASSET_PATH}"
+          if [ ! -f "${ASSET_PATH}" ]; then
+            echo "::error::Asset file not found at ${ASSET_PATH}"
+            exit 1
+          fi
           if gh release view "Release_latest" >/dev/null 2>&1; then
             echo "Release 'Release_latest' exists - attempting upload (non-destructive)"
             if gh release upload "Release_latest" "${ASSET_PATH}" --clobber; then
@@ -239,5 +255,5 @@ jobs:
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
         run: |
           echo "Release tag created: ${NEW_TAG}"
-          echo "Versioned download URL (asset): https://github.com/${GITHUB_REPOSITORY}/releases/download/${NEW_TAG}/${ASSET_NAME}"
-          echo "Persistent Release_latest download URL: https://github.com/${GITHUB_REPOSITORY}/releases/download/Release_latest/${ASSET_NAME}"
+          echo "Versioned download URL (asset): https://github.com/${GITHUB_REPOSITORY}/releases/download/${NEW_TAG}/${{ env.ASSET_NAME }}"
+          echo "Persistent Release_latest download URL: https://github.com/${GITHUB_REPOSITORY}/releases/download/Release_latest/${{ env.ASSET_NAME }}"
