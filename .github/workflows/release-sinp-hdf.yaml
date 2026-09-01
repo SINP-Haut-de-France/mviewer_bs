@@ -19,7 +19,6 @@ jobs:
     env:
       # make github.token available as GH_TOKEN for gh CLI
       GH_TOKEN: ${{ github.token }}
-      ASSET_NAME: ${{ env.ASSET_NAME }}
     steps:
       - name: Checkout repository (full history & tags)
         uses: actions/checkout@v4
