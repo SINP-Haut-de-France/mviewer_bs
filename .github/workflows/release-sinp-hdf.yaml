@@ -18,6 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'SINP-Haut-de-France/mviewer_bs'
 
+    env:
+      ASSET_NAME: sinp_hdf.tar.gz
+
     steps:
       - name: "Checkout repository"
         uses: actions/checkout@v4
@@ -39,32 +42,76 @@ jobs:
         working-directory: apps/sinp_hdf
         run: npm run build
 
-      - name: "Archive SINP HDF package"
+      - name: "Create archive (content of apps/sinp_hdf only)"
         run: |
           echo "Workspace: $GITHUB_WORKSPACE"
           ls -la "$GITHUB_WORKSPACE" || true
           if [ -d "$GITHUB_WORKSPACE/apps/sinp_hdf" ]; then
-            # create a single predictable archive at repository root containing ONLY the contents of apps/sinp_hdf
-            tar -czf "$GITHUB_WORKSPACE/sinp_hdf.tar.gz" -C "$GITHUB_WORKSPACE/apps/sinp_hdf" .
+            tar -czf "$GITHUB_WORKSPACE/${ASSET_NAME}" -C "$GITHUB_WORKSPACE/apps/sinp_hdf" .
             echo "Created archive:"
-            ls -la "$GITHUB_WORKSPACE/sinp_hdf.tar.gz"
+            ls -la "$GITHUB_WORKSPACE/${ASSET_NAME}"
           else
             echo "ERROR: apps/sinp_hdf directory not found"
             ls -la "$GITHUB_WORKSPACE" || true
             exit 1
           fi
 
-      - name: "Create or get release"
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      - name: "Determine release tag"
+        id: get_tag
         run: |
-          # ensure the release exists (useful when running workflow_dispatch)
-          gh release view "${RELEASE_TAG}" >/dev/null 2>&1 || gh release create "${RELEASE_TAG}" --draft
+          # priority: release event tag_name, otherwise workflow_dispatch input
+          if [ -n "${{ github.event.release.tag_name }}" ]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+          fi
 
-      - name: "Upload package to release"
+      - name: "Ensure versioned release exists (fallback)"
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+          RELEASE_TAG: ${{ steps.get_tag.outputs.tag }}
         run: |
-          gh release upload "${RELEASE_TAG}" "$GITHUB_WORKSPACE/sinp_hdf.tar.gz" --clobber
+          # If release doesn't exist for the tag, create it (target master). Usually release exists when triggered by release event.
+          if ! gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            echo "Release ${RELEASE_TAG} not found — creating draft targetting 'master'"
+            gh release create "${RELEASE_TAG}" --target main --notes "Release ${RELEASE_TAG} (auto-created by CI)" || true
+          else
+            echo "Release ${RELEASE_TAG} exists"
+          fi
+
+      - name: "Upload package to versioned release"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.get_tag.outputs.tag }}
+        run: |
+          echo "Uploading ${ASSET_NAME} to release ${RELEASE_TAG}"
+          gh release upload "${RELEASE_TAG}" "$GITHUB_WORKSPACE/${ASSET_NAME}" --clobber
+
+      - name: "Upload package to persistent 'Latest' release (fixed URL)"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.get_tag.outputs.tag }}
+          ASSET_NAME: ${{ env.ASSET_NAME }}
+        run: |
+          # Goal: keep a release named "Latest" that always contains the most recent asset.
+          if gh release view "Latest" >/dev/null 2>&1; then
+            echo "Uploading ${ASSET_NAME} to existing release 'Latest'"
+            gh release upload "Latest" "$GITHUB_WORKSPACE/${ASSET_NAME}" --clobber
+            # update notes to reference the versioned release for traceability
+            gh release edit "Latest" --notes "Latest asset updated from release ${RELEASE_TAG} (uploaded by workflow run ${GITHUB_RUN_ID})" || true
+          else
+            echo "Release 'Latest' not found — creating it pointing to 'main' and uploading asset"
+            gh release create "Latest" --target main --notes "Persistent release for Latest asset. Initially created by CI." || true
+            gh release upload "Latest" "$GITHUB_WORKSPACE/${ASSET_NAME}" --clobber
+            gh release edit "Latest" --notes "Latest asset created from release ${RELEASE_TAG} (workflow run ${GITHUB_RUN_ID})" || true
+          fi
+
+      - name: "Verification (list release assets)"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.get_tag.outputs.tag }}
+        run: |
+          echo "Assets for ${RELEASE_TAG}:"
+          gh release view "${RELEASE_TAG}" --json assets -q '.assets[].name' || true
+          echo "Assets for Latest:"
+          gh release view "Latest" --json assets -q '.assets[].name' || true
