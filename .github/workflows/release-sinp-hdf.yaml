@@ -18,24 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'SINP-Haut-de-France/mviewer_bs'
 
-    defaults:
-      run:
-        working-directory: apps/sinp_hdf
-
     steps:
-      - name: "Create or get release"
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
-        run: |
-          gh release view "${RELEASE_TAG}" || gh release create "${RELEASE_TAG}" --draft
-      
-      - name: "Upload package to release"
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
-        run: gh release upload "${RELEASE_TAG}" dist/sinp_hdf.tar.gz --clobber
-    
       - name: "Checkout repository"
         uses: actions/checkout@v4
 
@@ -47,18 +30,28 @@ jobs:
           cache-dependency-path: apps/sinp_hdf/package-lock.json
 
       - name: "Install dependencies"
+        working-directory: apps/sinp_hdf
         run: npm ci
 
       - name: "Build SINP HDF package"
+        working-directory: apps/sinp_hdf
         run: npm run build
 
       - name: "Archive SINP HDF package"
+        working-directory: apps/sinp_hdf
         run: |
           cd dist/sinp_hdf
           tar -czf ../sinp_hdf.tar.gz .
+
+      - name: "Create or get release"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          gh release view "${RELEASE_TAG}" || gh release create "${RELEASE_TAG}" --draft
 
       - name: "Upload package to release"
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
-        run: gh release upload "${RELEASE_TAG}" dist/sinp_hdf.tar.gz --clobber
+        run: gh release upload "${RELEASE_TAG}" apps/sinp_hdf/dist/sinp_hdf.tar.gz --clobber
