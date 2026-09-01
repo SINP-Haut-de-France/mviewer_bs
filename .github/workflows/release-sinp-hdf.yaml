@@ -40,6 +40,7 @@ jobs:
         run: npm run build
 
       - name: "Archive SINP HDF package"
+        working-directory: apps/sinp_hdf
         run: |
           echo "Workspace: $GITHUB_WORKSPACE"
           ls -la "$GITHUB_WORKSPACE" || true
@@ -61,6 +62,13 @@ jobs:
         run: |
           # ensure the release exists (useful when running workflow_dispatch)
           gh release view "${RELEASE_TAG}" >/dev/null 2>&1 || gh release create "${RELEASE_TAG}" --draft
+
+      - name: "Create or get release"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          gh release view "${RELEASE_TAG}" || gh release create "${RELEASE_TAG}" --draft
 
       - name: "Upload package to release"
         env:
