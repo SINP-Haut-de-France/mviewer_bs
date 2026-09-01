@@ -17,7 +17,6 @@ jobs:
   package-and-release:
     runs-on: ubuntu-latest
     env:
-      # make github.token available as GH_TOKEN for gh CLI
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout repository (full history & tags)
@@ -29,7 +28,6 @@ jobs:
       - name: Determine repository default branch
         id: default_branch
         run: |
-          # get default branch from GitHub API
           DEFAULT=$(gh api -H "Accept: application/vnd.github+json" /repos/${GITHUB_REPOSITORY} --jq .default_branch)
           echo "default_branch=${DEFAULT}" >> $GITHUB_OUTPUT
           echo "Default branch: ${DEFAULT}"
@@ -49,18 +47,43 @@ jobs:
         working-directory: apps/sinp_hdf
         run: npm run build
 
-      - name: Create archive (content of apps/sinp_hdf only)
+      - name: Create archive (prefer dist/sinp_hdf, then dist, then fallback)
         run: |
+          set -euo pipefail
           echo "Workspace: $GITHUB_WORKSPACE"
-          if [ -d "$GITHUB_WORKSPACE/apps/sinp_hdf" ]; then
-            tar -czf "$GITHUB_WORKSPACE/${ASSET_NAME}" -C "$GITHUB_WORKSPACE/apps/sinp_hdf" .
-            echo "Created archive:"
-            ls -la "$GITHUB_WORKSPACE/${ASSET_NAME}"
-          else
-            echo "ERROR: apps/sinp_hdf directory not found"
-            ls -la "$GITHUB_WORKSPACE" || true
+          echo "Listing apps/sinp_hdf:"
+          ls -la "$GITHUB_WORKSPACE/apps/sinp_hdf" || true
+
+          # candidates in order of preference
+          C1="apps/sinp_hdf/dist/sinp_hdf"
+          C2="apps/sinp_hdf/dist"
+          C3="apps/sinp_hdf"
+
+          SELECTED=""
+          if [ -d "$GITHUB_WORKSPACE/$C1" ] && find "$GITHUB_WORKSPACE/$C1" -mindepth 1 | read -r; then
+            SELECTED="$C1"
+          elif [ -d "$GITHUB_WORKSPACE/$C2" ] && find "$GITHUB_WORKSPACE/$C2" -mindepth 1 | read -r; then
+            SELECTED="$C2"
+          elif [ -d "$GITHUB_WORKSPACE/$C3" ] && find "$GITHUB_WORKSPACE/$C3" -mindepth 1 | read -r; then
+            SELECTED="$C3"
+          fi
+
+          if [ -z "$SELECTED" ]; then
+            echo "::error::No build output found in expected locations: $C1, $C2, $C3"
+            echo "Full listing (3 levels) of apps/sinp_hdf:"
+            find "$GITHUB_WORKSPACE/apps/sinp_hdf" -maxdepth 3 -type f -print || true
             exit 1
           fi
+
+          echo "Selected directory to archive: $SELECTED"
+          # If selected is apps/sinp_hdf/dist/sinp_hdf we want to archive that directory itself (so tar -C dist sinp_hdf)
+          if [ "$SELECTED" = "$C1" ]; then
+            tar -czf "$GITHUB_WORKSPACE/${ASSET_NAME}" -C "$GITHUB_WORKSPACE/apps/sinp_hdf/dist" "sinp_hdf"
+          else
+            tar -czf "$GITHUB_WORKSPACE/${ASSET_NAME}" -C "$GITHUB_WORKSPACE/$SELECTED" .
+          fi
+          echo "Created archive:"
+          ls -la "$GITHUB_WORKSPACE/${ASSET_NAME}"
 
       - name: Determine new tag from package.json and existing tags
         id: compute_tag
@@ -76,9 +99,6 @@ jobs:
             exit 1
           fi
           base="${parts[0]}.${parts[1]}.${parts[2]}"
-          echo "Base (first 3 fields): $base"
-
-          # fetch tag list from remote and find max suffix for base
           tags=$(git ls-remote --tags origin | awk '{print $2}' | sed 's@refs/tags/@@' | sed 's@\^{}@@')
           max=-1
           for t in $tags; do
@@ -93,7 +113,6 @@ jobs:
               fi
             fi
           done
-
           if [ "${#parts[@]}" -ge 4 ]; then
             last="${parts[3]}"
             if ! [[ "$last" =~ ^[0-9]+$ ]]; then
@@ -110,9 +129,8 @@ jobs:
             fi
             newtag="${base}.${newnum}"
           fi
-
-          echo "Calculated new tag: $newtag"
           echo "tag=${newtag}" >> "$GITHUB_OUTPUT"
+          echo "Calculated new tag: ${newtag}"
 
       - name: Create annotated git tag and push
         env:
@@ -121,21 +139,19 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          echo "Creating tag ${NEW_TAG}"
           git tag -a "${NEW_TAG}" -m "Release ${NEW_TAG} (created by CI run ${GITHUB_RUN_ID})"
           git push origin "refs/tags/${NEW_TAG}"
 
       - name: Create or update versioned release and upload asset (non-destructive)
         env:
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
-          ASSET_PATH: ${{ github.workspace }}/${{ env.ASSET_NAME }}
+          ASSET_PATH: ${{ github.workspace }}/$ASSET_NAME
           DEFAULT_BRANCH: ${{ steps.default_branch.outputs.default_branch }}
         run: |
           set -euo pipefail
           echo "Creating or updating release ${NEW_TAG} targeting ${DEFAULT_BRANCH}"
-          # If release exists, try to upload; otherwise create with asset using the repo default branch
           if gh release view "${NEW_TAG}" >/dev/null 2>&1; then
-            echo "Release ${NEW_TAG} already exists - attempting upload"
+            echo "Release ${NEW_TAG} exists - attempting upload"
             if gh release upload "${NEW_TAG}" "${ASSET_PATH}" --clobber; then
               echo "Uploaded asset to ${NEW_TAG}"
             else
@@ -156,7 +172,7 @@ jobs:
 
       - name: Update persistent 'Latest' release (conservative, non-destructive)
         env:
-          ASSET_PATH: ${{ github.workspace }}/${{ env.ASSET_NAME }}
+          ASSET_PATH: ${{ github.workspace }}/$ASSET_NAME
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
           DEFAULT_BRANCH: ${{ steps.default_branch.outputs.default_branch }}
         run: |
