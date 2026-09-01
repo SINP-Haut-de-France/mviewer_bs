@@ -385,9 +385,17 @@ window.sinpQueryBuilder = (function () {
   };
 
   const _normalizeParamsForView = function (params = {}, view) {
+    let normalizedParams =
+      _normalizeViewParamListValues(params.taxons).length > 0
+        ? {
+            ...params,
+            groupes: [],
+          }
+        : params;
+
     if (
-      Array.isArray(params.communes) &&
-      params.communes.length > MAX_SELECTED_COMMUNES
+      Array.isArray(normalizedParams.communes) &&
+      normalizedParams.communes.length > MAX_SELECTED_COMMUNES
     ) {
       throw new Error(
         `Invalid CODE_INSEES value: maximum ${MAX_SELECTED_COMMUNES} communes allowed`
@@ -396,17 +404,17 @@ window.sinpQueryBuilder = (function () {
 
     if (
       view === "fn_get_obs_detaillee" &&
-      Array.isArray(params.mailles) &&
-      params.mailles.length > 0
+      Array.isArray(normalizedParams.mailles) &&
+      normalizedParams.mailles.length > 0
     ) {
-      return {
-        ...params,
+      normalizedParams = {
+        ...normalizedParams,
         departements: [],
         communes: [],
       };
     }
 
-    return params;
+    return normalizedParams;
   };
 
   const _serializeViewParam = function (paramKey, value, config = {}) {
@@ -484,6 +492,21 @@ window.sinpQueryBuilder = (function () {
     }
 
     return sharedViewParams;
+  };
+
+  const _buildGeometrySearchViewParams = function () {
+    return {
+      GEOMETRY_GEOJSON: "geometryGeojson",
+      DATE_DEB: "dateDeb",
+      DATE_FIN: "dateFin",
+      TARGET_LOC_CODE: "targetLocCode",
+      CD_REF: _buildListSeparatedViewParamConfig("taxons", {
+        omitEmpty: true,
+      }),
+      GRP_IDS: _buildListSeparatedViewParamConfig("groupes", {
+        omitEmpty: true,
+      }),
+    };
   };
 
   const _viewConfig = {
@@ -569,6 +592,16 @@ window.sinpQueryBuilder = (function () {
       view_params: _buildSharedSearchViewParams({
         targetLocCodeSource: "targetLocCode",
       }),
+    },
+
+    fn_get_obs_detaillee_for_geometry: {
+      cql_filters: {},
+      view_params: _buildGeometrySearchViewParams(),
+    },
+
+    fn_get_metadonnees_for_geometry: {
+      cql_filters: {},
+      view_params: _buildGeometrySearchViewParams(),
     },
   };
 

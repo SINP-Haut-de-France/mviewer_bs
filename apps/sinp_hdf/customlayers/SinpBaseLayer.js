@@ -8,6 +8,24 @@
  * - sortie: une requête GeoServer WFS avec TYPENAME + VIEWPARAMS (+ CQL_FILTER si besoin legacy)
  * - rendu: mise à jour du layer OL + injection du HTML du template dans le panneau mviewer
  */
+const PANEL_REVEAL_HANDLE_CONFIG = {
+  "right-panel": {
+    positionClass: "mv-panel-reveal-handle--right",
+    iconClass: "fa-chevron-left",
+    panelLabel: "panneau latéral",
+  },
+  "bottom-panel": {
+    positionClass: "mv-panel-reveal-handle--bottom",
+    iconClass: "fa-chevron-up",
+    panelLabel: "panneau inférieur",
+  },
+  "top-panel": {
+    positionClass: "mv-panel-reveal-handle--top",
+    iconClass: "fa-chevron-down",
+    panelLabel: "panneau supérieur",
+  },
+};
+
 class SinpBaseLayer {
   constructor(layerId, typeName, config = {}) {
     this.layerId = layerId;
@@ -16,6 +34,7 @@ class SinpBaseLayer {
     this.style = config.style || this._getDefaultStyle();
     this.format = new ol.format.GeoJSON();
     this.serverStyle = config.serverStyle || null;
+    this._resolvedServerStyleName = this.serverStyle?.styleName || "";
     this.serverRenderOnly = config.serverRenderOnly === true;
     this.serverRenderRatio = config.serverRenderRatio || 1.5;
     this.defaultSearchExtent =
@@ -319,6 +338,31 @@ class SinpBaseLayer {
     return renderLayer;
   }
 
+  _debugServerRender(event, details = {}, refreshId = null) {
+    const mapLayers = mviewer.getMap?.()?.getLayers?.()?.getArray?.() || [];
+    console.info(
+      `[SINP restitution][refresh:${refreshId ?? "none"}][${this.layerId}] ${event}`,
+      {
+        targetLayerId: this.layerId,
+        vectorVisible: this.layer?.getVisible?.() ?? null,
+        serverRenderExists: Boolean(this._serverRenderLayer),
+        serverRenderVisible: this._serverRenderLayer?.getVisible?.() ?? false,
+        serverRenderAttached: mapLayers.includes(this._serverRenderLayer),
+        visibleRestitutionLayers: mapLayers
+          .filter(
+            (layer) =>
+              layer?.getVisible?.() &&
+              String(layer.get?.("name") || "").endsWith("-server-render")
+          )
+          .map((layer) => ({
+            name: layer.get("name"),
+            params: layer.getSource?.()?.getParams?.() || null,
+          })),
+        ...details,
+      }
+    );
+  }
+
   _attachServerRenderLoader(source) {
     if (!source?.on || source.get?.("sinpServerRenderLoaderAttached")) {
       return;
@@ -326,12 +370,21 @@ class SinpBaseLayer {
 
     source.set?.("sinpServerRenderLoaderAttached", true);
     source.on("imageloadstart", () => {
+      this._debugServerRender("WMS image load start", {
+        sourceParams: source.getParams?.() || null,
+      }, source.getParams?.()?.SINP_REFRESH);
       SinpBaseLayer._startServerRenderLoad();
     });
     source.on("imageloadend", () => {
+      this._debugServerRender("WMS image load end", {
+        sourceParams: source.getParams?.() || null,
+      }, source.getParams?.()?.SINP_REFRESH);
       SinpBaseLayer._finishServerRenderLoad();
     });
     source.on("imageloaderror", () => {
+      this._debugServerRender("WMS image load error", {
+        sourceParams: source.getParams?.() || null,
+      }, source.getParams?.()?.SINP_REFRESH);
       SinpBaseLayer._finishServerRenderLoad();
     });
   }
@@ -351,8 +404,47 @@ class SinpBaseLayer {
     return {
       url: `${geoserverBaseUrl}/wms`,
       layerName: this.serverStyle?.layerName || `${workspace}:${this.typeName}`,
-      styleName: this.serverStyle?.styleName || "",
+      styleName: this._resolvedServerStyleName,
     };
+  }
+
+  async _resolveServerStyleName(queryOptions = {}) {
+    const legendTypeName = this.serverStyle?.legendTypeName;
+    if (!legendTypeName) {
+      return this._resolvedServerStyleName;
+    }
+
+    if (!window.sinpRepository?.fetchGeoServerData) {
+      throw new Error(
+        `[${this.layerId}] Impossible d'interroger ${legendTypeName}: dépôt GeoServer indisponible`
+      );
+    }
+
+    const workspace = this.serverStyle?.workspace || "sinp_diffusion";
+    const legendOptions = {
+      TYPENAME: legendTypeName.includes(":")
+        ? legendTypeName
+        : `${workspace}:${legendTypeName}`,
+    };
+
+    if (queryOptions?.VIEWPARAMS) {
+      legendOptions.VIEWPARAMS = queryOptions.VIEWPARAMS;
+    }
+
+    const legendData = await window.sinpRepository.fetchGeoServerData(legendOptions);
+    const styleName = legendData?.features?.[0]?.properties?.style_name;
+    const allowedStyleNames = this.serverStyle?.allowedStyleNames || [];
+
+    if (
+      typeof styleName !== "string" ||
+      !styleName.trim() ||
+      (allowedStyleNames.length > 0 && !allowedStyleNames.includes(styleName.trim()))
+    ) {
+      throw new Error(`[${this.layerId}] ${legendTypeName} a retourné un style invalide`);
+    }
+
+    this._resolvedServerStyleName = styleName.trim();
+    return this._resolvedServerStyleName;
   }
 
   _appendUrlParams(url, params = {}) {
@@ -365,6 +457,14 @@ class SinpBaseLayer {
       .join("&");
 
     return queryString ? `${url}${separator}${queryString}` : url;
+  }
+
+  _escapeViewParams(viewParams = "") {
+    if (window.sinpRepository?.escapeViewParams) {
+      return window.sinpRepository.escapeViewParams(viewParams);
+    }
+
+    return String(viewParams).replace(/(^|[^\\]),/g, "$1\\,");
   }
 
   _buildServerLegendUrl(queryOptions = {}) {
@@ -392,7 +492,7 @@ class SinpBaseLayer {
     }
 
     if (queryOptions?.VIEWPARAMS) {
-      params.VIEWPARAMS = queryOptions.VIEWPARAMS;
+      params.VIEWPARAMS = this._escapeViewParams(queryOptions.VIEWPARAMS);
     }
 
     if (queryOptions?.CQL_FILTER) {
@@ -443,12 +543,26 @@ class SinpBaseLayer {
 
     Object.assign(config, legendConfig);
     this._refreshLegacyLegend(config);
+    this._debugServerRender(
+      "legacy layer and legend configured",
+      {
+        layerName: legendConfig.layername,
+        style: legendConfig.style || "(style GeoServer par défaut)",
+        legendUrl: legendConfig.legendurl,
+        viewParams: queryOptions.VIEWPARAMS || null,
+      },
+      queryOptions.SINP_REFRESH
+    );
     return config;
   }
 
   _ensureServerRenderLayer() {
-    if (!this._serverRenderLayer) {
+    if (!this.serverStyle?.enabled) {
       return;
+    }
+
+    if (!this._serverRenderLayer) {
+      this._serverRenderLayer = this._createServerRenderLayer();
     }
 
     const map = mviewer.getMap();
@@ -462,6 +576,25 @@ class SinpBaseLayer {
     }
 
     this._syncServerRenderLayerState();
+  }
+
+  _discardServerRenderLayer() {
+    const renderLayer = this._serverRenderLayer;
+    if (!renderLayer) {
+      return;
+    }
+
+    const previousParams = renderLayer.getSource?.()?.getParams?.() || null;
+    this._debugServerRender("discard WMS layer: before", {
+      previousParams,
+    }, previousParams?.SINP_REFRESH);
+    renderLayer.setVisible?.(false);
+    mviewer.getMap?.()?.removeLayer?.(renderLayer);
+    renderLayer.setSource?.(null);
+    this._serverRenderLayer = null;
+    this._debugServerRender("discard WMS layer: after", {
+      previousParams,
+    }, previousParams?.SINP_REFRESH);
   }
 
   _ensureSelectionLayer() {
@@ -587,13 +720,24 @@ class SinpBaseLayer {
     });
   }
 
-  _updateServerRenderLayer(queryOptions = {}, hasFeatures = false) {
+  async _updateServerRenderLayer(queryOptions = {}, hasFeatures = false) {
+    const requestToken = Symbol("server-render");
+    this._serverRenderRequestToken = requestToken;
+
+    if (hasFeatures) {
+      await this._resolveServerStyleName(queryOptions);
+      if (this._serverRenderRequestToken !== requestToken) {
+        return;
+      }
+    }
+
+    this._ensureServerRenderLayer();
+
     if (!this._serverRenderLayer) {
       this._pendingServerRenderPromise = Promise.resolve();
       return this._pendingServerRenderPromise;
     }
 
-    this._ensureServerRenderLayer();
     this.attachLegacyConfig(this.config, queryOptions);
 
     if (!hasFeatures) {
@@ -611,18 +755,36 @@ class SinpBaseLayer {
       TRANSPARENT: true,
     };
 
-    if (this.serverStyle?.styleName) {
-      params.STYLES = this.serverStyle.styleName;
+    const serverStyleContext = this._getServerStyleContext();
+    if (serverStyleContext?.styleName) {
+      params.STYLES = serverStyleContext.styleName;
     }
 
     if (queryOptions?.VIEWPARAMS) {
-      params.VIEWPARAMS = queryOptions.VIEWPARAMS;
+      params.VIEWPARAMS = this._escapeViewParams(queryOptions.VIEWPARAMS);
     }
 
     if (queryOptions?.CQL_FILTER) {
       params.CQL_FILTER = queryOptions.CQL_FILTER;
     }
 
+    if (queryOptions?.SINP_REFRESH) {
+      params.SINP_REFRESH = queryOptions.SINP_REFRESH;
+    }
+
+    this._debugServerRender(
+      "apply WMS rendering",
+      {
+        requestedParams: params,
+        targetLocCode:
+          String(queryOptions?.VIEWPARAMS || "").match(
+            /(?:^|;)TARGET_LOC_CODE:([^;]+)/
+          )?.[1] || null,
+        style: params.STYLES || "(style GeoServer par défaut)",
+        legendUrl: this._buildServerLegendUrl(queryOptions),
+      },
+      queryOptions.SINP_REFRESH
+    );
     this._refreshLegacyLegend({
       legendurl: this._buildServerLegendUrl(queryOptions),
     });
@@ -633,6 +795,14 @@ class SinpBaseLayer {
       () => {
         this._serverRenderLayer.getSource().updateParams(params);
         this._serverRenderLayer.getSource().refresh();
+        this._debugServerRender(
+          "WMS source refreshed",
+          {
+            effectiveParams:
+              this._serverRenderLayer.getSource().getParams?.() || null,
+          },
+          queryOptions.SINP_REFRESH
+        );
       }
     );
 
@@ -686,7 +856,8 @@ class SinpBaseLayer {
   }
 
   _ensurePanelRevealHandle(panelType) {
-    if (panelType !== "right-panel" || configuration.getConfiguration().mobile) {
+    const handleConfig = PANEL_REVEAL_HANDLE_CONFIG[panelType];
+    if (!handleConfig || configuration.getConfiguration().mobile) {
       return null;
     }
 
@@ -703,15 +874,19 @@ class SinpBaseLayer {
         <button
           type="button"
           id="${handleId}"
-          class="mv-panel-reveal-handle"
-          aria-label="Réafficher le panneau d'informations"
-          title="Réafficher le panneau d'informations">
-          <i class="fas fa-chevron-left" aria-hidden="true"></i>
+          class="mv-panel-reveal-handle ${handleConfig.positionClass}"
+          aria-controls="${panelType}"
+          aria-expanded="false">
+          <i class="fas ${handleConfig.iconClass}" aria-hidden="true"></i>
         </button>
       `);
 
       handle.on("click", () => {
-        panel.addClass("active");
+        const isCollapsing = panel.hasClass("active");
+        panel.toggleClass("active");
+        if (isCollapsing) {
+          this._hideLocationMarkers();
+        }
         this._syncPanelRevealHandle(panelType);
       });
 
@@ -722,6 +897,26 @@ class SinpBaseLayer {
       panel.find(".btn-close").on("click.mvRevealHandle", () => {
         window.setTimeout(() => this._syncPanelRevealHandle(panelType), 0);
       });
+
+      const sync = () => this._syncPanelRevealHandle(panelType);
+      const panelElement = panel.get(0);
+      const observer = new MutationObserver(sync);
+      observer.observe(panelElement, {
+        attributes: true,
+        attributeFilter: ["class", "style"],
+        childList: true,
+        subtree: true,
+      });
+      panelElement.addEventListener("transitionend", sync);
+
+      if (typeof ResizeObserver === "function") {
+        const resizeObserver = new ResizeObserver(sync);
+        resizeObserver.observe(panelElement);
+        panel.data("mvRevealResizeObserver", resizeObserver);
+      }
+
+      panel.data("mvRevealObserver", observer);
+      panel.data("mvRevealTransitionHandler", sync);
       panel.data("mvRevealBound", true);
     }
 
@@ -738,10 +933,25 @@ class SinpBaseLayer {
 
     const panelContent = panel.find(".popup-content");
     const hasContent = Boolean(panelContent.length && panelContent.html()?.trim());
-    const shouldShowHandle = !panel.hasClass("active") && hasContent;
+    const isExpanded = panel.hasClass("active");
+    const handleConfig = PANEL_REVEAL_HANDLE_CONFIG[panelType];
 
-    handle.toggleClass("is-visible", shouldShowHandle);
-    handle.attr("aria-hidden", shouldShowHandle ? "false" : "true");
+    const panelWidth = isExpanded ? panel.outerWidth() || 0 : 0;
+    handle.toggleClass("is-visible", hasContent);
+    handle.toggleClass("is-expanded", isExpanded && panelWidth > 0);
+    handle.attr("aria-hidden", hasContent ? "false" : "true");
+    handle.attr("aria-expanded", isExpanded && panelWidth > 0 ? "true" : "false");
+    handle.css("right", handleConfig.positionClass === "mv-panel-reveal-handle--right"
+      ? `${panelWidth}px`
+      : "");
+    handle.attr(
+      "aria-label",
+      `${isExpanded && panelWidth > 0 ? "Réduire" : "Réafficher"} le ${handleConfig.panelLabel}`
+    );
+    handle.attr(
+      "title",
+      `${isExpanded && panelWidth > 0 ? "Réduire" : "Réafficher"} le ${handleConfig.panelLabel}`
+    );
   }
 
   _hideLocationMarkers() {
@@ -974,13 +1184,12 @@ class SinpBaseLayer {
   }
 
   clear() {
+    this._serverRenderRequestToken = Symbol("server-render-cleared");
     this._clearSelectedFeatures();
     this.layer?.getSource()?.clear();
     this._pendingServerRenderPromise = Promise.resolve();
-    if (this._serverRenderLayer) {
-      this._serverStyleActive = false;
-      this._syncServerRenderLayerState();
-    }
+    this._serverStyleActive = false;
+    this._discardServerRenderLayer();
   }
 
   getLayer() {
@@ -993,12 +1202,26 @@ class SinpBaseLayer {
       mviewer.getMap()?.removeLayer(this._selectionLayer);
       this._selectionLayer = null;
     }
-    if (this._serverRenderLayer) {
-      mviewer.getMap()?.removeLayer(this._serverRenderLayer);
-      this._serverRenderLayer = null;
-    }
     this.layer = null;
   }
 }
 
+SinpBaseLayer.STATS_STYLE_NAMES = Object.freeze([
+  "fn_get_stats_100",
+  "fn_get_stats_500",
+  "fn_get_stats_5000",
+  "fn_get_stats_50000",
+]);
 mviewer.customLayers.SinpBaseLayer = SinpBaseLayer;
+
+if (typeof document !== "undefined") {
+  document.addEventListener("infopanel-ready", (event) => {
+    const panelType = event.detail?.panel;
+    const layerInstance =
+      mviewer.customLayers?.communeSearch?._instance ||
+      mviewer.customLayers?.gridSearch5x5?._instance ||
+      mviewer.customLayers?.grid10x10search?._instance;
+
+    layerInstance?._syncPanelRevealHandle?.(panelType);
+  });
+}

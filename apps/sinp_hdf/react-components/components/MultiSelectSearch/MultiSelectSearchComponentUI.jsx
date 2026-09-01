@@ -56,6 +56,7 @@ const MultiSelectSearchUI = ({
             <span>{typeof label === "function" ? label(item) : label}</span>
             <button
               className="remove-btn"
+              disabled={disabled}
               onClick={() => handleRemove(item[selectedKey])}>
               ✕
             </button>

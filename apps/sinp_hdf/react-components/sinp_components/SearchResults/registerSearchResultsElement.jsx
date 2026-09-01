@@ -1,23 +1,35 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import ExternalLayerObservationResultsComponent from "./ExternalLayerObservationResultsComponent";
 import SearchResultsComponent from "./SearchResultsComponent";
 
 const ELEMENT_NAMES = [
   "mv-feature-search-results",
   "mv-commune-search-results",
   "mv-grid-search-results",
+  "mv-external-layer-observation-results",
 ];
 
 const renderElement = (element) => {
-  const layerId = element.getAttribute("data-layer-id") || "communeSearch";
   const featureUid = element.getAttribute("data-feature-uid") || "";
-  const promptOnly = element.getAttribute("data-selection-prompt") === "true";
-  const metadataInMaintenance =
-    element.getAttribute("data-metadata-in-maintenance") === "true";
+  const isExternalLayerResults =
+    element.tagName.toLowerCase() === "mv-external-layer-observation-results";
 
   if (!element.__reactRoot) {
     element.__reactRoot = ReactDOM.createRoot(element);
   }
+
+  if (isExternalLayerResults) {
+    element.__reactRoot.render(
+      <ExternalLayerObservationResultsComponent featureUid={featureUid} />
+    );
+    return;
+  }
+
+  const layerId = element.getAttribute("data-layer-id") || "communeSearch";
+  const promptOnly = element.getAttribute("data-selection-prompt") === "true";
+  const metadataInMaintenance =
+    element.getAttribute("data-metadata-in-maintenance") === "true";
 
   element.__reactRoot.render(
     <SearchResultsComponent

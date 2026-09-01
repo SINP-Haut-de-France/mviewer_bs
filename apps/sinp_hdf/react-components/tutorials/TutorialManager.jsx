@@ -119,7 +119,9 @@ const showHelpModal = () => {
 
   if (!helpModal.dataset.sinpModalCloseBound) {
     helpModal
-      .querySelectorAll(".btn-close, .close, [data-bs-dismiss='modal'], [data-dismiss='modal']")
+      .querySelectorAll(
+        ".btn-close, .close, [data-bs-dismiss='modal'], [data-dismiss='modal']"
+      )
       .forEach((button) => {
         button.addEventListener("click", hideHelpModal);
       });
@@ -195,7 +197,9 @@ const cleanupShepherdOverlay = () => {
     .forEach((element) => element.remove());
 
   document
-    .querySelectorAll(".shepherd-enabled, .shepherd-target, .shepherd-target-click-disabled")
+    .querySelectorAll(
+      ".shepherd-enabled, .shepherd-target, .shepherd-target-click-disabled"
+    )
     .forEach((element) => {
       element.classList.remove(
         "shepherd-enabled",
@@ -217,7 +221,9 @@ const getValidatedSteps = () =>
 
 const openAdvancedFiltersMenu = () => {
   const filtersTheme = document.getElementById("theme-react-filters");
-  const filtersContainer = document.getElementById("react-sidebar-filter-panel")?.parentElement;
+  const filtersContainer = document.getElementById(
+    "react-sidebar-filter-panel"
+  )?.parentElement;
 
   if (!filtersTheme || !filtersContainer) {
     return;
@@ -243,6 +249,14 @@ const runStepAction = (action) => {
     case "openTaxonomicGroupFilter":
       openAdvancedFiltersMenu();
       expandFilterSection("filter-taxonomic-group");
+      break;
+    case "openTaxonFilter":
+      openAdvancedFiltersMenu();
+      expandFilterSection("filter-taxon");
+      break;
+    case "openDateFilter":
+      openAdvancedFiltersMenu();
+      expandFilterSection("filter-date");
       break;
     default:
       break;

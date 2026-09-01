@@ -84,7 +84,7 @@ const SearchResultsTable = ({
   }, [displayMode, expandedGroupKey, groupedItems]);
 
   const visibleRowCount = useMemo(() => {
-    if (selectionPrompt || loadingState || errorMessage) {
+    if (selectionPrompt || loadingState || errorMessage || !items.length) {
       return 1;
     }
 
@@ -99,6 +99,7 @@ const SearchResultsTable = ({
     selectionPrompt,
     loadingState,
     errorMessage,
+    items.length,
     displayMode,
     groupedItems,
     expandedGroupKey,
@@ -144,10 +145,6 @@ const SearchResultsTable = ({
     </tr>
   );
 
-  if (!items.length && !selectionPrompt && !loadingState && !errorMessage) {
-    return <p className="mv-sr-empty">{emptyMessage}</p>;
-  }
-
   return (
     <div className="mv-sr-section">
       <div className="mv-sr-toolbar">
@@ -158,16 +155,22 @@ const SearchResultsTable = ({
               className={`mv-sr-display-button ${
                 displayMode === "standard" ? "is-active" : ""
               }`}
+              title="Vue standard"
+              aria-label="Vue standard"
+              aria-pressed={displayMode === "standard"}
               onClick={() => setDisplayMode("standard")}>
-              Vue standard
+              <i className="fas fa-table" aria-hidden="true"></i>
             </button>
             <button
               type="button"
               className={`mv-sr-display-button ${
                 displayMode === "grouped" ? "is-active" : ""
               }`}
+              title={groupBy.toggleLabel || `Regrouper par ${groupBy.label}`}
+              aria-label={groupBy.toggleLabel || `Regrouper par ${groupBy.label}`}
+              aria-pressed={displayMode === "grouped"}
               onClick={() => setDisplayMode("grouped")}>
-              {groupBy.toggleLabel || `Regrouper par ${groupBy.label}`}
+              <i className="fas fa-layer-group" aria-hidden="true"></i>
             </button>
           </div>
         ) : (
@@ -264,7 +267,7 @@ const SearchResultsTable = ({
             </tr>
           </thead>
 
-          {selectionPrompt || loadingState || errorMessage ? (
+          {selectionPrompt || loadingState || errorMessage || !items.length ? (
             <tbody>
               <tr>
                 <td colSpan={visibleColumns.length} className={loadingState ? "mv-sr-loading-row" : "mv-sr-empty-row"}>
@@ -275,8 +278,10 @@ const SearchResultsTable = ({
                     </div>
                   ) : selectionPrompt ? (
                     selectionPromptMessage
-                  ) : (
+                  ) : errorMessage ? (
                     errorMessage
+                  ) : (
+                    emptyMessage
                   )}
                 </td>
               </tr>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import EntityNavigationControls from "./EntityNavigationControls";
 import SearchResultsTabs from "./SearchResultsTabs";
 import "./SearchResults.css";
 import {
@@ -6,6 +7,7 @@ import {
   getFeatureProperties,
   getLayerConfig,
   getSelectedEntitySummary,
+  getResultPanelTitle,
   SELECTION_PROMPT_MESSAGE,
   TAB_IDS,
 } from "./searchResults.utils";
@@ -129,9 +131,45 @@ const SearchResultsComponent = ({
   const datasetErrorMessage =
     typeof properties.jdd_data_error === "string" ? properties.jdd_data_error : "";
   const selectionPrompt = promptOnly === true;
+  const navigationController = window.mviewer?.customControls?.[layerId];
+  const navigationState =
+    !selectionPrompt && feature
+      ? navigationController?.getEntityNavigationState?.(feature) || null
+      : null;
+
+  const selectEntity = (index) => {
+    navigationController?.selectEntityByIndex?.(index);
+  };
+
+  React.useEffect(() => {
+    try {
+      const headerH6 = document.querySelector('#right-panel .mv-header h6');
+      if (headerH6) {
+        headerH6.textContent = getResultPanelTitle({
+          layerId,
+          properties,
+          selectionSummary,
+          selectionMode: Boolean(window.__filterAPI?.currentFilters?.selectionMode),
+        });
+      }
+    } catch (e) {
+      // Ignore if the legacy panel is not mounted yet.
+    }
+  }, [layerId, properties, selectionSummary]);
 
   return (
     <div className="mv-sr-root">
+      {navigationState ? (
+        <EntityNavigationControls
+          currentIndex={navigationState.currentIndex}
+          total={navigationState.total}
+          entityLabel={navigationState.entityLabel}
+          disabled={loadingState || datasetLoadingState}
+          onPrevious={() => selectEntity(navigationState.currentIndex - 1)}
+          onNext={() => selectEntity(navigationState.currentIndex + 1)}
+        />
+      ) : null}
+
       <SearchResultsTabs
         activeTab={activeTab}
         onTabChange={setActiveTab}

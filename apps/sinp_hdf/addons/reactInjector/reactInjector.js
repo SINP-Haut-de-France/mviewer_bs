@@ -128,7 +128,31 @@ var reactInjector = (function () {
         reactContainer.style.overflow = "visible";
         reactContainer.style.position = "relative";
 
+        const actionsContainer = document.createElement("div");
+        actionsContainer.id = "react-sidebar-filter-actions";
+        actionsContainer.className = "react-filter-actions-container";
+
         filtersContainer.appendChild(reactContainer);
+
+        const actionsSection = document.createElement("section");
+        actionsSection.id = "theme-react-filter-actions";
+        actionsSection.className = "react-filter-actions-section";
+        actionsSection.appendChild(actionsContainer);
+
+        const syncActionsHeight = () => {
+          const actionsHeight = Math.ceil(actionsSection.getBoundingClientRect().height);
+          sidebarWrapper.style.setProperty(
+            "--sinp-filter-actions-height",
+            `${actionsHeight}px`
+          );
+        };
+
+        if (typeof ResizeObserver === "function") {
+          const actionsResizeObserver = new ResizeObserver(syncActionsHeight);
+          actionsResizeObserver.observe(actionsSection);
+        } else {
+          window.addEventListener("resize", syncActionsHeight);
+        }
 
         const modalToggleButton = header.querySelector(".react-filters-toggle-button");
 
@@ -171,8 +195,10 @@ var reactInjector = (function () {
         filterTheme.appendChild(filtersContainer);
         filtersWrapper.appendChild(filterTheme);
 
-        // L'ajouter après le ul.sidebar-nav existant dans le sidebar-wrapper
-        sidebarWrapper.appendChild(filtersWrapper);
+        // Toujours placer les filtres avant les autres menus de la barre latérale.
+        sidebarWrapper.insertBefore(filtersWrapper, sidebarNav);
+        sidebarWrapper.parentElement?.insertBefore(actionsSection, sidebarWrapper);
+        window.requestAnimationFrame(syncActionsHeight);
 
         // Injecter le CSS pour le sidebar
         const cssHref =
@@ -242,7 +268,8 @@ var reactInjector = (function () {
           filterBtn.classList.toggle("active", Boolean(event.detail?.isOpen));
         });
 
-        mobileNav.appendChild(filterBtn);
+        // En mode mobile, la première entrée du DOM est affichée à gauche.
+        mobileNav.prepend(filterBtn);
       };
 
       if (document.readyState === "loading") {

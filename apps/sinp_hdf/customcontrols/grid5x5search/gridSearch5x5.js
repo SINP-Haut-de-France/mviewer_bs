@@ -99,6 +99,9 @@ mviewer.customControls.gridSearch5x5 = (function () {
     init: () => controller.init(),
     submit: (filters, options) => controller.submit(filters, options),
     handle: (features) => controller.handle(features),
+    getEntityNavigationState: (feature) =>
+      controller.getEntityNavigationState(feature),
+    selectEntityByIndex: (index) => controller.selectEntityByIndex(index),
     ensureMetadataForFeatures: (features) => controller.ensureMetadataForFeatures(features),
     normalizeFilters: (selectedFilters) =>
       controller._normalizeInputParams(selectedFilters),

@@ -16,6 +16,7 @@ var sinpOverriding = (function () {
       try {
         await loadScript('apps/sinp_hdf/custom_scripts/sinpRepository.js');
         await loadScript('apps/sinp_hdf/custom_scripts/sinpQueryBuilder.js');
+        await loadScript('apps/sinp_hdf/custom_scripts/externalLayersObs.js');
       } catch (err) {
         console.error('Erreur de chargement des scripts sinp:', err);
       }

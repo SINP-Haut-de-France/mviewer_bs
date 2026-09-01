@@ -264,7 +264,7 @@
         "code": "TRACHEOPHYTES",
         "level": 2,
         "parent_id": 2,
-        "name": "Plantes vasculaires(Trachéophytes)",
+        "name": "Plantes vasculaires(trachéophytes)",
         "display_order": 40,
         "children": null
       },
@@ -275,15 +275,6 @@
         "parent_id": 2,
         "name": "Bryophytes",
         "display_order": 50,
-        "children": null
-      },
-      {
-        "id": 10,
-        "code": "LICHENS",
-        "level": 2,
-        "parent_id": 2,
-        "name": "Lichens",
-        "display_order": 60,
         "children": null
       },
       {
@@ -302,9 +293,28 @@
     "code": "FONGE",
     "level": 1,
     "parent_id": null,
-    "name": "Fonge (hors lichens)",
+    "name": "Fonge",
     "display_order": 3,
-    "children": null
+    "children": [
+      {
+        "id": 10,
+        "code": "LICHENS",
+        "level": 2,
+        "parent_id": 3,
+        "name": "Lichens",
+        "display_order": 60,
+        "children": null
+      },
+      {
+        "id": 35,
+        "code": "FONGE_HORS_LICHENS",
+        "level": 2,
+        "parent_id": 3,
+        "name": "Autres",
+        "display_order": 61,
+        "children": null
+      }
+    ]
   },
   {
     "id": 4,

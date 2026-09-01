@@ -8,11 +8,13 @@ const SidebarFilterPanel = ({
   activeLayerId,
   filterProfile,
   onSubmit,
+  selectionContext,
+  onSelectionSubmit,
   density,
   initialFilters,
   onFiltersChange,
 }) => {
-  const { pushFilterError } = useFilters();
+  const { pushFilterError, clearSelectionContext } = useFilters();
 
   const executeSearch = async (params, layerId = activeLayerId) => {
     if (typeof onSubmit === "function") {
@@ -36,6 +38,11 @@ const SidebarFilterPanel = ({
     console.log("🎯 [SIDEBAR] handleSubmit APPELÉ !");
     console.log("🎯 [SIDEBAR] Filtres soumis depuis le sidebar:", params);
     console.log("🎯 [SIDEBAR] État complet des filtres:", currentFilters);
+
+    if (currentFilters?.selectionMode && typeof onSelectionSubmit === "function") {
+      await onSelectionSubmit(params, layerId);
+      return;
+    }
 
     await executeSearch(params, layerId);
   };
@@ -65,10 +72,10 @@ const SidebarFilterPanel = ({
         initialFilters={initialFilters}
         activeLayerId={resolveSearchLayerId(activeLayerId)}
         filterProfile={filterProfile}
-        showActions={true}
-        actionLabels={{
-          submit: "Appliquer",
-          reset: "Réinitialiser",
+        selectionContext={selectionContext}
+        onSelectionClear={() => {
+          clearSelectionContext();
+          window.externalLayersObs?.clearSelection?.();
         }}
         onSubmitError={handleSubmitError}
       />

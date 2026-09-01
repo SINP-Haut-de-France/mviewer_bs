@@ -35,7 +35,7 @@ const EspeceSearchFilterUI = ({
               selectedValues={selectedValues}
               returnValueKey="cd_ref"
               title={title}
-              label={(item) => `${item.nom_vern || "N/A"} - ${item.nom_complet}`}
+              label={(item) => `${item.nom_vern || item.nom_complet } - ${item.nom_complet}`}
               minCharacters={minCharacters}
               maxResults={maxResults}
               multiselect={multiselect}

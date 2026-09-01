@@ -1,7 +1,7 @@
 /**Vibe Coding amélioré d'un query builder pour le sinp_hdf (inspiré des QueryBuilder et Expression en C#)**/
 window.sinpRepository = (function () {
   const _defaultParameters = {
-    BASEURL: `${mviewer.env?.[mviewer.env?.CURRENT_ENV]?.GEOSERVER_BASE_URL}/wfs`,
+    BASEURL: mviewer.env?.[mviewer.env?.CURRENT_ENV]?.GEOSERVER_BASE_URL,
     SERVICE: "WFS",
     VERSION: "2.0.0",
     REQUEST: "GetFeature",
@@ -14,8 +14,22 @@ window.sinpRepository = (function () {
     return String(viewParams).replace(/^;+|;+$/g, "").replace(/;;+/g, ";");
   };
 
+  const _resolveWfsUrl = function (baseUrl) {
+    const normalizedBaseUrl = String(baseUrl || "")
+      .trim()
+      .replace(/\/+$/g, "")
+      .replace(/\/(?:ows|wfs|wms)$/i, "");
+
+    if (!normalizedBaseUrl) {
+      throw new Error("URL GeoServer non configurée");
+    }
+
+    return `${normalizedBaseUrl}/wfs`;
+  };
+
   const _normalizeFinalParams = function (options = {}) {
     const finalParams = { ..._defaultParameters, ...options };
+    finalParams.BASEURL = _resolveWfsUrl(finalParams.BASEURL);
 
     if (finalParams.VIEWPARAMS) {
       finalParams.VIEWPARAMS = _sanitizeViewParams(finalParams.VIEWPARAMS);
@@ -39,7 +53,7 @@ window.sinpRepository = (function () {
       : trimmedTypeName;
   };
 
-  const _escapePostViewParams = function (viewParams = "") {
+  const _escapeViewParams = function (viewParams = "") {
     let escapedViewParams = "";
 
     for (let index = 0; index < viewParams.length; index += 1) {
@@ -116,7 +130,7 @@ window.sinpRepository = (function () {
 
       const value =
         key === "VIEWPARAMS"
-          ? _escapePostViewParams(finalParams[key])
+          ? _escapeViewParams(finalParams[key])
           : finalParams[key];
 
       body.append(key, value);
@@ -148,7 +162,25 @@ window.sinpRepository = (function () {
       });
 
       if (!response.ok) {
-        throw new Error(`Erreur lors de la requête GeoServer : ${response.statusText}`);
+        const responseBody =
+          typeof response.text === "function" ? await response.text() : "";
+        const responseDetails = responseBody
+          .replace(/<[^>]*>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 1000);
+        const responseUrl = response.url || url;
+        const error = new Error(
+          `GeoServer HTTP ${response.status}${
+            response.statusText ? ` ${response.statusText}` : ""
+          } sur ${responseUrl}${responseDetails ? ` : ${responseDetails}` : ""}`
+        );
+        error.status = response.status;
+        error.responseUrl = responseUrl;
+        error.userMessage = responseDetails
+          ? `GeoServer a renvoyé une erreur HTTP ${response.status} : ${responseDetails}`
+          : `GeoServer a renvoyé une erreur HTTP ${response.status} sur ${responseUrl}.`;
+        throw error;
       }
 
       return await response.json();
@@ -222,9 +254,11 @@ window.sinpRepository = (function () {
     // Fonctions principales
     buildQueryURL: _buildQueryURL,
     buildPostRequest: _buildPostRequest,
+    escapeViewParams: _escapeViewParams,
     fetchGeoServerData: _fetchGeoServerData,
     fetchGeoServerDataGet: _fetchGeoServerDataGet,
     fetchGeoServerDataPost: _fetchGeoServerDataPost,
+    resolveWfsUrl: _resolveWfsUrl,
     shouldUsePost: _shouldUsePost,
   };
 })();

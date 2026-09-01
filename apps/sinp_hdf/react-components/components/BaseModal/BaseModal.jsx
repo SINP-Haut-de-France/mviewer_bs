@@ -22,6 +22,7 @@ const BaseModal = forwardRef(
       contentClassName = "",
       showMinimize = true,
       draggable = true,
+      nonBlocking = false,
     },
     ref
   ) => {
@@ -133,13 +134,28 @@ const BaseModal = forwardRef(
     });
   }, [onMinimize]);
 
-  // Exposer handleToggleMinimize via ref
+  const restore = useCallback(() => {
+    setIsMinimized((previousState) => {
+      if (!previousState) {
+        return previousState;
+      }
+
+      setPosition({
+        top: window.innerHeight / 2,
+        left: window.innerWidth / 2,
+      });
+      onMinimize?.(false);
+      return false;
+    });
+  }, [onMinimize]);
+
   useImperativeHandle(
     ref,
     () => ({
       handleToggleMinimize,
+      restore,
     }),
-    [handleToggleMinimize]
+    [handleToggleMinimize, restore]
   );
 
     return (
@@ -156,7 +172,8 @@ const BaseModal = forwardRef(
         contentClassName={contentClassName}
         closeButton={closeButton}
         showMinimize={showMinimize}
-        draggable={draggable}>
+        draggable={draggable}
+        nonBlocking={nonBlocking}>
         {children}
       </BaseModalUI>
     );

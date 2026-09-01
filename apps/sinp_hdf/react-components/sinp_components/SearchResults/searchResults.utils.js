@@ -91,8 +91,44 @@ export const getFeatureProperties = (feature) => {
   return feature.getProperties() || {};
 };
 
+export const getResultPanelTitle = ({
+  layerId,
+  properties = {},
+  selectionSummary = null,
+  selectionMode = false,
+  selectionLayerName = "Zonage environnemental",
+  selectionEntityLabel = "",
+}) => {
+  if (selectionMode) {
+    const entityLabel = selectionEntityLabel || selectionSummary?.selectionLabel || "Entité";
+    return `Résultat pour : ${selectionLayerName} - ${entityLabel}`;
+  }
+
+  const entity =
+    selectionSummary?.selectionLabel ||
+    getFirstDefinedValue(
+      properties.nom_commune,
+      properties.libelle_commune,
+      properties.commune_name,
+      properties.nom_epci,
+      properties.libelle_epci,
+      properties.epci_name,
+      properties.libelle,
+      properties.nom_min,
+      properties.nom_maj,
+      properties.code_insee,
+      properties.code_maille,
+      properties.code
+    ) || getLayerConfig(layerId).panelLabel;
+
+  const normalizedEntity = String(entity).trim();
+
+  return `Résultat pour : ${normalizedEntity}`;
+};
+
 export const getSelectedEntitySummary = (layerId, properties = {}, layerConfig = null) => {
   const resolvedLayerConfig = layerConfig || getLayerConfig(layerId);
+  const details = Array.isArray(properties.details) ? properties.details : [];
   const entityCode = getFirstDefinedValue(
     properties.code_insee,
     properties.code_maille,
@@ -105,10 +141,54 @@ export const getSelectedEntitySummary = (layerId, properties = {}, layerConfig =
     properties.nb_evenements,
     properties.nb_events
   );
+  const derivedEventCount = details.reduce((total, detail) => {
+    const observationCount = Number(detail?.nb_observations);
+    return Number.isFinite(observationCount) ? total + observationCount : total;
+  }, 0);
   const eventCount =
     rawEventCount === null || rawEventCount === undefined || String(rawEventCount).trim() === ""
-      ? null
+      ? details.length > 0
+        ? String(derivedEventCount)
+        : null
       : String(rawEventCount).trim();
+  const rawTaxonCount = getFirstDefinedValue(
+    properties.nb_taxons,
+    properties.nb_taxons_distincts,
+    properties.distinct_taxon_count
+  );
+  const distinctTaxonKeys = new Set(
+    details
+      .map((detail) =>
+        getFirstDefinedValue(detail?.cd_ref, detail?.nom_valide, detail?.nom_vern)
+      )
+      .filter((value) => value !== null)
+      .map((value) => String(value).trim())
+  );
+  const taxonCount =
+    rawTaxonCount === null ||
+    rawTaxonCount === undefined ||
+    String(rawTaxonCount).trim() === ""
+      ? details.length > 0
+        ? String(distinctTaxonKeys.size)
+        : null
+      : String(rawTaxonCount).trim();
+  const rawLastObservationDate = getFirstDefinedValue(
+    properties.last_date_obs,
+    properties.date_derniere_observation
+  );
+  const derivedLastObservationDate = details.reduce((latestValue, detail) => {
+    const candidateValue = detail?.last_date_obs;
+    const candidateDate = parseDateValue(candidateValue);
+    const latestDate = parseDateValue(latestValue);
+
+    if (!candidateDate) {
+      return latestValue;
+    }
+
+    return !latestDate || candidateDate > latestDate ? candidateValue : latestValue;
+  }, null);
+  const lastObservationDate =
+    rawLastObservationDate ?? derivedLastObservationDate ?? null;
 
   if (!entityCode && eventCount === null) {
     return null;
@@ -132,6 +212,8 @@ export const getSelectedEntitySummary = (layerId, properties = {}, layerConfig =
   return {
     selectionLabel,
     eventCount: eventCount ?? "-",
+    taxonCount: taxonCount ?? "-",
+    lastObservationDate,
   };
 };
 
@@ -140,7 +222,12 @@ const LAYER_CONFIG = {
     panelLabel: "Détails de la commune",
     primaryLabel: "Commune",
     primaryValue: (properties) =>
-      properties.libelle || properties.commune_name || properties.nom_commune || "-",
+      properties.libelle ||
+      properties.nom_min ||
+      properties.nom_maj ||
+      properties.commune_name ||
+      properties.nom_commune ||
+      "-",
     secondaryLabel: "Code INSEE",
     secondaryValue: (properties) => properties.code_insee || properties.code || "-",
     countLabel: "Nombre d'observations",
@@ -241,7 +328,11 @@ const getColumnSortValue = (item, column) => {
   return item?.[column?.id];
 };
 
-const normalizeSortValue = (value, sortType = "text") => {
+const STRING_COLLATOR = new Intl.Collator("fr", {
+  sensitivity: "base",
+});
+
+const normalizeSortValue = (value, sortType = "string") => {
   if (value === undefined || value === null || String(value).trim() === "") {
     return null;
   }
@@ -252,11 +343,26 @@ const normalizeSortValue = (value, sortType = "text") => {
   }
 
   if (sortType === "number") {
-    const normalizedNumber = Number(value);
+    if (typeof value !== "number" && typeof value !== "string") {
+      return null;
+    }
+
+    const normalizedNumber =
+      typeof value === "number"
+        ? value
+        : Number(value.trim().replace(/\s/g, "").replace(",", "."));
     return Number.isFinite(normalizedNumber) ? normalizedNumber : null;
   }
 
-  return String(value).trim().toLocaleLowerCase("fr");
+  return String(value).trim();
+};
+
+const compareSortValues = (leftValue, rightValue, sortType) => {
+  if (sortType === "number" || sortType === "date") {
+    return leftValue - rightValue;
+  }
+
+  return STRING_COLLATOR.compare(leftValue, rightValue);
 };
 
 export const sortTableItems = (items = [], columns = [], sortConfig = null) => {
@@ -290,11 +396,9 @@ export const sortTableItems = (items = [], columns = [], sortConfig = null) => {
         return -1;
       }
 
-      if (leftValue < rightValue) {
-        return -1 * directionFactor;
-      }
-      if (leftValue > rightValue) {
-        return 1 * directionFactor;
+      const comparison = compareSortValues(leftValue, rightValue, column.sortType);
+      if (comparison !== 0) {
+        return comparison * directionFactor;
       }
 
       return left.index - right.index;

@@ -1,6 +1,7 @@
 import React from "react";
 import SearchResultsTable from "./SearchResultsTable";
 import { formatDisplayDate } from "../../utils/date.utils";
+import "./TaxonDetailComponent.css";
 
 const PAGE_SIZE_OPTIONS = [
   { value: 25, label: "25" },
@@ -8,27 +9,22 @@ const PAGE_SIZE_OPTIONS = [
   { value: "all", label: "Tous" },
 ];
 
-const getTaxonomicGroupLabel = (detail = {}) => {
-  return (
-    detail?.group2_inpn || detail?.group1_inpn || detail?.group3_inpn || detail?.groupe_taxo || "-"
-  );
-};
-
 const TAXON_COLUMNS = [
   {
     id: "taxonomicGroup",
     label: "Groupe taxonomique",
     sortable: true,
-    sortType: "text",
-    getValue: (detail) => getTaxonomicGroupLabel(detail),
+    sortType: "string",
+    getValue: (detail) => detail?.groupe_taxo,
   },
   {
     id: "observedSpecies",
-    label: "Espèce(s) observée(s)",
+    label: "Taxon(s) observée(s)",
     sortable: true,
-    sortType: "text",
+    sortType: "string",
     getValue: (detail) => detail?.nom_vern || detail?.nom_valide || "-",
-    getSortValue: (detail) => [detail?.nom_vern || "", detail?.nom_valide || ""].join(" "),
+    getSortValue: (detail) =>
+      [detail?.nom_vern || "", detail?.nom_valide || ""].join(" "),
     render: (detail) => (
       <>
         <div>{detail?.nom_vern || detail?.nom_valide || "-"}</div>
@@ -46,9 +42,10 @@ const TAXON_COLUMNS = [
   },
   {
     id: "observationCount",
-    label: "Nb. observations",
-    sortable: false,
-    getValue: (detail) => detail?.nb_observations ?? "-",
+    label: "Nb. de données",
+    sortable: true,
+    sortType: "number",
+    getValue: (detail) => detail?.nb_observations ?? null,
   },
 ];
 
@@ -60,27 +57,15 @@ const TaxonDetailComponent = ({
   loadingState = false,
   errorMessage = "",
 }) => {
-  if (!details.length && !selectionPrompt && !loadingState && !errorMessage) {
-    return <p className="mv-sr-empty">Aucune observation détaillée disponible.</p>;
-  }
-
   return (
     <div className="mv-sr-section">
-      {!selectionPrompt && selectionSummary ? (
-        <div className="mv-sr-selection-summary" aria-live="polite">
-          <strong>Sélection courante :</strong> {selectionSummary.selectionLabel}
-          <span className="mv-sr-selection-summary-separator" aria-hidden="true">
-            -
-          </span>
-          <strong>Évènement(s) rattaché(s) :</strong> {selectionSummary.eventCount}
-        </div>
-      ) : null}
-
       <SearchResultsTable
         items={details}
         columns={TAXON_COLUMNS}
-        rowKey={(detail, index) => `${detail?.cd_ref || detail?.nom_valide || "detail"}-${index}`}
-        tableClassName="table table-striped table-hover mv-sr-table"
+        rowKey={(detail, index) =>
+          `${detail?.cd_ref || detail?.nom_valide || "detail"}-${index}`
+        }
+        tableClassName="table table-striped table-hover mv-sr-table mv-sr-taxon-table"
         itemLabel="taxons"
         pageSizeOptions={PAGE_SIZE_OPTIONS}
         defaultPageSize={25}
@@ -94,7 +79,7 @@ const TaxonDetailComponent = ({
           columnId: "taxonomicGroup",
           label: "groupe taxonomique",
           toggleLabel: "Regrouper par groupe taxonomique",
-          getValue: (detail) => getTaxonomicGroupLabel(detail),
+          getValue: (detail) => detail.groupe_taxo,
           emptyLabel: "Groupe non renseigné",
         }}
       />

@@ -70,7 +70,7 @@
       "waitForTarget": true,
       "beforeShowAction": "openAdvancedFilters",
       "title": "Couche de restitution",
-      "text": "Ce filtre permet de choisir le niveau de restitution de la recherche, par exemple les communes ou les grilles disponibles. La recherche s'effectuent dans ce cas en calculant et en rattachant les données au niveau de restitution souhaité."
+      "text": "Ce filtre permet de choisir le niveau de restitution de la recherche : communes, grilles ou zonage complet lorsqu'un zonage environnemental est utilisé comme périmètre."
     },
     {
       "id": "filtre-groupe-taxonomique",
@@ -82,7 +82,7 @@
       "required": false,
       "waitForTarget": true,
       "beforeShowAction": "openTaxonomicGroupFilter",
-      "title": "Classification des espèces",
+      "title": "Groupes taxinomiques",
       "text": "Ce filtre permet de restreindre la recherche à un ou plusieurs groupes taxonomiques."
     },
     {
@@ -94,7 +94,7 @@
       "placement": "right",
       "required": false,
       "waitForTarget": true,
-      "beforeShowAction": "openAdvancedFilters",
+      "beforeShowAction": "openTaxonFilter",
       "title": "Recherche d'espèce",
       "text": "Ce filtre sert à rechercher une espèce par son nom scientifique ou vernaculaire. Plusieurs taxons peuvent être sélectionnés."
     },
@@ -107,7 +107,7 @@
       "placement": "right",
       "required": false,
       "waitForTarget": true,
-      "beforeShowAction": "openAdvancedFilters",
+      "beforeShowAction": "openDateFilter",
       "title": "Période d'observation",
       "text": "Ce filtre permet de définir la période temporelle souhaitée. Par défaut, la recherche couvre les 20 dernières années."
     },
@@ -121,8 +121,8 @@
       "required": false,
       "waitForTarget": true,
       "beforeShowAction": "openAdvancedFilters",
-      "title": "Localisation géographique",
-      "text": "Cette section regroupe les filtres géographiques. Elle permet de limiter la recherche à un département et/ou à des communes. Elle sera enrichie avec d'autres couches de repérage administratif (EPCI, bassins versants, PNR, etc.)."
+      "title": "Localisation",
+      "text": "Cette section permet de limiter la recherche à un département ou à des communes. Lorsqu'un zonage environnemental visible a été sélectionné depuis sa fiche, il peut également être utilisé comme périmètre ; les autres filtres de localisation sont alors désactivés."
     },
     {
       "id": "filtre-departement",

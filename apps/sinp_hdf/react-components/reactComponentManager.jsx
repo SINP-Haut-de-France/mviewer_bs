@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { FILTER_PROFILES } from './configs/filtersConfig';
 
 // === LEGACY SUPPORT ===
 
@@ -55,14 +56,17 @@ export const openFilterModal = (config = {}) => {
   console.log('✅ Ouverture de la modal avec filterContextAPI:', filterContextAPI);
 
   filterContextAPI.openModal({
-    onSubmit: config.onSubmit || ((params) => {
+    onSubmit: config.onSubmit || (config.selectionContext ? null : ((params) => {
       console.log('Filtres soumis:', params);
       if (window.mviewer?.customLayers?.advancedSearch) {
-        mviewer.customLayers.advancedSearch.get_datas(params);
+        return mviewer.customLayers.advancedSearch.get_datas(params);
       }
-    }),
+      return null;
+    })),
     activeLayerId: config.activeLayerId || null,
     filterProfile: config.filterProfile || null,
+    selectionContext: config.selectionContext || null,
+    onSelectionSubmit: config.onSelectionSubmit || null,
     closeButton: config.closeButton,
     density: config.density,
     uiConfig: config.uiConfig,
@@ -109,6 +113,8 @@ export const openFilterSidebar = (config = {}) => {
       onSubmit: config.onSubmit || null,
       activeLayerId: config.activeLayerId || null,
       filterProfile: config.filterProfile || null,
+      selectionContext: config.selectionContext || null,
+      onSelectionSubmit: config.onSelectionSubmit || null,
       closeButton: config.closeButton,
       density: config.density,
       uiConfig: config.uiConfig,
@@ -128,6 +134,15 @@ export const setFilterLayer = (layerId) => {
     return;
   }
   filterContextAPI.setSidebarLayer(layerId);
+};
+
+export const setZoningSelection = (selectionContext, onSelectionSubmit) => {
+  if (!filterContextAPI?.setSelectionContext) {
+    console.error("❌ Filter API non initialisée");
+    return;
+  }
+
+  filterContextAPI.setSelectionContext(selectionContext, onSelectionSubmit);
 };
 
 /**
@@ -168,9 +183,11 @@ if (typeof window !== 'undefined') {
     openFilterSidebar,
     toggleFilterSidebar,
     setFilterLayer,
+    setZoningSelection,
     mountComponent,
     unmountComponent,
     initFilterAPI, // ⚠️ IMPORTANT: Exposer pour que FilterProvider puisse l'appeler
+    filterProfiles: FILTER_PROFILES,
 
     // Alias pour compatibilité
     toggleFilterModal: openFilterModal,

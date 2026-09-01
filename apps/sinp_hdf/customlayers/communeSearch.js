@@ -18,6 +18,8 @@ mviewer.customLayers.communeSearch = (function () {
         serverRenderOnly: true,
         serverStyle: {
           enabled: true,
+          legendTypeName: "fn_get_legend",
+          allowedStyleNames: mviewer.customLayers.SinpBaseLayer.STATS_STYLE_NAMES,
         },
         style: new ol.style.Style({
           stroke: new ol.style.Stroke({
@@ -38,7 +40,7 @@ mviewer.customLayers.communeSearch = (function () {
     layer: instance.getLayer(),
     handle: false,
     get_datas: function (params, options) {
-      return mviewer.customControls.communeSearch.submit(params, options);
+      return SinpBaseCustom.refreshSearchLayer("communeSearch", params, options);
     },
     _instance: instance,
   };

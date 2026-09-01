@@ -10,6 +10,7 @@ const Datasource = ({
   datasource,
   datatype = "json",
   searchUrlBuilder = null,
+  searchDependencies = null,
   queryParams = {},
   lazyloading = false,
   onDataFetch = () => {},
@@ -25,6 +26,7 @@ const Datasource = ({
   const fetchOnce = useRef(false);
   const abortControllerRef = useRef(null);
   const isMountedRef = useRef(true);
+  const fetchDataRef = useRef(null);
 
   // Fonction de chargement des données
   const fetchData = useCallback(
@@ -100,7 +102,7 @@ const Datasource = ({
         const abortController = new AbortController();
         abortControllerRef.current = abortController;
 
-        const url = searchUrlBuilder(searchQuery, queryParams);
+        const url = searchUrlBuilder(searchQuery, queryParams, searchDependencies);
         if (isMountedRef.current) {
           setLoading(true);
           setError(null);
@@ -131,13 +133,26 @@ const Datasource = ({
         }
       }
     },
-    [datatype, datasource, searchUrlBuilder, queryParams, minCharacters, onDataFetch, cacheDuration, name]
+    [
+      datatype,
+      datasource,
+      searchUrlBuilder,
+      searchDependencies,
+      queryParams,
+      minCharacters,
+      onDataFetch,
+      cacheDuration,
+      name,
+    ]
   );
 
-  // Débounçage pour maîtriser les requêtes WFS fréquentes
+  fetchDataRef.current = fetchData;
+
+  // Débounçage pour maîtriser les requêtes WFS fréquentes tout en utilisant
+  // la dernière version du constructeur d'URL et de ses dépendances.
   const debouncedFetchData = useRef(
     debounce((value) => {
-      fetchData(value);
+      fetchDataRef.current?.(value);
     }, 300)
   ).current;
 
@@ -165,14 +180,22 @@ const Datasource = ({
 
   // Gestion des recherches dynamiques WFS
   useEffect(() => {
-    if (datatype === "wfs" && query.length > 0) {
-      if (query.length >= minCharacters) {
-        debouncedFetchData(query);
-      } else {
-        setData([]);
-      }
+    if (datatype !== "wfs") {
+      return;
     }
-  }, [query, datatype, minCharacters, debouncedFetchData]);
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    if (query.length >= minCharacters) {
+      debouncedFetchData(query);
+    } else {
+      debouncedFetchData.cancel();
+      setData([]);
+      setLoading(false);
+    }
+  }, [query, datatype, minCharacters, searchDependencies, debouncedFetchData]);
 
   // Chargement initial pour JSON
   useEffect(() => {

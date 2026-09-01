@@ -7,22 +7,24 @@
 mviewer.customLayers.gridSearch5x5 = (function () {
   class GridSearch5x5Layer extends mviewer.customLayers.SinpBaseLayer {
     constructor() {
-  super("gridSearch5x5", "fn_get_stats", {
-    maxZoom: 12,
-    serverRenderOnly: true,
-    serverStyle: {
-      enabled: true,
-    },
-    style: new ol.style.Style({
-      stroke: new ol.style.Stroke({
-        color: "rgba(0, 0, 0, 0.001)",
-        width: 1,
-      }),
-      fill: new ol.style.Fill({
-        color: "rgba(0, 0, 0, 0.001)",
-      }),
-    }),
-  });
+      super("gridSearch5x5", "fn_get_stats", {
+        maxZoom: 12,
+        serverRenderOnly: true,
+        serverStyle: {
+          enabled: true,
+          legendTypeName: "fn_get_legend",
+          allowedStyleNames: mviewer.customLayers.SinpBaseLayer.STATS_STYLE_NAMES,
+        },
+        style: new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: "rgba(0, 0, 0, 0.001)",
+            width: 1,
+          }),
+          fill: new ol.style.Fill({
+            color: "rgba(0, 0, 0, 0.001)",
+          }),
+        }),
+      });
     }
   }
 
@@ -32,7 +34,7 @@ mviewer.customLayers.gridSearch5x5 = (function () {
     layer: instance.getLayer(),
     handle: false,
     get_datas: function (params, options) {
-      return mviewer.customControls.gridSearch5x5.submit(params, options);
+      return SinpBaseCustom.refreshSearchLayer("gridSearch5x5", params, options);
     },
     _instance: instance,
   };

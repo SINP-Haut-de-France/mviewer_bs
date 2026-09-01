@@ -1,7 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$" />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/node_modules" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/sinp_hdf/node_modules" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/sinp_hdf/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/temp" />
+      <excludeFolder url="file://$MODULE_DIR$/docs" />
+      <excludeFolder url="file://$MODULE_DIR$/lib/font-awesome-5.13.0" />
+      <excludeFolder url="file://$MODULE_DIR$/lib/flag-icons-4.1.4" />
+      <excludeFolder url="file://$MODULE_DIR$/lib/remix-icon" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/cad" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/catalogue" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/cog-geotiff" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/customcontrols" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/customlayers" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/customtheme" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/data" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/draw" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/filter" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/heatmap" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/label" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/lang" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/littosat" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/multifilter" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/multigeom" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/mviewer_templates" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/sentinel" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/stats" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/swipe" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/templates" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/theme-designfr" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/tile" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/trackview" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/wmswfs" />
+    </content>
     <orderEntry type="jdk" jdkName="Python 3.14" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>

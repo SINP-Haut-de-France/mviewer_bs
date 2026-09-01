@@ -19,8 +19,11 @@ const DateFilter = ({
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
 
-  // Notify parent component on mount
+  // Synchroniser les champs lorsque le parent restaure les filtres par défaut.
   useEffect(() => {
+    setStartDate(defaultStartDate);
+    setEndDate(defaultEndDate);
+
     if (onChange) {
       onChange({
         startDate: defaultStartDate,

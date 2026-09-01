@@ -96,6 +96,89 @@ describe("SinpBaseLayer - Classe abstraite", () => {
     mviewer.getLegendUrl = previousGetLegendUrl;
   });
 
+  test("Résout le style WMS avec fn_get_legend et les VIEWPARAMS sélectionnés", async () => {
+    const previousRepository = window.sinpRepository;
+    const previousEnv = mviewer.env;
+    window.sinpRepository = {
+      fetchGeoServerData: jest.fn().mockResolvedValue({
+        type: "FeatureCollection",
+        features: [
+          {
+            properties: {
+              style_name: "fn_get_stats_500",
+            },
+          },
+        ],
+      }),
+    };
+    mviewer.env = {
+      CURRENT_ENV: "TEST",
+      TEST: {
+        GEOSERVER_BASE_URL: "https://example.test/geoserver/sinp",
+      },
+    };
+
+    const layer = new mviewer.customLayers.SinpBaseLayer("testLayer", "fn_get_stats", {
+      serverStyle: {
+        enabled: true,
+        legendTypeName: "fn_get_legend",
+        allowedStyleNames: [
+          "fn_get_stats_100",
+          "fn_get_stats_500",
+          "fn_get_stats_5000",
+          "fn_get_stats_50000",
+        ],
+      },
+    });
+    const viewParams =
+      "DATE_DEB:2020-01-01;DATE_FIN:2026-03-10;DEPT_IDS:62;TARGET_LOC_CODE:2";
+
+    await layer._resolveServerStyleName({
+      VIEWPARAMS: viewParams,
+    });
+
+    expect(window.sinpRepository.fetchGeoServerData).toHaveBeenCalledWith({
+      TYPENAME: "sinp_diffusion:fn_get_legend",
+      VIEWPARAMS: viewParams,
+    });
+    expect(layer._getServerStyleContext().styleName).toBe("fn_get_stats_500");
+    expect(layer._buildServerLegendUrl({ VIEWPARAMS: viewParams })).toContain(
+      "STYLE=fn_get_stats_500"
+    );
+
+    window.sinpRepository = previousRepository;
+    mviewer.env = previousEnv;
+  });
+
+  test("Rejette un style non configuré retourné par fn_get_legend", async () => {
+    const previousRepository = window.sinpRepository;
+    window.sinpRepository = {
+      fetchGeoServerData: jest.fn().mockResolvedValue({
+        features: [
+          {
+            properties: {
+              style_name: "style_inconnu",
+            },
+          },
+        ],
+      }),
+    };
+
+    const layer = new mviewer.customLayers.SinpBaseLayer("testLayer", "fn_get_stats", {
+      serverStyle: {
+        enabled: true,
+        legendTypeName: "fn_get_legend",
+        allowedStyleNames: ["fn_get_stats_100"],
+      },
+    });
+
+    await expect(layer._resolveServerStyleName()).rejects.toThrow(
+      "fn_get_legend a retourné un style invalide"
+    );
+
+    window.sinpRepository = previousRepository;
+  });
+
   test("Désactive les tooltips legacy pour un layer en rendu WMS seul", () => {
     const layer = new mviewer.customLayers.SinpBaseLayer("testLayer", "fn_get_stats", {
       serverRenderOnly: true,
@@ -192,6 +275,48 @@ describe("SinpBaseLayer - Classe abstraite", () => {
     expect(features[0].get("code_insee")).toBe("62225");
 
     global.fetch = previousFetch;
+    mviewer.getMap = previousGetMap;
+  });
+
+  test("Remplace entièrement le calque WMS après un nettoyage", () => {
+    const previousGetMap = mviewer.getMap;
+    const mapLayers = [];
+    const map = {
+      getLayers: () => ({
+        getArray: () => mapLayers,
+      }),
+      addLayer: jest.fn((renderLayer) => {
+        mapLayers.push(renderLayer);
+      }),
+      removeLayer: jest.fn((renderLayer) => {
+        const index = mapLayers.indexOf(renderLayer);
+        if (index >= 0) {
+          mapLayers.splice(index, 1);
+        }
+      }),
+    };
+    mviewer.getMap = jest.fn(() => map);
+
+    const layer = new mviewer.customLayers.SinpBaseLayer("testLayer", "fn_get_stats", {
+      serverRenderOnly: true,
+      serverStyle: {
+        enabled: true,
+      },
+    });
+    const previousRenderLayer = layer._serverRenderLayer;
+
+    layer._ensureServerRenderLayer();
+    layer.clear();
+
+    expect(map.removeLayer).toHaveBeenCalledWith(previousRenderLayer);
+    expect(layer._serverRenderLayer).toBeNull();
+
+    layer._ensureServerRenderLayer();
+
+    expect(layer._serverRenderLayer).toBeDefined();
+    expect(layer._serverRenderLayer).not.toBe(previousRenderLayer);
+    expect(mapLayers).toEqual([layer._serverRenderLayer]);
+
     mviewer.getMap = previousGetMap;
   });
 });
@@ -322,6 +447,7 @@ describe("SinpBaseCustom - Scopage des détails", () => {
       })
     ).toEqual({
       communes: ["62041", "62165", "62225"],
+      mailles: [],
       departements: ["62"],
       epcis: [],
       groupes: [],
@@ -359,6 +485,37 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     mviewer.addLayer = previousAddLayer;
   });
 
+  test("Route une soumission React vers la restitution sélectionnée", async () => {
+    const previousManager = window.reactComponentManager;
+    const previousTargetControl = mviewer.customControls.gridSearch5x5;
+    const openFilterModal = jest.fn();
+    const submit = jest.fn().mockResolvedValue(undefined);
+    const control = new SinpBaseCustom({
+      layerId: "communeSearch",
+    });
+
+    window.reactComponentManager = { openFilterModal };
+    mviewer.customControls.gridSearch5x5 = {
+      submit,
+    };
+
+    control.openReactFilterModal();
+    const { onSubmit } = openFilterModal.mock.calls[0][0];
+    await onSubmit({ taxons: [60585] }, "gridSearch5x5");
+
+    expect(submit).toHaveBeenCalledWith(
+      {
+        taxons: [60585],
+      },
+      expect.objectContaining({
+        searchRefreshId: expect.any(Number),
+      })
+    );
+
+    window.reactComponentManager = previousManager;
+    mviewer.customControls.gridSearch5x5 = previousTargetControl;
+  });
+
   test("Ignore les clics carte pendant une nouvelle recherche", async () => {
     const control = new SinpBaseCustom({
       layerId: "testControl",
@@ -374,7 +531,22 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     querySelectedFeatureSpy.mockRestore();
   });
 
-  test("Nettoie les autres restitutions sans vider l'alias de la couche courante", () => {
+  test("Bloque les clics carte quand la sélection est verrouillée par un résultat", () => {
+    const previousFilterApi = window.__filterAPI;
+    window.__filterAPI = {
+      currentFilters: {
+        selectionMode: true,
+      },
+    };
+
+    window.externalLayersObs?.setSelectionActive?.(true, { locked: true });
+
+    expect(window.externalLayersObs?.handleMapClick?.({ pixel: [10, 20] })).toBe(true);
+
+    window.__filterAPI = previousFilterApi;
+  });
+
+  test("Nettoie toutes les restitutions avant un nouveau rendu", () => {
     const control = new SinpBaseCustom({
       layerId: "grid10x10search",
     });
@@ -391,11 +563,11 @@ describe("SinpBaseCustom - Scopage des détails", () => {
       "clear"
     );
 
-    control._clearOtherSearchLayers();
+    control._clearSearchLayersForRefresh();
 
     expect(communeClearSpy).toHaveBeenCalled();
     expect(grid5ClearSpy).toHaveBeenCalled();
-    expect(currentClearSpy).not.toHaveBeenCalled();
+    expect(currentClearSpy).toHaveBeenCalled();
 
     communeClearSpy.mockRestore();
     grid5ClearSpy.mockRestore();
@@ -565,7 +737,7 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     expect(result.detailKey).toContain("cd_sig");
   });
 
-  test("Met en cache les détails chargés à la demande pour une même entité", async () => {
+  test("Recharge les détails à la demande pour une même entité", async () => {
     const control = new SinpBaseCustom({
       layerId: "testControl",
       mainTypeName: "fn_get_stats",
@@ -598,7 +770,7 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     await control._ensureEntityData([firstFeature], params);
     await control._ensureEntityData([secondFeature], params);
 
-    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(1);
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledTimes(2);
     expect(fetchGeoServerDataSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         TYPENAME: "sinp_diffusion:fn_get_obs_detaillee",
@@ -619,6 +791,66 @@ describe("SinpBaseCustom - Scopage des détails", () => {
     fetchGeoServerDataSpy.mockRestore();
   });
 
+  test("Charge uniquement le détail de l'entité courante pour plusieurs communes", async () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      mainTypeName: "fn_get_stats",
+      detailsTypeName: "fn_get_obs_detaillee",
+      targetLocCode: "2",
+    });
+    const feature = new ol.Feature({ code: "62002" });
+    const fetchGeoServerDataSpy = jest
+      .spyOn(control, "fetchGeoServerData")
+      .mockResolvedValue({
+        type: "FeatureCollection",
+        features: [],
+      });
+
+    await control._ensureEntityData([feature], {
+      communes: ["62001", "62002", "62003"],
+      dateDeb: "2021-01-01",
+      dateFin: "2026-03-10",
+      targetLocCode: "2",
+    });
+
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        VIEWPARAMS: expect.stringContaining("CODE_INSEES:62002"),
+      })
+    );
+    expect(fetchGeoServerDataSpy.mock.calls[0][0].VIEWPARAMS).not.toContain(
+      "62001,62002,62003"
+    );
+
+    fetchGeoServerDataSpy.mockRestore();
+  });
+
+  test("Navigue dans les entités de restitution préchargées", async () => {
+    const control = new SinpBaseCustom({
+      layerId: "testControl",
+      targetLocCode: "2",
+    });
+    const firstFeature = new ol.Feature({ code: "62001", libelle: "Commune A" });
+    const secondFeature = new ol.Feature({ code: "62002", libelle: "Commune B" });
+    control._lastSearchParams = {
+      communes: ["62001", "62002"],
+      targetLocCode: "2",
+    };
+    control._setLastResultFeatures([firstFeature, secondFeature]);
+    const handleSpy = jest.spyOn(control, "handle").mockResolvedValue();
+
+    expect(control.getEntityNavigationState(firstFeature)).toEqual({
+      currentIndex: 0,
+      total: 2,
+      entityLabel: "Commune A",
+    });
+
+    await control.selectEntityByIndex(1);
+
+    expect(handleSpy).toHaveBeenCalledWith([secondFeature]);
+    handleSpy.mockRestore();
+  });
+
   test("Les variantes de clés de maille reconnaissent le suffixe cd_sig", () => {
     const control = new SinpBaseCustom({
       layerId: "testControl",
@@ -632,6 +864,24 @@ describe("SinpBaseCustom - Scopage des détails", () => {
 });
 
 describe("sinpRepository - GET/POST GeoServer", () => {
+  test("normalise les URL de service GeoServer vers WFS", () => {
+    expect(
+      sinpRepository.resolveWfsUrl(
+        "http://localhost:8080/geoserver/preprod_sinp/wms"
+      )
+    ).toBe("http://localhost:8080/geoserver/preprod_sinp/wfs");
+    expect(
+      sinpRepository.resolveWfsUrl(
+        "http://localhost:8080/geoserver/preprod_sinp/ows/"
+      )
+    ).toBe("http://localhost:8080/geoserver/preprod_sinp/wfs");
+    expect(
+      sinpRepository.resolveWfsUrl(
+        "http://localhost:8080/geoserver/preprod_sinp"
+      )
+    ).toBe("http://localhost:8080/geoserver/preprod_sinp/wfs");
+  });
+
   test("construit un body POST x-www-form-urlencoded pour les fonctions PostgreSQL", () => {
     const request = sinpRepository.buildPostRequest({
       TYPENAME: "sinp_diffusion:fn_get_stats",
@@ -645,7 +895,17 @@ describe("sinpRepository - GET/POST GeoServer", () => {
     expect(request.body.toString()).toContain("REQUEST=GetFeature");
     expect(request.body.toString()).toContain("TYPENAME=sinp_diffusion%3Afn_get_stats");
     expect(request.body.toString()).toContain(
-      "VIEWPARAMS=DATE_DEB%3A2006-05-28%3BDATE_FIN%3A2026-05-28%3BDEPT_IDS%3A62%3BCODE_INSEES%3A62225%2C62040%3BTARGET_LOC_CODE%3A2"
+      "VIEWPARAMS=DATE_DEB%3A2006-05-28%3BDATE_FIN%3A2026-05-28%3BDEPT_IDS%3A62%3BCODE_INSEES%3A62225%5C%2C62040%3BTARGET_LOC_CODE%3A2"
+    );
+  });
+
+  test("échappe les virgules réservées par GeoServer dans VIEWPARAMS", () => {
+    expect(
+      sinpRepository.escapeViewParams(
+        "DEPT_IDS:59,62;CD_REF:60588,60585;TARGET_LOC_CODE:7"
+      )
+    ).toBe(
+      "DEPT_IDS:59\\,62;CD_REF:60588\\,60585;TARGET_LOC_CODE:7"
     );
   });
 
@@ -701,6 +961,33 @@ describe("sinpRepository - GET/POST GeoServer", () => {
 
     const [, requestOptions] = global.fetch.mock.calls[0];
     expect(requestOptions?.method).toBeUndefined();
+
+    global.fetch = previousFetch;
+    mviewer.getProxy = previousGetProxy;
+  });
+
+  test("remonte le détail et l'URL des erreurs GeoServer", async () => {
+    const previousFetch = global.fetch;
+    const previousGetProxy = mviewer.getProxy;
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      statusText: "Not Found",
+      url: "https://example.test/geoserver/sinp/wfs",
+      text: async () => "<html><body>Workspace introuvable</body></html>",
+    });
+    mviewer.getProxy = jest.fn(() => "");
+
+    await expect(
+      sinpRepository.fetchGeoServerDataPost({
+        BASEURL: "https://example.test/geoserver/sinp/wms",
+        TYPENAME: "sinp_diffusion:fn_get_stats",
+        VIEWPARAMS: "DATE_DEB:2006-05-28;DATE_FIN:2026-05-28",
+      })
+    ).rejects.toThrow(
+      "GeoServer HTTP 404 Not Found sur https://example.test/geoserver/sinp/wfs : Workspace introuvable"
+    );
 
     global.fetch = previousFetch;
     mviewer.getProxy = previousGetProxy;
@@ -1216,16 +1503,33 @@ describe("CommuneSearchLayer", () => {
     expect(instance._serverRenderLayer).toBeDefined();
   });
 
-  test("Le contrôle communeSearch lance directement le WMS sans WFS fn_get_stats", async () => {
+  test("Le contrôle communeSearch ajuste la vue avec les géométries WFS", async () => {
     const control = mviewer.customControls.communeSearch;
     const layerInstance = mviewer.customLayers.communeSearch._instance;
     const renderServerOnlySpy = jest
       .spyOn(layerInstance, "renderServerOnly")
       .mockResolvedValue(undefined);
+    const fitToFeaturesSpy = jest.spyOn(layerInstance, "fitToFeatures");
+    const showSelectionPromptPanelSpy = jest.spyOn(
+      layerInstance,
+      "showSelectionPromptPanel"
+    );
     const fetchGeoServerDataSpy = jest.spyOn(
       SinpBaseCustom.prototype,
       "fetchGeoServerData"
-    ).mockResolvedValue({ type: "FeatureCollection", features: [] });
+    ).mockResolvedValue({
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: { code_insee: "62001" },
+          geometry: {
+            type: "Point",
+            coordinates: [650000, 7050000],
+          },
+        },
+      ],
+    });
 
     await control.submit({
       filteredDepartments: ["62"],
@@ -1238,13 +1542,25 @@ describe("CommuneSearchLayer", () => {
         TYPENAME: "sinp_diffusion:fn_get_stats",
       })
     );
-    expect(fetchGeoServerDataSpy).not.toHaveBeenCalled();
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        TYPENAME: "sinp_diffusion:fn_get_stats",
+      })
+    );
     expect(fetchGeoServerDataSpy).not.toHaveBeenCalledWith(
       expect.objectContaining({
         TYPENAME: "sinp_diffusion:fn_get_obs_detaillee",
       })
     );
+    expect(fitToFeaturesSpy).toHaveBeenCalledWith([
+      expect.objectContaining({
+        getGeometry: expect.any(Function),
+      }),
+    ]);
+    expect(showSelectionPromptPanelSpy).toHaveBeenCalled();
     renderServerOnlySpy.mockRestore();
+    fitToFeaturesSpy.mockRestore();
+    showSelectionPromptPanelSpy.mockRestore();
     fetchGeoServerDataSpy.mockRestore();
   });
 
@@ -1273,7 +1589,11 @@ describe("CommuneSearchLayer", () => {
         TYPENAME: "sinp_diffusion:fn_get_stats",
       })
     );
-    expect(fetchGeoServerDataSpy).not.toHaveBeenCalled();
+    expect(fetchGeoServerDataSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        TYPENAME: "sinp_diffusion:fn_get_stats",
+      })
+    );
     expect(showLegendSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         TYPENAME: "sinp_diffusion:fn_get_stats",
@@ -1627,7 +1947,7 @@ describe("sinpQueryBuilder - Configurations nouvelles", () => {
     expect(options.VIEWPARAMS).toContain("DATE_DEB:2020-01-01");
     expect(options.VIEWPARAMS).toContain("DATE_FIN:2026-03-10");
     expect(options.VIEWPARAMS).toContain("CD_REF:2440,2442");
-    expect(options.VIEWPARAMS).toContain("GRP_IDS:13,15");
+    expect(options.VIEWPARAMS).not.toContain("GRP_IDS:");
     expect(options.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
   });
 
@@ -1711,7 +2031,7 @@ describe("sinpQueryBuilder - Configurations nouvelles", () => {
     expect(options.VIEWPARAMS).toContain("DATE_FIN:2026-03-10");
     expect(options.VIEWPARAMS).toContain("DEPT_IDS:62");
     expect(options.VIEWPARAMS).toContain("CODE_INSEES:62225");
-    expect(options.VIEWPARAMS).toContain("GRP_IDS:13");
+    expect(options.VIEWPARAMS).not.toContain("GRP_IDS:");
     expect(options.VIEWPARAMS).toContain("CD_REF:2440");
     expect(options.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
   });
