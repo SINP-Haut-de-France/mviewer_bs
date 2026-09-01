@@ -239,7 +239,7 @@ jobs:
             fi
           fi
 
-      - name: Update persistent 'Release_latest' release (conservative, non-destructive)
+      - name: Update persistent 'Release_latest' release (Solution 1 - delete old asset then re-upload)
         env:
           ASSET_PATH: ${{ github.workspace }}/${{ env.ASSET_NAME }}
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
@@ -252,17 +252,29 @@ jobs:
             echo "::error::Asset file not found at ${ASSET_PATH}"
             exit 1
           fi
+          
           if gh release view "Release_latest" >/dev/null 2>&1; then
-            echo "Release 'Release_latest' exists - attempting upload (non-destructive)"
-            if gh release upload "Release_latest" "${ASSET_PATH}" --clobber; then
-              echo "Uploaded asset to 'Release_latest' successfully"
-              gh release edit "Release_latest" --notes "Latest asset updated from release ${NEW_TAG} (workflow ${GITHUB_RUN_ID})" || true
+            echo "Release 'Release_latest' exists - removing old assets first"
+            
+            # Supprimer les anciens assets (sinp_hdf.tar.gz)
+            # Le --clobber précédent ne fonctionne pas sur les releases immuables
+            # donc on supprime l'asset explicitement
+            gh release delete-asset "Release_latest" "sinp_hdf.tar.gz" 2>/dev/null || true
+            
+            # Attendre que la suppression soit traitée
+            sleep 2
+            
+            # Télécharger le nouvel asset
+            if gh release upload "Release_latest" "${ASSET_PATH}"; then
+              echo "Uploaded new asset to 'Release_latest' successfully"
+              # Mettre à jour les notes avec l'information du dernier tag
+              gh release edit "Release_latest" --notes "Latest release from ${NEW_TAG} (workflow run ${GITHUB_RUN_ID})" || true
             else
-              echo "::warning::Cannot upload to 'Release_latest' (permission denied). Manual intervention required to update the 'Release_latest' release asset."
+              echo "::warning::Cannot upload to 'Release_latest' after asset deletion. Manual intervention required."
             fi
           else
-            echo "'Release_latest' release not found — creating it targeting ${DEFAULT_BRANCH} (non-destructive: create only)"
-            if gh release create "Release_latest" --target "${DEFAULT_BRANCH}" --title "Release Latest" --notes "Persistent 'Release_latest' release created by CI (source ${NEW_TAG})" "${ASSET_PATH}"; then
+            echo "'Release_latest' release not found — creating it targeting ${DEFAULT_BRANCH}"
+            if gh release create "Release_latest" --target "${DEFAULT_BRANCH}" --title "Release Latest" --notes "Latest release from ${NEW_TAG} (source branch ${DEFAULT_BRANCH})" "${ASSET_PATH}"; then
               echo "'Release_latest' created and asset uploaded"
             else
               echo "::warning::Failed to create 'Release_latest' release. Likely permissions or invalid target branch. Manual intervention required."
