@@ -20,19 +20,7 @@
       "text": "Ce menu permet de choisir le fond de carte utilisé comme support de lecture : plan, photographie aérienne ou scan cartographique selon la configuration. D'autres fonds de cartes pourront être ajoutés à cette configuration."
     },
     {
-      "id": "limites-administratives",
-      "tag": "menus",
-      "status": "validated",
-      "enabled": true,
-      "target": ["#theme-layers-limiteAdm"],
-      "placement": "right",
-      "required": false,
-      "waitForTarget": true,
-      "title": "Limites administratives",
-      "text": "Cette rubrique rassemble les couches de référentiel administratif :bassins versants, départements, EPCI, communes, etc."
-    },
-    {
-      "id": "menu-environnement",
+      "id": "menu-fonds-de-cartes",
       "tag": "menus",
       "status": "validated",
       "enabled": true,
@@ -40,8 +28,53 @@
       "placement": "right",
       "required": false,
       "waitForTarget": true,
-      "title": "Environnement",
-      "text": "Cette rubrique rassemble les zonages environnementaux: espaces protégés et inventaires. Elle n'est pas exhaustive. Une réflexion est en cours pour remplacer ce menu par une fonctionnalité mviewer existante permettant à l'utilisateur d'ajouter des couches dynamiquement."
+      "title": "Fonds de cartes",
+      "text": "Ce menu regroupe des fonds de carte thématiques et des couches de référence comme les limites administratives, des zonages environnementaux. Cette liste n'est pas exhaustive et pourra être enrichie dans le futur."
+    },
+    {
+      "id": "limites-administratives",
+      "tag": "menus",
+      "status": "validated",
+      "enabled": true,
+      "target": [
+        "#theme-layers-environnement a[i18n='Limites administratives']",
+        "#theme-layers-environnement .level-2:nth-child(1) > a"
+      ],
+      "placement": "right",
+      "required": false,
+      "waitForTarget": true,
+      "title": "Limites administratives",
+      "text": "Cette rubrique rassemble les couches de référentiel administratif :bassins versants, départements, EPCI, communes, etc."
+    },
+    {
+      "id": "zonages-aires-protegees",
+      "tag": "menus",
+      "status": "validated",
+      "enabled": true,
+      "target": [
+        "#theme-layers-environnement a[i18n='Aires protégées']",
+        "#theme-layers-environnement .level-2:nth-child(2) > a"
+      ],
+      "placement": "right",
+      "required": false,
+      "waitForTarget": true,
+      "title": "Aires protégées",
+      "text": "Cette section rassemble les zonages environnementaux relevant des espaces protégés : arrêtés de protection, réserves naturelles, Natura 2000, sites classés, parcs naturels régionaux, etc. Elle n'est pas exhaustive."
+    },
+    {
+      "id": "zonages-inventaires",
+      "tag": "menus",
+      "status": "validated",
+      "enabled": true,
+      "target": [
+        "#theme-layers-environnement a[i18n='Inventaires du patrimoine naturel']",
+        "#theme-layers-environnement .level-2:nth-child(3) > a"
+      ],
+      "placement": "right",
+      "required": false,
+      "waitForTarget": true,
+      "title": "Inventaires du patrimoine naturel",
+      "text": "Cette section rassemble les inventaires du patrimoine naturel : ZNIEFF de type I et II, INPG. Elle n'est pas exhaustive."
     },
     {
       "id": "filtres-avances",
@@ -64,8 +97,11 @@
       "tag": "filtres-avances",
       "status": "validated",
       "enabled": true,
-      "target": ["[data-tour='filter-restitution-layer']"],
-      "placement": "right",
+      "target": [
+        "[data-tour='filter-restitution-layer-communeSearch']",
+        "[data-tour='filter-restitution-layer']"
+      ],
+      "placement": "bottom",
       "required": false,
       "waitForTarget": true,
       "beforeShowAction": "openAdvancedFilters",
