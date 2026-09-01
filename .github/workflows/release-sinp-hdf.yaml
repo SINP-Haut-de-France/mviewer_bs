@@ -1,4 +1,4 @@
-name: "Auto package & release SINP HDF (versioned + Latest)"
+name: "Auto package & release SINP HDF (conservative, non-destructive)"
 
 on:
   push:
@@ -55,62 +55,46 @@ jobs:
         id: compute_tag
         run: |
           set -euo pipefail
-          repo="${GITHUB_REPOSITORY}"
-          echo "Repository: $repo"
-
-          # read version from package.json
           version=$(node -e "console.log(require('./apps/sinp_hdf/package.json').version)")
           version="${version#v}"
           echo "package.json version: $version"
-
           IFS='.' read -ra parts <<< "$version"
           if [ "${#parts[@]}" -lt 3 ]; then
             echo "ERROR: package.json version must be at least MAJOR.MINOR.PATCH"
             exit 1
           fi
           base="${parts[0]}.${parts[1]}.${parts[2]}"
-          echo "Base (first 3 fields): $base"
-
-          # fetch tag list from remote
+          echo "Base: $base"
           tags=$(git ls-remote --tags origin | awk '{print $2}' | sed 's@refs/tags/@@' | sed 's@\^{}@@')
           max=-1
           for t in $tags; do
             tclean="${t#v}"
-            # if exactly base => treat as suffix 0
             if [ "$tclean" = "$base" ]; then
               num=0
               if [ $num -gt $max ]; then max=$num; fi
             else
-              # if matches base.N
               if [[ "$tclean" =~ ^${base}\.([0-9]+)$ ]]; then
                 num="${BASH_REMATCH[1]}"
                 if [ "$num" -gt "$max" ]; then max="$num"; fi
               fi
             fi
           done
-
-          # Decide new tag:
           if [ "${#parts[@]}" -ge 4 ]; then
-            # package.json already has 4th field: increment it
             last="${parts[3]}"
             if ! [[ "$last" =~ ^[0-9]+$ ]]; then
-              echo "ERROR: 4th component is not numeric: $last"
+              echo "ERROR: 4th component not numeric: $last"
               exit 1
             fi
             newnum=$((last + 1))
             newtag="${base}.${newnum}"
           else
-            # package.json has only 3 components: create/increment 4th suffix
             if [ $max -lt 0 ]; then
-              # no existing tags with base -> start at 1
               newnum=1
             else
               newnum=$((max + 1))
             fi
             newtag="${base}.${newnum}"
           fi
-
-          echo "Calculated new tag: $newtag"
           echo "tag=${newtag}" >> "$GITHUB_OUTPUT"
 
       - name: Create annotated git tag and push
@@ -120,55 +104,64 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          echo "Creating tag ${NEW_TAG}"
-          git tag -a "${NEW_TAG}" -m "Release ${NEW_TAG} (created by CI run ${GITHUB_RUN_ID})"
-          # push the new tag
+          echo "Creating and pushing tag ${NEW_TAG}"
+          git tag -a "${NEW_TAG}" -m "Release ${NEW_TAG} (created by CI ${GITHUB_RUN_ID})"
           git push origin "refs/tags/${NEW_TAG}"
 
-      - name: Create versioned release and upload asset (release = ${TAG})
+      - name: Create or update versioned release and upload asset (non-destructive)
         env:
+          GH_TOKEN: ${{ github.token }}
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
-          ASSET_PATH: ${{ github.workspace }}/$ASSET_NAME
+          ASSET_PATH: ${{ github.workspace }}/${{ env.ASSET_NAME }}
         run: |
           set -euo pipefail
-          echo "Creating release ${NEW_TAG} with asset ${ASSET_PATH}"
-          # Create release and upload asset in one step (if it already exists, try to upload)
+          echo "Creating release ${NEW_TAG} or uploading asset if already exists"
+          # Try to create the release with asset in one command
           if gh release view "${NEW_TAG}" >/dev/null 2>&1; then
-            echo "Release ${NEW_TAG} already exists - uploading asset"
-            gh release upload "${NEW_TAG}" "${ASSET_PATH}" --clobber || {
-              echo "Upload to existing release failed"
-              exit 1
-            }
+            echo "Release ${NEW_TAG} already exists - attempt upload"
+            if gh release upload "${NEW_TAG}" "${ASSET_PATH}" --clobber; then
+              echo "Uploaded asset to ${NEW_TAG}"
+            else
+              echo "Warning: upload to ${NEW_TAG} failed (immutable or permission). No destructive action will be taken."
+            fi
           else
-            gh release create "${NEW_TAG}" --target main --title "${NEW_TAG}" --notes "Release ${NEW_TAG} (auto-created by CI)" "${ASSET_PATH}"
+            # create release and include the asset
+            if gh release create "${NEW_TAG}" --target main --title "${NEW_TAG}" --notes "Release ${NEW_TAG} (auto-created by CI)" "${ASSET_PATH}"; then
+              echo "Release ${NEW_TAG} created with asset"
+            else
+              echo "Warning: failed to create release ${NEW_TAG}. Attempting to upload if release exists."
+              if gh release upload "${NEW_TAG}" "${ASSET_PATH}" --clobber; then
+                echo "Uploaded asset to ${NEW_TAG}"
+              else
+                echo "Warning: upload still failed. No destructive action will be taken."
+              fi
+            fi
           fi
-          echo "Versioned release ${NEW_TAG} created/updated."
 
-      - name: Update persistent 'Latest' release (upload or recreate if immutable)
+      - name: Update persistent 'Latest' release (conservative)
         env:
+          GH_TOKEN: ${{ github.token }}
           ASSET_PATH: ${{ github.workspace }}/${{ env.ASSET_NAME }}
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
         run: |
           set -euo pipefail
-          echo "Updating 'Latest' release with asset ${ASSET_PATH}"
-          # Try upload to existing 'Latest'
+          echo "Attempting to update 'Latest' release with asset ${ASSET_PATH}"
           if gh release view "Latest" >/dev/null 2>&1; then
-            echo "Release 'Latest' exists, attempting upload"
+            echo "Release 'Latest' exists - attempting upload (non-destructive)"
             if gh release upload "Latest" "${ASSET_PATH}" --clobber; then
               echo "Uploaded asset to 'Latest' successfully"
               gh release edit "Latest" --notes "Latest asset updated from release ${NEW_TAG} (workflow ${GITHUB_RUN_ID})" || true
             else
-              echo "Upload to 'Latest' failed. Attempting recovery: delete + recreate 'Latest' and upload asset."
-              # destructive path: delete and recreate Latest
-              gh release delete "Latest" -y || true
-              gh release create "Latest" --target main --title "Latest" --notes "Persistent 'Latest' release recreated by CI (source ${NEW_TAG})" "${ASSET_PATH}"
-              echo "'Latest' recreated and asset uploaded."
+              echo "::warning::Cannot upload to 'Latest' (immutable or permission denied). Manual intervention required to update the 'Latest' release asset."
+              # do not delete or recreate — conservative policy: stop here
             fi
           else
-            echo "Release 'Latest' not found. Creating it and uploading asset."
-            gh release create "Latest" --target main --title "Latest" --notes "Persistent 'Latest' release created by CI (source ${NEW_TAG})" "${ASSET_PATH}"
-            echo "'Latest' created and asset uploaded."
+            echo "'Latest' release not found — creating it (non-destructive in the sense we only create when absent)"
+            if gh release create "Latest" --target main --title "Latest" --notes "Persistent 'Latest' release created by CI (source ${NEW_TAG})" "${ASSET_PATH}"; then
+              echo "'Latest' created and asset uploaded"
+            else
+              echo "::warning::Failed to create 'Latest' release. Manual intervention required."
+            fi
           fi
 
       - name: Print final URLs and summary
