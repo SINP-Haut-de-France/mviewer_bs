@@ -173,7 +173,26 @@ jobs:
       - name: Get default branch
         id: default_branch
         run: |
-          default_branch=$(git rev-parse --abbrev-ref origin/HEAD | sed 's@origin/@@')
+          # Method 1: Try to get from remote HEAD symbolic ref
+          default_branch=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@refs/remotes/origin/@@' || echo "")
+          
+          # Method 2: Fallback - use the repository API
+          if [ -z "$default_branch" ]; then
+            default_branch=$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name')
+          fi
+          
+          # Method 3: Final fallback - check which branch exists
+          if [ -z "$default_branch" ]; then
+            if git rev-parse --verify origin/main >/dev/null 2>&1; then
+              default_branch="main"
+            elif git rev-parse --verify origin/master >/dev/null 2>&1; then
+              default_branch="master"
+            else
+              default_branch="main"  # Default fallback
+            fi
+          fi
+          
+          echo "Detected default branch: ${default_branch}"
           echo "default_branch=${default_branch}" >> "$GITHUB_OUTPUT"
 
       - name: Create annotated git tag and push
