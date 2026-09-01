@@ -18,13 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'SINP-Haut-de-France/mviewer_bs'
 
-    defaults:
-      run:
-        working-directory: apps/sinp_hdf
-
     steps:
       - name: "Checkout repository"
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: "Setup Node.js"
         uses: actions/setup-node@v4
@@ -34,18 +32,39 @@ jobs:
           cache-dependency-path: apps/sinp_hdf/package-lock.json
 
       - name: "Install dependencies"
+        working-directory: apps/sinp_hdf
         run: npm ci
 
       - name: "Build SINP HDF package"
+        working-directory: apps/sinp_hdf
         run: npm run build
 
       - name: "Archive SINP HDF package"
         run: |
-          cd dist/sinp_hdf
-          tar -czf ../sinp_hdf.tar.gz .
+          echo "Workspace: $GITHUB_WORKSPACE"
+          ls -la "$GITHUB_WORKSPACE" || true
+          if [ -d "$GITHUB_WORKSPACE/apps/sinp_hdf" ]; then
+            # create a single predictable archive at repository root containing ONLY the contents of apps/sinp_hdf
+            tar -czf "$GITHUB_WORKSPACE/sinp_hdf.tar.gz" -C "$GITHUB_WORKSPACE/apps/sinp_hdf" .
+            echo "Created archive:"
+            ls -la "$GITHUB_WORKSPACE/sinp_hdf.tar.gz"
+          else
+            echo "ERROR: apps/sinp_hdf directory not found"
+            ls -la "$GITHUB_WORKSPACE" || true
+            exit 1
+          fi
+
+      - name: "Create or get release"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          # ensure the release exists (useful when running workflow_dispatch)
+          gh release view "${RELEASE_TAG}" >/dev/null 2>&1 || gh release create "${RELEASE_TAG}" --draft
 
       - name: "Upload package to release"
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
-        run: gh release upload "${RELEASE_TAG}" dist/sinp_hdf.tar.gz --clobber
+        run: |
+          gh release upload "${RELEASE_TAG}" "$GITHUB_WORKSPACE/sinp_hdf.tar.gz" --clobber
