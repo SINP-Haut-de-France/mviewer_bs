@@ -209,28 +209,28 @@ jobs:
             fi
           fi
 
-      - name: Update persistent 'Latest' release (conservative, non-destructive)
+      - name: Update persistent 'Release_latest' release (conservative, non-destructive)
         env:
           ASSET_PATH: ${{ github.workspace }}/$ASSET_NAME
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
           DEFAULT_BRANCH: ${{ steps.default_branch.outputs.default_branch }}
         run: |
           set -euo pipefail
-          echo "Attempting to update 'Latest' release with asset ${ASSET_PATH}"
-          if gh release view "Latest" >/dev/null 2>&1; then
-            echo "Release 'Latest' exists - attempting upload (non-destructive)"
-            if gh release upload "Latest" "${ASSET_PATH}" --clobber; then
-              echo "Uploaded asset to 'Latest' successfully"
-              gh release edit "Latest" --notes "Latest asset updated from release ${NEW_TAG} (workflow ${GITHUB_RUN_ID})" || true
+          echo "Attempting to update 'Release_latest' release with asset ${ASSET_PATH}"
+          if gh release view "Release_latest" >/dev/null 2>&1; then
+            echo "Release 'Release_latest' exists - attempting upload (non-destructive)"
+            if gh release upload "Release_latest" "${ASSET_PATH}" --clobber; then
+              echo "Uploaded asset to 'Release_latest' successfully"
+              gh release edit "Release_latest" --notes "Latest asset updated from release ${NEW_TAG} (workflow ${GITHUB_RUN_ID})" || true
             else
-              echo "::warning::Cannot upload to 'Latest' (immutable or permission denied). Manual intervention required to update the 'Latest' release asset."
+              echo "::warning::Cannot upload to 'Release_latest' (permission denied). Manual intervention required to update the 'Release_latest' release asset."
             fi
           else
-            echo "'Latest' release not found — creating it targeting ${DEFAULT_BRANCH} (non-destructive: create only)"
-            if gh release create "Latest" --target "${DEFAULT_BRANCH}" --title "Latest" --notes "Persistent 'Latest' release created by CI (source ${NEW_TAG})" "${ASSET_PATH}"; then
-              echo "'Latest' created and asset uploaded"
+            echo "'Release_latest' release not found — creating it targeting ${DEFAULT_BRANCH} (non-destructive: create only)"
+            if gh release create "Release_latest" --target "${DEFAULT_BRANCH}" --title "Release Latest" --notes "Persistent 'Release_latest' release created by CI (source ${NEW_TAG})" "${ASSET_PATH}"; then
+              echo "'Release_latest' created and asset uploaded"
             else
-              echo "::warning::Failed to create 'Latest' release. Likely permissions or invalid target branch. Manual intervention required."
+              echo "::warning::Failed to create 'Release_latest' release. Likely permissions or invalid target branch. Manual intervention required."
             fi
           fi
 
@@ -240,4 +240,4 @@ jobs:
         run: |
           echo "Release tag created: ${NEW_TAG}"
           echo "Versioned download URL (asset): https://github.com/${GITHUB_REPOSITORY}/releases/download/${NEW_TAG}/${ASSET_NAME}"
-          echo "Persistent Latest download URL: https://github.com/${GITHUB_REPOSITORY}/releases/download/Latest/${ASSET_NAME}"
+          echo "Persistent Release_latest download URL: https://github.com/${GITHUB_REPOSITORY}/releases/download/Release_latest/${ASSET_NAME}"
