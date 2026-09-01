@@ -19,6 +19,7 @@ const RestitutionLayerControl = ({
         <button
           key={layer.id}
           type="button"
+          data-tour={`filter-restitution-layer-${layer.id}`}
           className={`btn mv-restitution-header-control__button ${
             isSelected ? "is-selected" : ""
           }`}
