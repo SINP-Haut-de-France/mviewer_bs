@@ -262,24 +262,48 @@ jobs:
             fi
           fi
 
-      - name: (Simplified) Provide stable "latest" download URL
+      - name: Ensure persistent 'Latest' release exists and upload asset
         env:
           ASSET_PATH: ${{ github.workspace }}/${{ env.ASSET_NAME }}
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
+          DEFAULT_BRANCH: ${{ steps.default_branch.outputs.default_branch }}
           TARGET_REPO: ${{ env.TARGET_REPO }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN_SINP_HDF }}
         run: |
-          echo "Instead of relying on a special immutable tag name, we'll use GitHub's /releases/latest redirect which points to the most recent published release."
-          echo "If you prefer a permanent tag named 'Latest', we can change the workflow but note tags are git refs and may be protected/immutable."
-          echo "Versioned asset URL: https://github.com/${TARGET_REPO}/releases/download/${NEW_TAG}/${{ env.ASSET_NAME }}"
-          echo "Stable latest URL (redirect): https://github.com/${TARGET_REPO}/releases/latest/download/${{ env.ASSET_NAME }}"
+          set -euo pipefail
+          echo "Ensuring 'Latest' release exists in target repo ${TARGET_REPO} and uploading asset"
+          echo "Asset path: ${ASSET_PATH}"
+          if [ ! -f "${ASSET_PATH}" ]; then
+            echo "::error::Asset file not found at ${ASSET_PATH}"
+            exit 1
+          fi
+
+          if gh release view "Latest" --repo "${TARGET_REPO}" >/dev/null 2>&1; then
+            echo "Release 'Latest' exists - uploading asset with --clobber and updating release metadata"
+            if gh release upload "Latest" "${ASSET_PATH}" --repo "${TARGET_REPO}" --clobber; then
+              echo "Uploaded asset to 'Latest' (clobber)"
+            else
+              echo "::warning::Failed to upload asset to 'Latest' (check permissions or immutability)"
+            fi
+            # Update release notes/target to point to DEFAULT_BRANCH and mention the version
+            gh release edit "Latest" --repo "${TARGET_REPO}" --target "${DEFAULT_BRANCH}" --notes "Latest release from ${NEW_TAG} (source: SINP-Haut-de-France/mviewer_bs, workflow run ${GITHUB_RUN_ID})" || true
+          else
+            echo "Release 'Latest' not found - creating it and uploading asset"
+            if gh release create "Latest" --repo "${TARGET_REPO}" --target "${DEFAULT_BRANCH}" --title "Latest" --notes "Latest release from ${NEW_TAG} (source: SINP-Haut-de-France/mviewer_bs, workflow run ${GITHUB_RUN_ID})" --assets "${ASSET_PATH}"; then
+              echo "Release 'Latest' created with asset"
+            else
+              echo "::warning::Failed to create 'Latest' release in target repo (check permissions)."
+            fi
+          fi
 
       - name: Print final URLs and summary
         env:
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
+          TARGET_REPO: ${{ env.TARGET_REPO }}
         run: |
           echo "✅ Source repo tag created: ${NEW_TAG}"
           echo "📌 Source repo URL: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${NEW_TAG}"
           echo ""
-          echo "✅ Target repo release created in: ${{ env.TARGET_REPO }}"
-          echo "📥 Versioned download: https://github.com/${{ env.TARGET_REPO }}/releases/download/${NEW_TAG}/${{ env.ASSET_NAME }}"
-          echo "📥 Latest download (redirect to most recent release): https://github.com/${{ env.TARGET_REPO }}/releases/latest/download/${{ env.ASSET_NAME }}"
+          echo "✅ Target repo release created in: ${TARGET_REPO}"
+          echo "📥 Versioned download: https://github.com/${TARGET_REPO}/releases/download/${NEW_TAG}/${{ env.ASSET_NAME }}"
+          echo "📥 Latest download (tagged 'Latest'): https://github.com/${TARGET_REPO}/releases/download/Latest/${{ env.ASSET_NAME }}"
