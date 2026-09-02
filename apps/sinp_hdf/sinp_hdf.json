@@ -1,6 +1,6 @@
 {
-  "CURRENT_ENV": "PREPROD",
-  "VERSION": "1.0.1.25",
+  "CURRENT_ENV": "DEV",
+  "VERSION": "1.0.1.27",
   "EXTERNAL_LAYERS_OBS": [
     { "id": "Patrinat_APB_France", "label": "APPB" },
     { "id": "Patrinat_APHN_France", "label": "APPHN" },
@@ -22,8 +22,33 @@
     { "id": "Patrinat_ZNIEFF2_France", "label": "ZNIEFF de type II" },
     { "id": "Patrinat_INPG_France", "label": "INPG" }
   ],
+  "QUA": {
+    "GEOSERVER_BASE_URL": "http://localhost:8080/geoserver/qua_sinp",
+    "GEONETWORK_METADATA_BASE_URL": "https://dev.geo2france.fr/datahub/dataset/",
+    "CLICNAT_BASE_URL": "http://localhost:8080/clicnat/sinp/",
+    "CBN_BASE_URL": "http://localhost:8080/cbns/sinp/",
+    "INPN_BASE_URL": "http://localhost:8080/inpn/sinp/"
+  },
   "PREPROD": {
     "GEOSERVER_BASE_URL": "https://dev.geo2france.fr/geoserver/sinp",
+    "GEONETWORK_METADATA_BASE_URL": "https://dev.geo2france.fr/datahub/dataset/",
+    "CLICNAT_BASE_URL": "http://localhost:8080/clicnat/sinp/",
+    "CBN_BASE_URL": "http://localhost:8080/cbns/sinp/",
+    "INPN_BASE_URL": "http://localhost:8080/inpn/sinp/"
+  },
+  "PREPROD_DEV": {
+    "GEOSERVER_BASE_URL": "http://localhost:8080/geoserver/preprod_sinp",
+    "GEONETWORK_METADATA_BASE_URL": "https://dev.geo2france.fr/datahub/dataset/",
+    "CLICNAT_BASE_URL": "http://localhost:8080/clicnat/sinp/",
+    "CBN_BASE_URL": "http://localhost:8080/cbns/sinp/",
+    "INPN_BASE_URL": "http://localhost:8080/inpn/sinp/"
+  },
+  "PROD": {
+    "GEOSERVER_BASE_URL": "https://www.geo2france.fr/geoserver/sinp",
+    "GEONETWORK_METADATA_BASE_URL": "https://dev.geo2france.fr/datahub/dataset/"
+  },
+  "DEV": {
+    "GEOSERVER_BASE_URL": "http://localhost:8080/geoserver/dev_sinp",
     "GEONETWORK_METADATA_BASE_URL": "https://dev.geo2france.fr/datahub/dataset/",
     "CLICNAT_BASE_URL": "http://localhost:8080/clicnat/sinp/",
     "CBN_BASE_URL": "http://localhost:8080/cbns/sinp/",
