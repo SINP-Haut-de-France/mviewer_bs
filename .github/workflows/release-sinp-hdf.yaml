@@ -216,8 +216,10 @@ jobs:
           if [ -z "${GH_TOKEN:-}" ]; then
             echo "::warning::secrets.GH_TOKEN_SINP_HDF is empty - cannot authenticate to target repo. gh commands may fail."
           else
-            echo "Authenticating gh CLI with provided token..."
-            echo "${GH_TOKEN}" | gh auth login --with-token
+            echo "Exporting GH_TOKEN and authenticating gh CLI with provided token..."
+            export GH_TOKEN="${GH_TOKEN}"
+            # login isn't strictly necessary if GH_TOKEN is set, but keep a check
+            echo "${GH_TOKEN}" | gh auth login --with-token || true
             echo "Verifying access to target repo ${TARGET_REPO}..."
             if ! gh repo view "${TARGET_REPO}" >/dev/null 2>&1; then
               echo "::error::Cannot access target repo ${TARGET_REPO} with the provided token. Check secret and token permissions (repo write)."
@@ -233,28 +235,31 @@ jobs:
           ASSET_PATH: ${{ github.workspace }}/${{ env.ASSET_NAME }}
           DEFAULT_BRANCH: ${{ steps.default_branch.outputs.default_branch }}
           GH_TOKEN: ${{ secrets.GH_TOKEN_SINP_HDF }}
+          TARGET_REPO: ${{ env.TARGET_REPO }}
         run: |
           set -euo pipefail
-          echo "Creating or updating release ${NEW_TAG} in target repo ${{ env.TARGET_REPO }}"
+          export GH_TOKEN="${GH_TOKEN}"
+          echo "Creating or updating release ${NEW_TAG} in target repo ${TARGET_REPO}"
           echo "Asset path: ${ASSET_PATH}"
           if [ ! -f "${ASSET_PATH}" ]; then
             echo "::error::Asset file not found at ${ASSET_PATH}"
             exit 1
           fi
           
-          if gh release view "${NEW_TAG}" --repo "${{ env.TARGET_REPO }}" >/dev/null 2>&1; then
+          if gh release view "${NEW_TAG}" --repo "${TARGET_REPO}" >/dev/null 2>&1; then
             echo "Release ${NEW_TAG} exists in target repo - attempting upload"
-            if gh release upload "${NEW_TAG}" "${ASSET_PATH}" --repo "${{ env.TARGET_REPO }}" --clobber; then
+            if gh release upload "${NEW_TAG}" "${ASSET_PATH}" --repo "${TARGET_REPO}" --clobber; then
               echo "Uploaded asset to ${NEW_TAG} in target repo"
             else
               echo "::warning::Upload to ${NEW_TAG} failed (immutable or permission). No destructive action will be taken."
             fi
           else
-            if gh release create "${NEW_TAG}" --repo "${{ env.TARGET_REPO }}" --target "${DEFAULT_BRANCH}" --title "${NEW_TAG}" --notes "Release ${NEW_TAG} (auto-created by CI from SINP-Haut-de-France/mviewer_bs, workflow run ${GITHUB_RUN_ID})" --assets "${ASSET_PATH}"; then
+            echo "Creating release ${NEW_TAG} and uploading asset (using positional asset argument)"
+            if gh release create "${NEW_TAG}" "${ASSET_PATH}" --repo "${TARGET_REPO}" --target "${DEFAULT_BRANCH}" --title "${NEW_TAG}" --notes "Release ${NEW_TAG} (auto-created by CI from SINP-Haut-de-France/mviewer_bs, workflow run ${GITHUB_RUN_ID})"; then
               echo "Release ${NEW_TAG} created with asset in target repo"
             else
               echo "::warning::Failed to create release ${NEW_TAG} in target repo. Attempting upload if release exists"
-              if gh release upload "${NEW_TAG}" "${ASSET_PATH}" --repo "${{ env.TARGET_REPO }}" --clobber; then
+              if gh release upload "${NEW_TAG}" "${ASSET_PATH}" --repo "${TARGET_REPO}" --clobber; then
                 echo "Uploaded asset to ${NEW_TAG} in target repo"
               else
                 echo "::warning::upload still failed. Manual intervention may be required."
@@ -271,6 +276,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN_SINP_HDF }}
         run: |
           set -euo pipefail
+          export GH_TOKEN="${GH_TOKEN}"
           echo "Ensuring 'Latest' release exists in target repo ${TARGET_REPO} and uploading asset"
           echo "Asset path: ${ASSET_PATH}"
           if [ ! -f "${ASSET_PATH}" ]; then
@@ -289,7 +295,7 @@ jobs:
             gh release edit "Latest" --repo "${TARGET_REPO}" --target "${DEFAULT_BRANCH}" --notes "Latest release from ${NEW_TAG} (source: SINP-Haut-de-France/mviewer_bs, workflow run ${GITHUB_RUN_ID})" || true
           else
             echo "Release 'Latest' not found - creating it and uploading asset"
-            if gh release create "Latest" --repo "${TARGET_REPO}" --target "${DEFAULT_BRANCH}" --title "Latest" --notes "Latest release from ${NEW_TAG} (source: SINP-Haut-de-France/mviewer_bs, workflow run ${GITHUB_RUN_ID})" --assets "${ASSET_PATH}"; then
+            if gh release create "Latest" "${ASSET_PATH}" --repo "${TARGET_REPO}" --target "${DEFAULT_BRANCH}" --title "Latest" --notes "Latest release from ${NEW_TAG} (source: SINP-Haut-de-France/mviewer_bs, workflow run ${GITHUB_RUN_ID})"; then
               echo "Release 'Latest' created with asset"
             else
               echo "::warning::Failed to create 'Latest' release in target repo (check permissions)."
