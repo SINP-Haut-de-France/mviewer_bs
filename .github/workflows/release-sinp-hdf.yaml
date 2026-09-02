@@ -12,7 +12,6 @@ permissions:
 
 env:
   ASSET_NAME: sinp_hdf.tar.gz
-  TARGET_REPO: sinp-hdf/sinp_hdf_front
 
 jobs:
   package-and-release:
@@ -207,109 +206,82 @@ jobs:
           git tag -a "${NEW_TAG}" -m "Release ${NEW_TAG} (created by CI run ${GITHUB_RUN_ID})"
           git push origin "refs/tags/${NEW_TAG}"
 
-      - name: Authenticate gh CLI for target repo
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN_SINP_HDF }}
-          TARGET_REPO: ${{ env.TARGET_REPO }}
-        run: |
-          set -euo pipefail
-          if [ -z "${GH_TOKEN:-}" ]; then
-            echo "::warning::secrets.GH_TOKEN_SINP_HDF is empty - cannot authenticate to target repo. gh commands may fail."
-          else
-            echo "Exporting GH_TOKEN and authenticating gh CLI with provided token..."
-            export GH_TOKEN="${GH_TOKEN}"
-            # login isn't strictly necessary if GH_TOKEN is set, but keep a check
-            echo "${GH_TOKEN}" | gh auth login --with-token || true
-            echo "Verifying access to target repo ${TARGET_REPO}..."
-            if ! gh repo view "${TARGET_REPO}" >/dev/null 2>&1; then
-              echo "::error::Cannot access target repo ${TARGET_REPO} with the provided token. Check secret and token permissions (repo write)."
-              gh repo view "${TARGET_REPO}" || true
-              exit 1
-            fi
-            echo "gh authenticated and target repo reachable"
-          fi
-
-      - name: Create or update versioned release in target repo
+      - name: Create or update release in source repo
         env:
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
           ASSET_PATH: ${{ github.workspace }}/${{ env.ASSET_NAME }}
           DEFAULT_BRANCH: ${{ steps.default_branch.outputs.default_branch }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN_SINP_HDF }}
-          TARGET_REPO: ${{ env.TARGET_REPO }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           export GH_TOKEN="${GH_TOKEN}"
-          echo "Creating or updating release ${NEW_TAG} in target repo ${TARGET_REPO}"
+          echo "Creating or updating release ${NEW_TAG} in source repository ${GITHUB_REPOSITORY}"
           echo "Asset path: ${ASSET_PATH}"
           if [ ! -f "${ASSET_PATH}" ]; then
             echo "::error::Asset file not found at ${ASSET_PATH}"
             exit 1
           fi
-          
-          if gh release view "${NEW_TAG}" --repo "${TARGET_REPO}" >/dev/null 2>&1; then
-            echo "Release ${NEW_TAG} exists in target repo - attempting upload"
-            if gh release upload "${NEW_TAG}" "${ASSET_PATH}" --repo "${TARGET_REPO}" --clobber; then
-              echo "Uploaded asset to ${NEW_TAG} in target repo"
+
+          if gh release view "${NEW_TAG}" >/dev/null 2>&1; then
+            echo "Release ${NEW_TAG} exists - attempting upload"
+            if gh release upload "${NEW_TAG}" "${ASSET_PATH}" --clobber; then
+              echo "Uploaded asset to ${NEW_TAG} in source repo"
             else
               echo "::warning::Upload to ${NEW_TAG} failed (immutable or permission). No destructive action will be taken."
             fi
           else
-            echo "Creating release ${NEW_TAG} and uploading asset (using positional asset argument)"
-            if gh release create "${NEW_TAG}" "${ASSET_PATH}" --repo "${TARGET_REPO}" --target "${DEFAULT_BRANCH}" --title "${NEW_TAG}" --notes "Release ${NEW_TAG} (auto-created by CI from SINP-Haut-de-France/mviewer_bs, workflow run ${GITHUB_RUN_ID})"; then
-              echo "Release ${NEW_TAG} created with asset in target repo"
+            echo "Creating release ${NEW_TAG} and uploading asset"
+            if gh release create "${NEW_TAG}" "${ASSET_PATH}" --target "${DEFAULT_BRANCH}" --title "${NEW_TAG}" --notes "Release ${NEW_TAG} (auto-created by CI from SINP-Haut-de-France/mviewer_bs, workflow run ${GITHUB_RUN_ID})" --repo "${GITHUB_REPOSITORY}"; then
+              echo "Release ${NEW_TAG} created with asset in source repo"
             else
-              echo "::warning::Failed to create release ${NEW_TAG} in target repo. Attempting upload if release exists"
-              if gh release upload "${NEW_TAG}" "${ASSET_PATH}" --repo "${TARGET_REPO}" --clobber; then
-                echo "Uploaded asset to ${NEW_TAG} in target repo"
+              echo "::warning::Failed to create release ${NEW_TAG} in source repo. Attempting upload if release exists"
+              if gh release upload "${NEW_TAG}" "${ASSET_PATH}" --clobber; then
+                echo "Uploaded asset to ${NEW_TAG} in source repo"
               else
                 echo "::warning::upload still failed. Manual intervention may be required."
               fi
             fi
           fi
 
-      - name: Ensure persistent 'Latest' release exists and upload asset
+      - name: Ensure persistent 'Latest' release exists and upload asset (source repo)
         env:
           ASSET_PATH: ${{ github.workspace }}/${{ env.ASSET_NAME }}
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
           DEFAULT_BRANCH: ${{ steps.default_branch.outputs.default_branch }}
-          TARGET_REPO: ${{ env.TARGET_REPO }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN_SINP_HDF }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           export GH_TOKEN="${GH_TOKEN}"
-          echo "Ensuring 'Latest' release exists in target repo ${TARGET_REPO} and uploading asset"
+          echo "Ensuring 'Latest' release exists in source repo ${GITHUB_REPOSITORY} and uploading asset"
           echo "Asset path: ${ASSET_PATH}"
           if [ ! -f "${ASSET_PATH}" ]; then
             echo "::error::Asset file not found at ${ASSET_PATH}"
             exit 1
           fi
 
-          if gh release view "Latest" --repo "${TARGET_REPO}" >/dev/null 2>&1; then
+          if gh release view "Latest" >/dev/null 2>&1; then
             echo "Release 'Latest' exists - uploading asset with --clobber and updating release metadata"
-            if gh release upload "Latest" "${ASSET_PATH}" --repo "${TARGET_REPO}" --clobber; then
+            if gh release upload "Latest" "${ASSET_PATH}" --clobber; then
               echo "Uploaded asset to 'Latest' (clobber)"
             else
               echo "::warning::Failed to upload asset to 'Latest' (check permissions or immutability)"
             fi
-            # Update release notes/target to point to DEFAULT_BRANCH and mention the version
-            gh release edit "Latest" --repo "${TARGET_REPO}" --target "${DEFAULT_BRANCH}" --notes "Latest release from ${NEW_TAG} (source: SINP-Haut-de-France/mviewer_bs, workflow run ${GITHUB_RUN_ID})" || true
+            gh release edit "Latest" --target "${DEFAULT_BRANCH}" --notes "Latest release from ${NEW_TAG} (source: ${GITHUB_REPOSITORY}, workflow run ${GITHUB_RUN_ID})" --repo "${GITHUB_REPOSITORY}" || true
           else
             echo "Release 'Latest' not found - creating it and uploading asset"
-            if gh release create "Latest" "${ASSET_PATH}" --repo "${TARGET_REPO}" --target "${DEFAULT_BRANCH}" --title "Latest" --notes "Latest release from ${NEW_TAG} (source: SINP-Haut-de-France/mviewer_bs, workflow run ${GITHUB_RUN_ID})"; then
+            if gh release create "Latest" "${ASSET_PATH}" --target "${DEFAULT_BRANCH}" --title "Latest" --notes "Latest release from ${NEW_TAG} (source: ${GITHUB_REPOSITORY}, workflow run ${GITHUB_RUN_ID})" --repo "${GITHUB_REPOSITORY}"; then
               echo "Release 'Latest' created with asset"
             else
-              echo "::warning::Failed to create 'Latest' release in target repo (check permissions)."
+              echo "::warning::Failed to create 'Latest' release in source repo (check permissions)."
             fi
           fi
 
       - name: Print final URLs and summary
         env:
           NEW_TAG: ${{ steps.compute_tag.outputs.tag }}
-          TARGET_REPO: ${{ env.TARGET_REPO }}
         run: |
           echo "✅ Source repo tag created: ${NEW_TAG}"
           echo "📌 Source repo URL: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${NEW_TAG}"
           echo ""
-          echo "✅ Target repo release created in: ${TARGET_REPO}"
-          echo "📥 Versioned download: https://github.com/${TARGET_REPO}/releases/download/${NEW_TAG}/${{ env.ASSET_NAME }}"
-          echo "📥 Latest download (tagged 'Latest'): https://github.com/${TARGET_REPO}/releases/download/Latest/${{ env.ASSET_NAME }}"
+          echo "📥 Versioned download: https://github.com/${GITHUB_REPOSITORY}/releases/download/${NEW_TAG}/${{ env.ASSET_NAME }}"
+          echo "📥 Latest download (tagged 'Latest'): https://github.com/${GITHUB_REPOSITORY}/releases/download/Latest/${{ env.ASSET_NAME }}"
