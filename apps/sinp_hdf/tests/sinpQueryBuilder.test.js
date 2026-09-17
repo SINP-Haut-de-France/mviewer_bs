@@ -1,6 +1,11 @@
 // Test unitaire pour sinpQueryBuilder avec gestion des tableaux cd_ref
 // Ajouter ce test dans votre suite de tests
 
+const sinpQueryBuilder =
+  typeof window !== "undefined" && window.sinpQueryBuilder
+    ? window.sinpQueryBuilder
+    : require("../custom_scripts/sinpQueryBuilder");
+
 describe("sinpQueryBuilder - Gestion des tableaux cd_ref", () => {
   test("Tableau cd_ref vide → CD_REF vide dans VIEWPARAMS", () => {
     const params = {
@@ -147,7 +152,7 @@ describe("Cas d'usage réels SINP", () => {
     const result = sinpQueryBuilder.buildRequestOptions(params, "v_synthese_commune");
 
     // Doit créer une requête sans filtre communal/départemental
-    expect(result.CQL_FILTER).toBe(""); // Pas de CQL_FILTER
+    expect(result.CQL_FILTER || "").toBe(""); // Pas de CQL_FILTER
     expect(result.VIEWPARAMS).toContain("CD_REF:2440,2442");
   });
 
@@ -539,5 +544,84 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
     expect(result.TYPENAME).toBe("sinp_diffusion:v_synthese_commune");
     expect(result.CQL_FILTER).toBe("code_insee IN ('62225') AND code_dpt IN ('62')");
     expect(result.VIEWPARAMS).toContain("CD_REF:2440");
+  });
+
+  test("fn_get_stats, fn_get_obs_detaillee et fn_get_metadonnee supportent la signature enrichie complète", () => {
+    const params = {
+      targetLocCode: 2,
+      geometryGeojson: JSON.stringify({ type: "Point", coordinates: [2.3, 48.8] }),
+      precision: 10,
+      buffer: 100,
+      tauxRecouvrement: 0.5,
+      dateDeb: "2020-01-01",
+      dateFin: "2025-12-31",
+      departements: ["62", "59"],
+      communes: ["62041"],
+      epcis: ["200069193"],
+      mailles: ["E069N692"],
+      taxons: [2440, 2442],
+    };
+
+    const statsResult = sinpQueryBuilder.buildRequestOptions(params, "fn_get_stats");
+    expect(statsResult.TYPENAME).toBe("sinp_diffusion:fn_get_stats");
+    expect(statsResult.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
+    expect(statsResult.VIEWPARAMS).toContain('GEOMETRY_GEOJSON:{"type":"Point","coordinates":[2.3,48.8]}');
+    expect(statsResult.VIEWPARAMS).toContain("PRECISION:10");
+    expect(statsResult.VIEWPARAMS).toContain("BUFFER:100");
+    expect(statsResult.VIEWPARAMS).toContain("TAUX_RECOUVREMENT:0.5");
+    expect(statsResult.VIEWPARAMS).toContain("DATE_DEB:2020-01-01");
+    expect(statsResult.VIEWPARAMS).toContain("DATE_FIN:2025-12-31");
+    expect(statsResult.VIEWPARAMS).toContain("DEPT_IDS:62,59");
+    expect(statsResult.VIEWPARAMS).toContain("CODE_INSEES:62041");
+    expect(statsResult.VIEWPARAMS).toContain("EPCI_IDS:200069193");
+    expect(statsResult.VIEWPARAMS).toContain("CODE_MAILLES:E069N692");
+    expect(statsResult.VIEWPARAMS).toContain("CD_REF:2440,2442");
+
+    const metaResult = sinpQueryBuilder.buildRequestOptions(params, "fn_get_metadonnees");
+    expect(metaResult.TYPENAME).toBe("sinp_diffusion:fn_get_metadonnees");
+    expect(metaResult.VIEWPARAMS).toContain("PRECISION:10");
+    expect(metaResult.VIEWPARAMS).toContain("BUFFER:100");
+    expect(metaResult.VIEWPARAMS).toContain("TAUX_RECOUVREMENT:0.5");
+    expect(metaResult.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
+
+    const metaPluralResult = sinpQueryBuilder.buildRequestOptions(params, "fn_get_metadonnees");
+    expect(metaPluralResult.TYPENAME).toBe("sinp_diffusion:fn_get_metadonnees");
+
+    const detailsResult = sinpQueryBuilder.buildRequestOptions(params, "fn_get_obs_detaillee");
+    expect(detailsResult.TYPENAME).toBe("sinp_diffusion:fn_get_obs_detaillee");
+    expect(detailsResult.VIEWPARAMS).toContain("PRECISION:10");
+    expect(detailsResult.VIEWPARAMS).toContain("BUFFER:100");
+    expect(detailsResult.VIEWPARAMS).toContain("TAUX_RECOUVREMENT:0.5");
+  });
+
+  test("support des variantes snake_case pour les nouveaux paramètres", () => {
+    const params = {
+      target_loc_code: "2",
+      geometry_geojson: '{"type":"Point","coordinates":[2.3,48.8]}',
+      precision: "50",
+      buffer: "200",
+      taux_recouvrement: "0.8",
+      date_deb: "2021-01-01",
+      date_fin: "2024-12-31",
+      dept_ids: ["59"],
+      code_insees: ["59350"],
+      epci_ids: ["200069193"],
+      code_mailles: ["E069N692"],
+      grp_ids: ["13", "15"],
+    };
+
+    const result = sinpQueryBuilder.buildRequestOptions(params, "fn_get_stats");
+    expect(result.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
+    expect(result.VIEWPARAMS).toContain('GEOMETRY_GEOJSON:{"type":"Point","coordinates":[2.3,48.8]}');
+    expect(result.VIEWPARAMS).toContain("PRECISION:50");
+    expect(result.VIEWPARAMS).toContain("BUFFER:200");
+    expect(result.VIEWPARAMS).toContain("TAUX_RECOUVREMENT:0.8");
+    expect(result.VIEWPARAMS).toContain("DATE_DEB:2021-01-01");
+    expect(result.VIEWPARAMS).toContain("DATE_FIN:2024-12-31");
+    expect(result.VIEWPARAMS).toContain("DEPT_IDS:59");
+    expect(result.VIEWPARAMS).toContain("CODE_INSEES:59350");
+    expect(result.VIEWPARAMS).toContain("EPCI_IDS:200069193");
+    expect(result.VIEWPARAMS).toContain("CODE_MAILLES:E069N692");
+    expect(result.VIEWPARAMS).toContain("GRP_IDS:13,15");
   });
 });

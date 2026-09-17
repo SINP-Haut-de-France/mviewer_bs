@@ -1,4 +1,13 @@
-window.sinpQueryBuilder = (function () {
+const _root =
+  typeof window !== "undefined"
+    ? window
+    : typeof globalThis !== "undefined"
+    ? globalThis
+    : typeof global !== "undefined"
+    ? global
+    : this;
+
+_root.sinpQueryBuilder = (function () {
   /**
    * Échappe les valeurs pour CQL (protection contre l'injection)
    * @param {*} value - Valeur à échapper
@@ -380,7 +389,7 @@ window.sinpQueryBuilder = (function () {
     return String(viewParams)
       .split(";")
       .map((entry) => entry.trim())
-      .filter((entry) => entry !== "" && !entry.endsWith(":"))
+      .filter((entry) => entry !== "")
       .join(";");
   };
 
@@ -418,7 +427,13 @@ window.sinpQueryBuilder = (function () {
   };
 
   const _serializeViewParam = function (paramKey, value, config = {}) {
-    const listSeparatedParams = ["GRP_IDS", "DEPT_IDS", "CODE_INSEES", "CODE_MAILLES"];
+    const listSeparatedParams = [
+      "GRP_IDS",
+      "DEPT_IDS",
+      "CODE_INSEES",
+      "CODE_MAILLES",
+      "EPCI_IDS",
+    ];
     const { separator = null, omitEmpty = false, validationPattern = null } = config;
 
     if (separator) {
@@ -456,57 +471,81 @@ window.sinpQueryBuilder = (function () {
   };
 
   const _buildSharedSearchViewParams = function ({
-    targetLocCodeSource = null,
+    targetLocCodeSource = ["targetLocCode", "target_loc_code", "TARGET_LOC_CODE"],
     includeEpciIds = true,
   } = {}) {
     const sharedViewParams = {
-      DATE_DEB: "dateDeb",
-      DATE_FIN: "dateFin",
-      DEPT_IDS: _buildListSeparatedViewParamConfig("departements", {
+      DATE_DEB: {
+        source: ["dateDeb", "date_deb", "DATE_DEB"],
         omitEmpty: true,
-      }),
-      CODE_INSEES: _buildListSeparatedViewParamConfig("communes", {
+      },
+      DATE_FIN: {
+        source: ["dateFin", "date_fin", "DATE_FIN"],
         omitEmpty: true,
-      }),
-      CODE_MAILLES: _buildListSeparatedViewParamConfig("mailles", {
-        omitEmpty: true,
-      }),
-      CD_REF: _buildListSeparatedViewParamConfig("taxons", {
-        omitEmpty: true,
-      }),
-      GRP_IDS: _buildListSeparatedViewParamConfig("groupes", {
-        omitEmpty: true,
-      }),
+      },
+      DEPT_IDS: _buildListSeparatedViewParamConfig(
+        ["departements", "deptIds", "dept_ids", "DEPT_IDS"],
+        { omitEmpty: true }
+      ),
+      CODE_INSEES: _buildListSeparatedViewParamConfig(
+        ["communes", "codeInsees", "code_insees", "CODE_INSEES"],
+        { omitEmpty: true }
+      ),
+      CODE_MAILLES: _buildListSeparatedViewParamConfig(
+        ["mailles", "codeMailles", "code_mailles", "CODE_MAILLES"],
+        { omitEmpty: true }
+      ),
+      CD_REF: _buildListSeparatedViewParamConfig(
+        ["taxons", "cdRef", "cd_ref", "CD_REF"],
+        { omitEmpty: true }
+      ),
+      GRP_IDS: _buildListSeparatedViewParamConfig(
+        ["groupes", "grpIds", "grp_ids", "GRP_IDS"],
+        { omitEmpty: true }
+      ),
     };
 
     if (includeEpciIds) {
-      sharedViewParams.EPCI_IDS = _buildListSeparatedViewParamConfig("epcis", {
-        omitEmpty: true,
-      });
+      sharedViewParams.EPCI_IDS = _buildListSeparatedViewParamConfig(
+        ["epcis", "epciIds", "epci_ids", "EPCI_IDS"],
+        { omitEmpty: true }
+      );
     }
 
     if (targetLocCodeSource) {
       sharedViewParams.TARGET_LOC_CODE = {
         source: targetLocCodeSource,
+        omitEmpty: true,
       };
     }
+
+    sharedViewParams.GEOMETRY_GEOJSON = {
+      source: [
+        "geometryGeojson",
+        "geometry_geojson",
+        "GEOMETRY_GEOJSON",
+        "geometry",
+      ],
+      omitEmpty: true,
+    };
+    sharedViewParams.PRECISION = {
+      source: ["precision", "PRECISION"],
+      omitEmpty: true,
+    };
+    sharedViewParams.BUFFER = {
+      source: ["buffer", "BUFFER"],
+      omitEmpty: true,
+    };
+    sharedViewParams.TAUX_RECOUVREMENT = {
+      source: ["tauxRecouvrement", "taux_recouvrement", "TAUX_RECOUVREMENT"],
+      omitEmpty: true,
+    };
 
     return sharedViewParams;
   };
 
   const _buildGeometrySearchViewParams = function () {
-    return {
-      GEOMETRY_GEOJSON: "geometryGeojson",
-      DATE_DEB: "dateDeb",
-      DATE_FIN: "dateFin",
-      TARGET_LOC_CODE: "targetLocCode",
-      CD_REF: _buildListSeparatedViewParamConfig("taxons", {
-        omitEmpty: true,
-      }),
-      GRP_IDS: _buildListSeparatedViewParamConfig("groupes", {
-        omitEmpty: true,
-      }),
-    };
+    return _buildSharedSearchViewParams();
   };
 
   const _viewConfig = {
@@ -576,32 +615,22 @@ window.sinpQueryBuilder = (function () {
     fn_get_stats: {
       cql_filters: {},
       view_params: _buildSharedSearchViewParams({
-        targetLocCodeSource: "targetLocCode",
+        targetLocCodeSource: ["targetLocCode", "target_loc_code", "TARGET_LOC_CODE"],
       }),
     },
 
     fn_get_obs_detaillee: {
       cql_filters: {},
       view_params: _buildSharedSearchViewParams({
-        targetLocCodeSource: "targetLocCode",
+        targetLocCodeSource: ["targetLocCode", "target_loc_code", "TARGET_LOC_CODE"],
       }),
     },
 
     fn_get_metadonnees: {
       cql_filters: {},
       view_params: _buildSharedSearchViewParams({
-        targetLocCodeSource: "targetLocCode",
+        targetLocCodeSource: ["targetLocCode", "target_loc_code", "TARGET_LOC_CODE"],
       }),
-    },
-
-    fn_get_obs_detaillee_for_geometry: {
-      cql_filters: {},
-      view_params: _buildGeometrySearchViewParams(),
-    },
-
-    fn_get_metadonnees_for_geometry: {
-      cql_filters: {},
-      view_params: _buildGeometrySearchViewParams(),
     },
   };
 
@@ -658,9 +687,19 @@ window.sinpQueryBuilder = (function () {
         .map(([paramKey, paramValue]) => {
           const viewParamConfig =
             typeof paramValue === "string" ? { source: paramValue } : paramValue;
+          const sources = Array.isArray(viewParamConfig.source)
+            ? viewParamConfig.source
+            : [viewParamConfig.source];
+          let rawValue;
+          for (const src of sources) {
+            if (normalizedParams[src] !== undefined && normalizedParams[src] !== null) {
+              rawValue = normalizedParams[src];
+              break;
+            }
+          }
           const serializedValue = _serializeViewParam(
             paramKey,
-            normalizedParams[viewParamConfig.source],
+            rawValue,
             viewParamConfig
           );
           if (serializedValue === null) {
@@ -678,10 +717,16 @@ window.sinpQueryBuilder = (function () {
     return result;
   };
 
-  return {
+  const api = {
     buildRequestOptions: _buildRequestOptions,
     normalizeViewName: _normalizeViewName,
     qualifiedTypeNamePattern: QUALIFIED_TYPENAME_PATTERN,
     sanitizeViewParamsString: _sanitizeViewParamsString,
   };
+
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = api;
+  }
+
+  return api;
 })();

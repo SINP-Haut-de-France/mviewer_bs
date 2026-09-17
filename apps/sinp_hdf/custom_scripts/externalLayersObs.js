@@ -643,11 +643,11 @@ window.externalLayersObs = (function () {
     };
     const detailsOptions = window.sinpQueryBuilder.buildRequestOptions(
       requestParams,
-      "fn_get_obs_detaillee_for_geometry"
+      "fn_get_obs_detaillee"
     );
     const metadataOptions = window.sinpQueryBuilder.buildRequestOptions(
       requestParams,
-      "fn_get_metadonnees_for_geometry"
+      "fn_get_metadonnees"
     );
     const normalizedUid = _normalizeFeatureUid(featureUid);
     const requestId = ++requestSequence;
