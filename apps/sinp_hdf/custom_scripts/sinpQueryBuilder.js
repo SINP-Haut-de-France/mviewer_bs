@@ -532,8 +532,8 @@ _root.sinpQueryBuilder = (function () {
       source: ["precision", "PRECISION"],
       omitEmpty: true,
     };
-    sharedViewParams.BUFFER = {
-      source: ["buffer", "BUFFER"],
+    sharedViewParams.BUFFER_M = {
+      source: ["buffer", "BUFFER_M"],
       omitEmpty: true,
     };
     sharedViewParams.TAUX_RECOUVREMENT = {

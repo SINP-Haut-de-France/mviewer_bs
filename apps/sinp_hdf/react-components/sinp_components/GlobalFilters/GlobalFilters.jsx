@@ -11,6 +11,7 @@ import GlobalFiltersUI from "./GlobalFiltersUI";
 import { format } from "date-fns";
 import useWFSCache from "../../hooks/useWFSCache";
 import useRestoreFromCache from "../../hooks/useRestoreFromCache";
+import useFilterLabels from "../../hooks/useFilterLabels";
 import {
   FILTER_PROFILES,
   isFilterVisible,
@@ -19,6 +20,12 @@ import {
   resolveSearchLayerId,
   getVisibleEnvironmentalLayers,
   subscribeToEnvironmentalLayerVisibility,
+  expandEnvironmentalLayersMenu,
+  DEFAULT_PRECISION_LEVEL,
+  DEFAULT_COVERAGE_RATE,
+  PRECISION_LEVELS,
+  PRECISION_LEVEL_VALUES,
+  BUFFER_DISTANCE_METERS,
 } from "../../configs/filtersConfig";
 
 const GlobalFiltersComponent = (
@@ -54,6 +61,7 @@ const GlobalFiltersComponent = (
     return {
       filteredDepartments: [],
       filteredCommunes: [],
+      filteredEpcis: [],
       filteredTaxons: [], // Now will store complete objects, not just IDs
       filteredGroupes: [], // IDs entiers des groupes taxonomiques sélectionnés
       dateDeb: format(
@@ -61,10 +69,15 @@ const GlobalFiltersComponent = (
         "yyyy-MM-dd"
       ),
       dateFin: format(new Date(), "yyyy-MM-dd"),
+      // Contexte de recherche : saisie (département, commune, EPCI) ou sélection de zonage
+      locationInputMode: true,
       selectionMode: false,
       selectedSelectionLayerId: null,
       selectionFeatureUid: null,
       selectionLabel: null,
+      precisionLevel: DEFAULT_PRECISION_LEVEL,
+      coverageRate: DEFAULT_COVERAGE_RATE,
+      useBuffer: true,
     };
   }, []);
 
@@ -76,6 +89,9 @@ const GlobalFiltersComponent = (
   const initialFilterState = {
     ...defaultFilters,
     ...(initialFilters || {}),
+    locationInputMode: selectionContext
+      ? false
+      : initialFilters?.locationInputMode ?? defaultFilters.locationInputMode,
     selectionMode: Boolean(selectionContext),
     selectedSelectionLayerId:
       selectionContext?.layerId ||
@@ -139,6 +155,10 @@ const GlobalFiltersComponent = (
 
     updateFilters((prev) => ({
       ...prev,
+      locationInputMode: false,
+      filteredDepartments: [],
+      filteredCommunes: [],
+      filteredEpcis: [],
       selectionMode: true,
       selectedSelectionLayerId: selectionContext.layerId,
       selectionFeatureUid: selectionContext.featureUid,
@@ -173,6 +193,7 @@ const GlobalFiltersComponent = (
     setSelectedRestitutionLayerId(fallbackLayerId);
     updateFilters((prev) => ({
       ...prev,
+      locationInputMode: true,
       selectionMode: false,
       selectedSelectionLayerId: null,
       selectionFeatureUid: null,
@@ -219,6 +240,7 @@ const GlobalFiltersComponent = (
       showDate: isFilterVisible(FILTER_TYPES.DATE, activeProfile),
       showDepartment: isFilterVisible(FILTER_TYPES.DEPARTMENT, activeProfile),
       showCommune: isFilterVisible(FILTER_TYPES.COMMUNE, activeProfile),
+      showEpci: isFilterVisible(FILTER_TYPES.EPCI, activeProfile),
       showTaxonomicGroup: isFilterVisible(FILTER_TYPES.TAXONOMIC_GROUP, activeProfile),
     };
 
@@ -342,6 +364,19 @@ const GlobalFiltersComponent = (
     });
   }, [updateFilters]);
 
+  const handleEpciChange = useCallback((epcis) => {
+    const selectedCodes = Array.isArray(epcis)
+      ? epcis.map((epci) => epci.code_epci || epci)
+      : epcis
+      ? [epcis.code_epci || epcis]
+      : [];
+
+    updateFilters((prev) => ({
+      ...prev,
+      filteredEpcis: selectedCodes,
+    }));
+  }, [updateFilters]);
+
   const handleGrpChange = useCallback((selectedNodes) => {
     console.log("🌳 Nœuds sélectionnés (deepest only):", selectedNodes);
 
@@ -372,13 +407,15 @@ const GlobalFiltersComponent = (
         window.externalLayersObs?.setSelectionActive?.(false, { locked: false });
       }
 
-      // When enabling selection-based search, clear any explicit department/commune filters
+      // When enabling selection-based search, clear any explicit department/commune/EPCI filters
       updateFilters((prev) => ({
         ...prev,
         selectionMode: enabled,
+        locationInputMode: enabled ? false : prev.locationInputMode,
         restitutionLayerId,
         filteredDepartments: enabled ? [] : prev.filteredDepartments,
         filteredCommunes: enabled ? [] : prev.filteredCommunes,
+        filteredEpcis: enabled ? [] : prev.filteredEpcis,
         ...(enabled
           ? {
               selectedSelectionLayerId: prev.selectedSelectionLayerId || null,
@@ -394,6 +431,8 @@ const GlobalFiltersComponent = (
 
       if (enabled) {
         window.externalLayersObs?.setSelectionActive?.(false, { locked: false });
+        // Rend les couches de zonage accessibles sans chercher dans le menu
+        expandEnvironmentalLayersMenu();
         window.dispatchEvent(new CustomEvent("sinp:selection-mode-enabled"));
         return;
       }
@@ -401,6 +440,50 @@ const GlobalFiltersComponent = (
       window.externalLayersObs?.setSelectionActive?.(false, { locked: false });
     },
     [activeLayerId, updateFilters]
+  );
+
+  const handleLocationInputModeChange = useCallback(
+    (enabled) => {
+      if (enabled && filtersRef.current.selectionMode) {
+        handleSelectionModeChange(false);
+      }
+
+      // Décocher la saisie masque les champs : on vide leurs valeurs pour qu'elles
+      // ne restent pas appliquées à la recherche sans être visibles.
+      updateFilters((prev) => ({
+        ...prev,
+        locationInputMode: enabled,
+        ...(enabled
+          ? {}
+          : {
+              filteredDepartments: [],
+              filteredCommunes: [],
+              filteredEpcis: [],
+            }),
+      }));
+    },
+    [handleSelectionModeChange, updateFilters]
+  );
+
+  const handlePrecisionLevelChange = useCallback(
+    (precisionLevel) => {
+      updateFilters((prev) => ({ ...prev, precisionLevel }));
+    },
+    [updateFilters]
+  );
+
+  const handleCoverageRateChange = useCallback(
+    (coverageRate) => {
+      updateFilters((prev) => ({ ...prev, coverageRate }));
+    },
+    [updateFilters]
+  );
+
+  const handleUseBufferChange = useCallback(
+    (useBuffer) => {
+      updateFilters((prev) => ({ ...prev, useBuffer }));
+    },
+    [updateFilters]
   );
 
   const handleSelectionLayerChange = useCallback(
@@ -478,11 +561,26 @@ const GlobalFiltersComponent = (
         (filtersSnapshot.filteredCommunes || []).length > 0 && {
           communes: filtersSnapshot.filteredCommunes,
         }),
+      ...(filterVisibility.showEpci &&
+        !filtersSnapshot.selectionMode &&
+        (filtersSnapshot.filteredEpcis || []).length > 0 && {
+          epcis: filtersSnapshot.filteredEpcis,
+        }),
       ...(filterVisibility.showTaxonomicGroup &&
         taxonsForURL.length === 0 &&
         (filtersSnapshot.filteredGroupes || []).length > 0 && {
           groupes: filtersSnapshot.filteredGroupes, // Envoyer directement les IDs sélectionnés
         }),
+      // Niveau de précision de la recherche géométrique (toujours transmis,
+      // même hors recherche par sélection, pour rester cohérent avec la
+      // signature attendue par les fonctions PostgreSQL côté GeoServer).
+      precision:
+        PRECISION_LEVEL_VALUES[filtersSnapshot.precisionLevel] ||
+        PRECISION_LEVEL_VALUES[DEFAULT_PRECISION_LEVEL],
+      buffer: filtersSnapshot.useBuffer ? BUFFER_DISTANCE_METERS : 0,
+      ...(filtersSnapshot.precisionLevel === "balanced" && {
+        tauxRecouvrement: filtersSnapshot.coverageRate,
+      }),
     };
   }, [filterVisibility]);
 
@@ -632,6 +730,7 @@ const GlobalFiltersComponent = (
     const hasNonEmptyArrays =
       filters.filteredDepartments?.length > 0 ||
       filters.filteredCommunes?.length > 0 ||
+      filters.filteredEpcis?.length > 0 ||
       filters.filteredTaxons?.length > 0 ||
       filters.filteredGroupes?.length > 0;
 
@@ -647,7 +746,8 @@ const GlobalFiltersComponent = (
     const standardLocationCount = filters.selectionMode
       ? 0
       : (filters.filteredDepartments || []).length +
-        (filters.filteredCommunes || []).length;
+        (filters.filteredCommunes || []).length +
+        (filters.filteredEpcis || []).length;
     const dateCount =
       filters.dateDeb !== defaultFilters.dateDeb ||
       filters.dateFin !== defaultFilters.dateFin
@@ -663,6 +763,77 @@ const GlobalFiltersComponent = (
     );
   }, [defaultFilters, filters, hasValidSelection]);
 
+  const filterLabels = useFilterLabels({
+    departments: !filters.selectionMode && filters.filteredDepartments?.length > 0,
+    communes: !filters.selectionMode && filters.filteredCommunes?.length > 0,
+    epcis: !filters.selectionMode && filters.filteredEpcis?.length > 0,
+    groupes: filters.filteredGroupes?.length > 0,
+  });
+
+  // Tags récapitulatifs des filtres sélectionnés (affichés dans la barre d'actions)
+  const filterTags = useMemo(() => {
+    const tags = [];
+    const addTags = (type, icon, values, labelsMap, fallback) =>
+      (values || []).forEach((value) =>
+        tags.push({
+          id: `${type}-${value}`,
+          icon,
+          label: labelsMap?.get(String(value)) || fallback(value),
+        })
+      );
+
+    if (hasSelectionChosen) {
+      tags.push({
+        id: "selection",
+        icon: "fa-draw-polygon",
+        label: filters.selectionLabel || "Zonage sélectionné",
+      });
+    } else {
+      addTags("dpt", "fa-map", filters.filteredDepartments, filterLabels.departments, (code) => code);
+      addTags("com", "fa-map-pin", filters.filteredCommunes, filterLabels.communes, (code) => code);
+      addTags("epci", "fa-city", filters.filteredEpcis, filterLabels.epcis, (code) => code);
+    }
+
+    addTags("grp", "fa-sitemap", filters.filteredGroupes, filterLabels.groupes, (id) => `Groupe ${id}`);
+    (filters.filteredTaxons || []).forEach((taxon) => {
+      const label =
+        typeof taxon === "object"
+          ? taxon.nom_vern || taxon.nom_complet || taxon.cd_ref
+          : taxon;
+      tags.push({ id: `taxon-${taxon?.cd_ref ?? taxon}`, icon: "fa-leaf", label });
+    });
+
+    if (
+      filters.dateDeb !== defaultFilters.dateDeb ||
+      filters.dateFin !== defaultFilters.dateFin
+    ) {
+      const toFrench = (isoDate) => (isoDate ? isoDate.split("-").reverse().join("/") : "…");
+      tags.push({
+        id: "dates",
+        icon: "fa-calendar",
+        label: `${toFrench(filters.dateDeb)} → ${toFrench(filters.dateFin)}`,
+      });
+    }
+
+    // Le niveau de précision (et le taux de recouvrement associé) n'est pas un
+    // filtre à proprement parler, mais on l'affiche pour rappel dans la barre.
+    const precisionLabel = PRECISION_LEVELS.find(
+      ({ id }) => id === filters.precisionLevel
+    )?.label;
+    if (precisionLabel) {
+      tags.push({
+        id: "precision",
+        icon: "fa-bullseye",
+        label:
+          filters.precisionLevel === "balanced"
+            ? `${precisionLabel} (${filters.coverageRate} %)`
+            : precisionLabel,
+      });
+    }
+
+    return tags;
+  }, [defaultFilters, filterLabels, filters, hasSelectionChosen]);
+
   const canSubmit =
     filters.selectionMode
       ? hasSelectionChosen
@@ -674,6 +845,7 @@ const GlobalFiltersComponent = (
       new CustomEvent("sinp:filter-actions-state", {
         detail: {
           filterCount: activeFilterCount,
+          filterTags,
           canReset: !isLoading,
           canSubmit: !isLoading && canSubmit,
           hasSubmittedSearch,
@@ -682,6 +854,7 @@ const GlobalFiltersComponent = (
     );
   }, [
     activeFilterCount,
+    filterTags,
     canSubmit,
     hasSubmittedSearch,
     isLoading,
@@ -753,6 +926,7 @@ const GlobalFiltersComponent = (
         setSelectedRestitutionLayerId(fallbackLayerId);
         updateFilters((prev) => ({
           ...prev,
+          locationInputMode: true,
           selectionMode: false,
           selectedSelectionLayerId: null,
           selectionFeatureUid: null,
@@ -773,13 +947,21 @@ const GlobalFiltersComponent = (
       handleTaxChange={handleTaxChange}
       handleDptChange={handleDptChange}
       handleComChange={handleComChange}
+      handleEpciChange={handleEpciChange}
       handleGrpChange={handleGrpChange}
+      locationInputMode={Boolean(filters.locationInputMode)}
       selectionMode={Boolean(filters.selectionMode)}
       hasValidSelection={hasValidSelection}
       selectionLabel={filters.selectionLabel}
       visibleEnvironmentalLayers={visibleEnvironmentalLayers}
       selectedSelectionLayerId={filters.selectedSelectionLayerId}
+      onLocationInputModeChange={handleLocationInputModeChange}
       onSelectionModeChange={handleSelectionModeChange}
+      onRevealLayers={expandEnvironmentalLayersMenu}
+      onPrecisionLevelChange={handlePrecisionLevelChange}
+      onCoverageRateChange={handleCoverageRateChange}
+      useBuffer={Boolean(filters.useBuffer)}
+      onUseBufferChange={handleUseBufferChange}
       onSelectionLayerChange={handleSelectionLayerChange}
       onRequestSelectionChange={handleRequestSelectionChange}
       onSelectionChangeRequest={handleSelectionChangeRequest}

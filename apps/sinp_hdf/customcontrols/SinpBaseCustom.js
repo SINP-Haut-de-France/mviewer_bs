@@ -586,6 +586,9 @@ class SinpBaseCustom {
       dateDeb: params.dateDeb || null,
       dateFin: params.dateFin || null,
       targetLocCode: params.targetLocCode || this.targetLocCode || null,
+      precision: params.precision ?? null,
+      buffer: params.buffer ?? null,
+      tauxRecouvrement: params.tauxRecouvrement ?? null,
     };
   }
 

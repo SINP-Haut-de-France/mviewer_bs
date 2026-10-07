@@ -567,7 +567,7 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
     expect(statsResult.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
     expect(statsResult.VIEWPARAMS).toContain('GEOMETRY_GEOJSON:{"type":"Point","coordinates":[2.3,48.8]}');
     expect(statsResult.VIEWPARAMS).toContain("PRECISION:10");
-    expect(statsResult.VIEWPARAMS).toContain("BUFFER:100");
+    expect(statsResult.VIEWPARAMS).toContain("BUFFER_M:100");
     expect(statsResult.VIEWPARAMS).toContain("TAUX_RECOUVREMENT:0.5");
     expect(statsResult.VIEWPARAMS).toContain("DATE_DEB:2020-01-01");
     expect(statsResult.VIEWPARAMS).toContain("DATE_FIN:2025-12-31");
@@ -580,7 +580,7 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
     const metaResult = sinpQueryBuilder.buildRequestOptions(params, "fn_get_metadonnees");
     expect(metaResult.TYPENAME).toBe("sinp_diffusion:fn_get_metadonnees");
     expect(metaResult.VIEWPARAMS).toContain("PRECISION:10");
-    expect(metaResult.VIEWPARAMS).toContain("BUFFER:100");
+    expect(metaResult.VIEWPARAMS).toContain("BUFFER_M:100");
     expect(metaResult.VIEWPARAMS).toContain("TAUX_RECOUVREMENT:0.5");
     expect(metaResult.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
 
@@ -590,7 +590,7 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
     const detailsResult = sinpQueryBuilder.buildRequestOptions(params, "fn_get_obs_detaillee");
     expect(detailsResult.TYPENAME).toBe("sinp_diffusion:fn_get_obs_detaillee");
     expect(detailsResult.VIEWPARAMS).toContain("PRECISION:10");
-    expect(detailsResult.VIEWPARAMS).toContain("BUFFER:100");
+    expect(detailsResult.VIEWPARAMS).toContain("BUFFER_M:100");
     expect(detailsResult.VIEWPARAMS).toContain("TAUX_RECOUVREMENT:0.5");
   });
 
@@ -614,7 +614,7 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
     expect(result.VIEWPARAMS).toContain("TARGET_LOC_CODE:2");
     expect(result.VIEWPARAMS).toContain('GEOMETRY_GEOJSON:{"type":"Point","coordinates":[2.3,48.8]}');
     expect(result.VIEWPARAMS).toContain("PRECISION:50");
-    expect(result.VIEWPARAMS).toContain("BUFFER:200");
+    expect(result.VIEWPARAMS).toContain("BUFFER_M:200");
     expect(result.VIEWPARAMS).toContain("TAUX_RECOUVREMENT:0.8");
     expect(result.VIEWPARAMS).toContain("DATE_DEB:2021-01-01");
     expect(result.VIEWPARAMS).toContain("DATE_FIN:2024-12-31");

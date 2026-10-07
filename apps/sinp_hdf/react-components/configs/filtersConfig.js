@@ -8,6 +8,7 @@ export const FILTER_TYPES = {
   DATE: 'date',
   DEPARTMENT: 'department',
   COMMUNE: 'commune',
+  EPCI: 'epci',
   TAXONOMIC_GROUP: 'taxonomicGroup',
 };
 
@@ -23,6 +24,7 @@ export const FILTER_PROFILES = {
       FILTER_TYPES.DATE,
       FILTER_TYPES.DEPARTMENT,
       FILTER_TYPES.COMMUNE,
+      FILTER_TYPES.EPCI,
       FILTER_TYPES.TAXONOMIC_GROUP,
     ],
   },
@@ -43,6 +45,7 @@ export const FILTER_PROFILES = {
       FILTER_TYPES.DATE,
       FILTER_TYPES.DEPARTMENT,
       FILTER_TYPES.COMMUNE,
+      FILTER_TYPES.EPCI,
     ],
   },
 
@@ -74,6 +77,7 @@ export const FILTER_PROFILES = {
       FILTER_TYPES.DATE,
       FILTER_TYPES.DEPARTMENT,
       FILTER_TYPES.COMMUNE,
+      FILTER_TYPES.EPCI,
       FILTER_TYPES.TAXONOMIC_GROUP,
     ],
   },
@@ -86,6 +90,7 @@ export const FILTER_PROFILES = {
       FILTER_TYPES.DATE,
       FILTER_TYPES.DEPARTMENT,
       FILTER_TYPES.COMMUNE,
+      FILTER_TYPES.EPCI,
     ],
   },
 };
@@ -118,6 +123,12 @@ export const FILTER_CONFIGS = {
     required: false,
     tooltip: 'Filtrer par commune (nécessite un département)',
     dependsOn: FILTER_TYPES.DEPARTMENT,
+  },
+  [FILTER_TYPES.EPCI]: {
+    label: 'EPCI',
+    icon: 'fa-city',
+    required: false,
+    tooltip: 'Filtrer par établissement public de coopération intercommunale',
   },
   [FILTER_TYPES.TAXONOMIC_GROUP]: {
     label: 'Groupe taxonomique',
@@ -164,6 +175,36 @@ export const SEARCH_RESTITUTION_LAYERS = [
     selectionOnly: true,
   },
 ];
+
+/**
+ * Niveaux de précision de la recherche par sélection de zonage.
+ * Le niveau « balanced » ouvre un taux de recouvrement personnalisable.
+ */
+export const PRECISION_LEVELS = [
+  { id: 'exhaustive', label: 'Exhaustif' },
+  { id: 'balanced', label: 'Équilibré' },
+  { id: 'strict', label: 'Strict' },
+];
+export const DEFAULT_PRECISION_LEVEL = 'exhaustive';
+export const COVERAGE_RATE_MIN = 80;
+export const COVERAGE_RATE_MAX = 100;
+export const DEFAULT_COVERAGE_RATE = 90;
+
+/**
+ * Valeur attendue par la fonction PostgreSQL (paramètre `precision` du
+ * context_params jsonb) pour chaque niveau de précision de l'UI.
+ */
+export const PRECISION_LEVEL_VALUES = {
+  exhaustive: 'exhaustif',
+  balanced: 'equilibre',
+  strict: 'strict',
+};
+
+/**
+ * Distance (en mètres) du buffer appliqué à la géométrie de recherche
+ * lorsque la case « Utiliser un buffer » est cochée.
+ */
+export const BUFFER_DISTANCE_METERS = 500;
 
 export const getEnvironmentalSelectionLayers = () => {
   const configuredLayers = window.mviewer?.env?.EXTERNAL_LAYERS_OBS;
@@ -241,6 +282,37 @@ export const getVisibleEnvironmentalLayers = () => {
   return getEnvironmentalSelectionLayers().filter(({ id }) =>
     configuredLayers[id]?.layer?.getVisible?.()
   );
+};
+
+/**
+ * Déploie dans le menu de gauche la thématique (et le groupe) qui contient les
+ * couches de zonage utilisables pour la recherche par sélection, afin que
+ * l'utilisateur puisse les afficher sans chercher dans le menu.
+ */
+export const expandEnvironmentalLayersMenu = () => {
+  const layerIds = getEnvironmentalSelectionLayers().map(({ id }) => id);
+  const layerItem = layerIds
+    .map((id) =>
+      document.querySelector(`#menu li.mv-nav-item[data-layerid="${id}"]`)
+    )
+    .find(Boolean);
+  const themeItem = layerItem?.closest('li[id^="theme-layers-"]');
+
+  if (!themeItem) {
+    return;
+  }
+
+  const isOpen = (item) => item?.querySelector(':scope > ul')?.offsetParent !== null;
+  const open = (item) => item?.querySelector(':scope > a')?.click();
+
+  if (!isOpen(themeItem)) {
+    open(themeItem);
+  }
+
+  const groupItem = layerItem.closest('li.level-2');
+  if (groupItem && !isOpen(groupItem)) {
+    open(groupItem);
+  }
 };
 
 export const subscribeToEnvironmentalLayerVisibility = (onChange) => {

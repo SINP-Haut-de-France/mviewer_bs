@@ -11,8 +11,19 @@ const CollapsibleFilterSection = ({
   badge = null,
   dataTour = null,
   expandOnTourTargets = EMPTY_TOUR_TARGETS,
+  expanded = undefined,
+  onExpandedChange = null,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
+  // Mode contrôlé : le parent pilote l'état d'ouverture via `expanded`.
+  const isControlled = expanded !== undefined;
+  const isExpanded = isControlled ? expanded : internalExpanded;
+  const setIsExpanded = (nextExpanded) => {
+    if (!isControlled) {
+      setInternalExpanded(nextExpanded);
+    }
+    onExpandedChange?.(nextExpanded);
+  };
 
   useEffect(() => {
     if (!dataTour) {

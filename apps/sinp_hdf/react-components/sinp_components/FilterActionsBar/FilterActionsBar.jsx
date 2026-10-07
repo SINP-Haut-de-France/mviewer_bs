@@ -3,6 +3,7 @@ import "./FilterActionsBar.css";
 
 const FilterActionsBar = ({
   filterCount = 0,
+  filterTags = [],
   canReset = false,
   canSubmit = false,
   hasSubmittedSearch = false,
@@ -10,6 +11,16 @@ const FilterActionsBar = ({
   onSubmit,
 }) => (
   <div className="mv-filter-actions-bar" data-tour="filter-actions">
+    {filterTags.length > 0 && (
+      <ul className="mv-filter-actions-bar__tags" aria-label="Filtres sélectionnés">
+        {filterTags.map((tag) => (
+          <li key={tag.id} className="mv-filter-actions-bar__tag" title={tag.label}>
+            {tag.icon && <i className={`fas ${tag.icon}`} aria-hidden="true"></i>}
+            <span>{tag.label}</span>
+          </li>
+        ))}
+      </ul>
+    )}
     <span className="mv-filter-actions-bar__count" aria-live="polite">
       Filtre(s) sélectionné(s) ({filterCount})
     </span>
