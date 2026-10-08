@@ -172,8 +172,17 @@ class SinpBaseCustom {
       requestedLayerId: this.layerId,
       mapState: this.constructor._getRestitutionLayersSnapshot(),
     });
+    this.constructor.clearSearchLayers();
+    this.constructor._debug(refreshId, "clear restitutions: after", {
+      requestedLayerId: this.layerId,
+      mapState: this.constructor._getRestitutionLayersSnapshot(),
+    });
+  }
+
+  static clearSearchLayers() {
     const clearedInstances = new Set();
-    this.constructor.SEARCH_LAYER_IDS.forEach((layerId) => {
+    this.SEARCH_LAYER_IDS.forEach((layerId) => {
+      const control = mviewer.customControls?.[layerId];
       const layerInstance = mviewer.customLayers?.[layerId]?._instance;
       if (!layerInstance || clearedInstances.has(layerInstance)) {
         return;
@@ -181,11 +190,7 @@ class SinpBaseCustom {
 
       clearedInstances.add(layerInstance);
       layerInstance.clear?.();
-      this._removeSearchLayerFromLegend(layerId);
-    });
-    this.constructor._debug(refreshId, "clear restitutions: after", {
-      requestedLayerId: this.layerId,
-      mapState: this.constructor._getRestitutionLayersSnapshot(),
+      control?._removeSearchLayerFromLegend?.(layerId);
     });
   }
 
@@ -1440,6 +1445,7 @@ class SinpBaseCustom {
     }
 
     await layerInstance.showSelectionPrompt(normalizedFeatures, mainOptions);
+    await this.handle([normalizedFeatures[0]]);
     return mainData;
   }
 
@@ -1564,9 +1570,14 @@ class SinpBaseCustom {
             return undefined;
           }
           this._setLastResultFeatures(navigationFeatures);
+        } else {
+          // Même modèle pour tous les cas : une entité par géométrie remontée.
+          this._setLastResultFeatures(extentFeatures);
         }
-        if (extentFeatures.length > 0) {
-          layerInstance.showSelectionPromptPanel?.();
+        const resultFeatures = this._getLastResultFeatures();
+        if (resultFeatures.length > 0) {
+          // Détail et métadonnées chargés d'office sur la première entité.
+          await this.handle([resultFeatures[0]]);
         }
         this._showSearchLayerLegend(mainOptions);
         return undefined;
@@ -1610,6 +1621,8 @@ class SinpBaseCustom {
     }
   }
 }
+
+window.sinpClearSearchLayers = () => SinpBaseCustom.clearSearchLayers();
 
 window.sinpRestitutionDebug = () => {
   const snapshot = SinpBaseCustom._getRestitutionLayersSnapshot();

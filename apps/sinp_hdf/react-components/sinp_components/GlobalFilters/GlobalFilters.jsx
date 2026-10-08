@@ -22,11 +22,11 @@ import {
   subscribeToEnvironmentalLayerVisibility,
   expandEnvironmentalLayersMenu,
   DEFAULT_PRECISION_LEVEL,
-  DEFAULT_COVERAGE_RATE,
   PRECISION_LEVELS,
   PRECISION_LEVEL_VALUES,
   BUFFER_DISTANCE_METERS,
 } from "../../configs/filtersConfig";
+import { getDefaultCoverageRate } from "../../configs/sinpConfiguration";
 
 const GlobalFiltersComponent = (
   {
@@ -76,7 +76,7 @@ const GlobalFiltersComponent = (
       selectionFeatureUid: null,
       selectionLabel: null,
       precisionLevel: DEFAULT_PRECISION_LEVEL,
-      coverageRate: DEFAULT_COVERAGE_RATE,
+      coverageRate: getDefaultCoverageRate(),
       useBuffer: true,
     };
   }, []);
@@ -395,6 +395,13 @@ const GlobalFiltersComponent = (
 
   const handleSelectionModeChange = useCallback(
     (enabled) => {
+      // Changement de contexte géographique : on retire les résultats précédents
+      // pour qu'ils n'interceptent pas les clics en mode sélection.
+      if (Boolean(filtersRef.current.selectionMode) !== Boolean(enabled)) {
+        window.sinpClearSearchLayers?.();
+        setHasSubmittedSearch(false);
+        lastSubmittedFiltersRef.current = null;
+      }
       let restitutionLayerId = selectedRestitutionLayerIdRef.current;
       if (!enabled && restitutionLayerId === "selection") {
         restitutionLayerId = resolveSearchLayerId(activeLayerId);
@@ -444,6 +451,11 @@ const GlobalFiltersComponent = (
 
   const handleLocationInputModeChange = useCallback(
     (enabled) => {
+      if (Boolean(filtersRef.current.locationInputMode) !== Boolean(enabled)) {
+        window.sinpClearSearchLayers?.();
+        setHasSubmittedSearch(false);
+        lastSubmittedFiltersRef.current = null;
+      }
       if (enabled && filtersRef.current.selectionMode) {
         handleSelectionModeChange(false);
       }

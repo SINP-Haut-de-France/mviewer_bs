@@ -617,9 +617,15 @@ window.externalLayersObs = (function () {
       ...state,
       currentIndex: index,
       currentEntity: state.entities[index],
+      currentProperties: _getStatsProperties(selectedFeature),
       currentDetails: selectedFeature.get("details") || [],
       currentMetadata: selectedFeature.get("jdd_details") || state.metadata || [],
     });
+  };
+
+  const _getStatsProperties = function (feature) {
+    const { geometry, ...properties } = feature?.getProperties?.() || {};
+    return properties;
   };
 
   const _loadResults = async function (feature, featureUid, params, layerId) {
@@ -745,6 +751,7 @@ window.externalLayersObs = (function () {
         entities,
         currentIndex: 0,
         currentEntity: entities[0] || null,
+        currentProperties: _getStatsProperties(firstFeature),
         currentDetails: firstFeature?.get("details") || [],
         currentMetadata: firstFeature?.get("jdd_details") || metadata,
         metadata,

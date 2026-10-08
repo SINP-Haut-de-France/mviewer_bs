@@ -2,11 +2,9 @@ import React from "react";
 import CollapsibleFilterSection from "../../components/CollapsibleFilterSection/CollapsibleFilterSection";
 import MultiSelectSearchComponent from "../../components/MultiSelectSearch/MultiSelectSearchComponent";
 import Datasource from "../../components/Datasource/Datasource";
-import {
-  PRECISION_LEVELS,
-  COVERAGE_RATE_MIN,
-  COVERAGE_RATE_MAX,
-} from "../../configs/filtersConfig";
+import { PRECISION_LEVELS } from "../../configs/filtersConfig";
+import InfoTooltip from "../../components/InfoTooltip/InfoTooltip";
+import { getCoverageRateBounds, getSinpConfigValue } from "../../configs/sinpConfiguration";
 import "./SearchContextSection.css";
 
 const LOCATION_TOUR_TARGETS = [
@@ -17,6 +15,30 @@ const LOCATION_TOUR_TARGETS = [
 
 const CONTEXT_MODE_INPUT_ID = "sinp-search-context-input";
 const CONTEXT_MODE_SELECTION_ID = "sinp-search-context-selection";
+
+const PRECISION_SECTION_HELP =
+  "Une observation est localisée sur une zone (un point, un tracé, une commune…). " +
+  "Ce réglage fixe la part de cette zone qui doit se trouver dans votre périmètre pour que l'observation soit retenue.";
+
+const INPUT_MODE_HELP =
+  "Définissez votre périmètre en tapant le nom ou le code d'un département, d'une commune ou d'un EPCI.";
+
+const SELECTION_MODE_HELP =
+  "Définissez votre périmètre en cliquant sur un zonage (site protégé, zone d'inventaire…) affiché sur la carte.";
+
+/** Explications grand public des niveaux de précision, d'après les seuils configurés. */
+const getPrecisionHelp = (id, { min, max }) => {
+  switch (id) {
+    case "exhaustive":
+      return `Retient toutes les observations dont au moins ${getSinpConfigValue("INCLUSION_EXHAUSTIF", 25)} % de la zone de localisation est dans votre périmètre. Vous obtenez le plus de résultats, y compris des observations en bordure.`;
+    case "balanced":
+      return `Vous choisissez la part minimale de la zone de localisation qui doit être dans votre périmètre, entre ${min} % et ${max} %. C'est un compromis entre nombre et fiabilité des résultats.`;
+    case "strict":
+      return `Ne retient que les observations dont au moins ${getSinpConfigValue("INCLUSION_STRICT", 75)} % de la zone de localisation est dans votre périmètre. Vous obtenez moins de résultats, mais très bien situés.`;
+    default:
+      return null;
+  }
+};
 
 /**
  * Niveau de précision (toujours visible) suivi du choix du périmètre
@@ -49,6 +71,7 @@ const SearchContextSection = ({
     filterVisibility.showEpci;
   const precisionLevel = filters.precisionLevel;
   const coverageRate = filters.coverageRate;
+  const { min: COVERAGE_RATE_MIN, max: COVERAGE_RATE_MAX } = getCoverageRateBounds();
 
   const badge = selectionMode
     ? hasValidSelection
@@ -64,7 +87,8 @@ const SearchContextSection = ({
         title="Niveau de précision"
         icon="fa-bullseye"
         defaultExpanded={true}
-        dataTour="filter-precision">
+        dataTour="filter-precision"
+        helpText={PRECISION_SECTION_HELP}>
         <div className="mv-search-context__precision">
           {PRECISION_LEVELS.map(({ id, label }) => (
             <React.Fragment key={id}>
@@ -82,6 +106,7 @@ const SearchContextSection = ({
                   htmlFor={`sinp-precision-level-${id}`}>
                   {label}
                 </label>
+                <InfoTooltip text={getPrecisionHelp(id, { min: COVERAGE_RATE_MIN, max: COVERAGE_RATE_MAX })} />
               </div>
 
               {id === "balanced" && precisionLevel === "balanced" && (
@@ -114,24 +139,11 @@ const SearchContextSection = ({
             </React.Fragment>
           ))}
 
-          <div className="form-check">
-            <input
-              id="sinp-use-buffer"
-              className="form-check-input"
-              type="checkbox"
-              checked={useBuffer}
-              disabled={isLoading}
-              onChange={(event) => onUseBufferChange?.(event.target.checked)}
-            />
-            <label className="form-check-label" htmlFor="sinp-use-buffer">
-              Utiliser un buffer
-            </label>
-          </div>
         </div>
       </CollapsibleFilterSection>
 
       <CollapsibleFilterSection
-        title="Sélectionner un contexte géographique"
+        title="Contexte de recherche géographique"
         icon="fa-map-marker-alt"
         defaultExpanded={true}
         badge={badge}
@@ -152,6 +164,7 @@ const SearchContextSection = ({
                 <label className="form-check-label" htmlFor={CONTEXT_MODE_INPUT_ID}>
                   À la saisie
                 </label>
+                <InfoTooltip text={INPUT_MODE_HELP} />
               </div>
 
               {locationInputMode && (
@@ -273,6 +286,7 @@ const SearchContextSection = ({
               <label className="form-check-label" htmlFor={CONTEXT_MODE_SELECTION_ID}>
                 À la sélection
               </label>
+              <InfoTooltip text={SELECTION_MODE_HELP} />
             </div>
 
             {selectionMode && (

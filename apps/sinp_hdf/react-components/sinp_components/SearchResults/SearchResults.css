@@ -61,6 +61,16 @@
   color: #94a3b8;
 }
 
+.mv-sr-entity-card {
+  border-color: #d6e0ea;
+  color: #1f2937;
+}
+
+.mv-sr-entity-card .card-header {
+  background: #f8fbff;
+  font-weight: 600;
+}
+
 .mv-sr-toolbar {
   display: flex;
   justify-content: space-between;

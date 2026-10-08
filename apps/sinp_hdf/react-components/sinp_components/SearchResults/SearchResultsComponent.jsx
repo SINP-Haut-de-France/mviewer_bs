@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
+import EntityCard from "./EntityCard";
 import EntityNavigationControls from "./EntityNavigationControls";
 import SearchResultsTabs from "./SearchResultsTabs";
 import "./SearchResults.css";
 import {
+  getEntityCardData,
   getFeatureByUid,
   getFeatureProperties,
   getLayerConfig,
@@ -124,6 +126,7 @@ const SearchResultsComponent = ({
   const details = Array.isArray(properties.details) ? properties.details : [];
   const jddDetails = Array.isArray(properties.jdd_details) ? properties.jdd_details : [];
   const selectionSummary = getSelectedEntitySummary(layerId, properties, layerConfig);
+  const entityCardData = promptOnly ? null : getEntityCardData(properties, details);
   const loadingState = properties.entity_data_loading === true;
   const errorMessage =
     typeof properties.entity_data_error === "string" ? properties.entity_data_error : "";
@@ -169,6 +172,12 @@ const SearchResultsComponent = ({
           onNext={() => selectEntity(navigationState.currentIndex + 1)}
         />
       ) : null}
+
+      <EntityCard
+        label={selectionSummary?.selectionLabel || ""}
+        cardData={entityCardData}
+        loading={loadingState}
+      />
 
       <SearchResultsTabs
         activeTab={activeTab}

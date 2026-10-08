@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import InfoTooltip from "../InfoTooltip/InfoTooltip";
 import "./CollapsibleFilterSection.css";
 
 const EMPTY_TOUR_TARGETS = [];
@@ -9,6 +10,7 @@ const CollapsibleFilterSection = ({
   children,
   defaultExpanded = true,
   badge = null,
+  helpText = null,
   dataTour = null,
   expandOnTourTargets = EMPTY_TOUR_TARGETS,
   expanded = undefined,
@@ -52,6 +54,7 @@ const CollapsibleFilterSection = ({
         <div className="section-title">
           <i className={`fas ${icon}`}></i>
           <span>{title}</span>
+          <InfoTooltip text={helpText} />
           {badge && <span className="section-badge">{badge}</span>}
         </div>
         <button className="toggle-btn" aria-label={isExpanded ? "Réduire" : "Développer"}>

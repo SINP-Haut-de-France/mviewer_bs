@@ -5,6 +5,7 @@ import GlobalFilterManager from "./sinp_components/GlobalFilterManager/GlobalFil
 import TutorialManager from "./tutorials/TutorialManager";
 import * as Sentry from "@sentry/react";
 import "./sinp_components/SearchResults/registerSearchResultsElement";
+import { loadSinpConfiguration } from "./configs/sinpConfiguration";
 
 // Initialiser window.roots avant tout
 window.roots = window.roots || {};
@@ -44,12 +45,19 @@ const initGlobalRoot = () => {
   console.log("✅ GlobalFilterManager monté dans react-global-root");
 };
 
-// Attendre que le DOM soit prêt
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initGlobalRoot);
-} else {
-  initGlobalRoot();
-}
+// Promesse de chargement de la configuration SINP (v_sinp_configuration) :
+// les composants ne sont montés qu'une fois les paramètres disponibles
+const configurationReady = loadSinpConfiguration();
+
+const onDomReady = (callback) => {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", callback);
+  } else {
+    callback();
+  }
+};
+
+onDomReady(() => configurationReady.then(initGlobalRoot));
 
 // Note: SidebarFilterPanel est maintenant géré par GlobalFilterManager via un portal
 // Le conteneur #react-sidebar-filter-panel est créé par reactInjector.js
@@ -154,13 +162,10 @@ const observeNewComponents = () => {
   console.log("👁️ Observateur de composants React activé");
 };
 
-// Monter les composants standalone après le DOM
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => {
+// Monter les composants standalone après le DOM et la configuration
+onDomReady(() =>
+  configurationReady.then(() => {
     initStandaloneComponents();
     observeNewComponents();
-  });
-} else {
-  initStandaloneComponents();
-  observeNewComponents();
-}
+  })
+);

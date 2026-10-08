@@ -181,9 +181,9 @@ export const SEARCH_RESTITUTION_LAYERS = [
  * Le niveau « balanced » ouvre un taux de recouvrement personnalisable.
  */
 export const PRECISION_LEVELS = [
-  { id: 'exhaustive', label: 'Exhaustif' },
-  { id: 'balanced', label: 'Équilibré' },
-  { id: 'strict', label: 'Strict' },
+  { id: 'exhaustive', label: 'Partiellement inclus' },
+  { id: 'balanced', label: 'Inclusion personnalisée' },
+  { id: 'strict', label: 'Totalement inclus' },
 ];
 export const DEFAULT_PRECISION_LEVEL = 'exhaustive';
 export const COVERAGE_RATE_MIN = 80;
