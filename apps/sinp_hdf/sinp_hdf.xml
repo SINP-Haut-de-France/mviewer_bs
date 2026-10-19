@@ -20,13 +20,17 @@
 	<themes>
 		<theme name="Fonds de cartes" collapsed="false" id="environnement" icon="fa fa-layer-group">
 			<group name="Limites administratives" id="limites_adm">
-				<layer id="communes" name="Communes" visible="false" queryable="false" url="https://www.geo2france.fr/geoserver/spld/ows">
+				<layer id="communes" name="Communes" visible="false" queryable="true" infoformat="application/vnd.ogc.gml" url="https://www.geo2france.fr/geoserver/spld/ows" featurecount="1">
+					<template url="apps/sinp_hdf/templates/zonages/environnement/admin-layer.mst"/>
 				</layer>
-				<layer id="epci" name="EPCI" visible="false" queryable="true" infoformat="application/vnd.ogc.gml" url="https://www.geo2france.fr/geoserver/spld/ows">
+				<layer id="epci" name="EPCI" visible="false" queryable="true" infoformat="application/vnd.ogc.gml" url="https://www.geo2france.fr/geoserver/spld/ows" featurecount="1">
+					<template url="apps/sinp_hdf/templates/zonages/environnement/admin-layer.mst"/>
 				</layer>
-				<layer id="DEPARTEMENT" name="Départements" visible="false" queryable="false" url="https://www.geo2france.fr/geoserver/spld/ows">
+				<layer id="DEPARTEMENT" name="Départements" visible="false" queryable="true" infoformat="application/vnd.ogc.gml" url="https://www.geo2france.fr/geoserver/spld/ows" featurecount="1">
+					<template url="apps/sinp_hdf/templates/zonages/environnement/admin-layer.mst"/>
 				</layer>
-				<layer id="bassinversanttopographique_fxx" visible="false" name="Bassins versants Topage 2025" queryable="false" url="https://www.geo2france.fr/geoserver/sandre/ows">
+				<layer id="bassinversanttopographique_fxx" visible="false" queryable="true" infoformat="application/vnd.ogc.gml" name="Bassins versants Topage 2025" url="https://www.geo2france.fr/geoserver/sandre/ows" featurecount="1">
+					<template url="apps/sinp_hdf/templates/zonages/environnement/admin-layer.mst"/>
 				</layer>
 			</group>
 			<group name="Aires protégées" id="environnement">

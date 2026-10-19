@@ -24,12 +24,13 @@ const SearchResultsTable = ({
   pageSizeOptions = [],
   defaultPageSize = 25,
   groupBy = null,
+  defaultSort = null,
   headerHeight = 34,
   rowHeight = 42,
 }) => {
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [page, setPage] = useState(1);
-  const [sortConfig, setSortConfig] = useState(null);
+  const [sortConfig, setSortConfig] = useState(defaultSort);
   const [displayMode, setDisplayMode] = useState("standard");
   const [expandedGroupKey, setExpandedGroupKey] = useState(null);
   const previousDisplayModeRef = useRef(displayMode);
@@ -140,7 +141,9 @@ const SearchResultsTable = ({
   const renderTableRow = (item, index, keyPrefix = "") => (
     <tr key={`${keyPrefix}${rowKey(item, index)}`}>
       {visibleColumns.map((column) => (
-        <td key={column.id}>{renderCellValue(column, item)}</td>
+        <td key={column.id} className={`mv-sr-col-${column.id}`}>
+          {renderCellValue(column, item)}
+        </td>
       ))}
     </tr>
   );
@@ -241,7 +244,7 @@ const SearchResultsTable = ({
                 const sortDirection = isSorted ? sortConfig.direction : null;
 
                 return (
-                  <th key={column.id}>
+                  <th key={column.id} className={`mv-sr-col-${column.id}`}>
                     {column.sortable ? (
                       <button
                         type="button"
@@ -302,7 +305,10 @@ const SearchResultsTable = ({
                             currentKey === group.key ? null : group.key
                           )
                         }>
-                        <span className="mv-sr-group-title">{group.label}</span>
+                        <span className="mv-sr-group-title">
+                          {groupBy.renderIcon?.(group.items[0])}
+                          {group.label}
+                        </span>
                         <span className="mv-sr-group-count">
                           {group.items.length} {itemLabel}
                         </span>

@@ -2,49 +2,57 @@
   margin:5px 10px 5px 10px
 }
 
-.mv-sr-taxon-table th:nth-last-child(2),
-.mv-sr-taxon-table
-  tbody
-  tr:not(.mv-sr-group-row)
-  td:nth-last-child(2):not(.mv-sr-empty-row):not(.mv-sr-loading-row) {
-  width: 110px;
-  min-width: 110px;
-  max-width: 110px;
+/* Colonnes à largeur fixe ; "Taxon(s) observée(s)" occupe l'espace restant */
+.mv-sr-taxon-table {
+  table-layout: fixed;
+  width: 100%;
 }
 
-.mv-sr-taxon-table th:last-child,
-.mv-sr-taxon-table
-  tbody
-  tr:not(.mv-sr-group-row)
-  td:last-child:not(.mv-sr-empty-row):not(.mv-sr-loading-row) {
+.mv-sr-taxon-table .mv-sr-col-groupIcon {
+  width: 32px;
+  text-align: center;
+}
+
+.mv-sr-taxon-table .mv-sr-col-lastObservation {
+  width: 80px;
+}
+
+.mv-sr-taxon-table .mv-sr-col-observationCount {
   width: 100px;
-  min-width: 100px;
-  max-width: 1000px;
 }
 
-.mv-sr-taxon-table
-  tbody
-  tr:not(.mv-sr-group-row)
-  td:nth-last-child(2):not(.mv-sr-empty-row):not(.mv-sr-loading-row),
-.mv-sr-taxon-table
-  tbody
-  tr:not(.mv-sr-group-row)
-  td:last-child:not(.mv-sr-empty-row):not(.mv-sr-loading-row) {
-  white-space: nowrap;
-}
-
-.mv-sr-taxon-table th:nth-last-child(2),
-.mv-sr-taxon-table th:last-child {
+.mv-sr-taxon-table th.mv-sr-col-lastObservation,
+.mv-sr-taxon-table th.mv-sr-col-observationCount {
   white-space: normal;
 }
 
-.mv-sr-taxon-table th:nth-last-child(2) .mv-sr-sort-button > span,
-.mv-sr-taxon-table th:last-child .mv-sr-sort-button > span {
+.mv-sr-taxon-table th .mv-sr-sort-button > span {
   min-width: 0;
   white-space: normal;
 }
 
-.mv-sr-taxon-table th:nth-last-child(2) .mv-sr-sort-button > i,
-.mv-sr-taxon-table th:last-child .mv-sr-sort-button > i {
+.mv-sr-taxon-table th .mv-sr-sort-button > i {
   flex: 0 0 auto;
+}
+
+.mv-sr-taxon-table td.mv-sr-col-lastObservation,
+.mv-sr-taxon-table td.mv-sr-col-observationCount {
+  white-space: nowrap;
+}
+
+/* Icônes sources carrées (512x512) : largeur = hauteur pour conserver le ratio */
+.mv-sr-group-icon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  max-width: none;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+/* Icône dans l'en-tête de groupe (vue regroupée) */
+.mv-sr-group-title .mv-sr-group-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 8px 0 0;
 }
