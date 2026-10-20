@@ -313,6 +313,23 @@ describe("sinpQueryBuilder - Fonctions PostgreSQL + VIEWPARAMS", () => {
     expect(result.VIEWPARAMS.endsWith(";")).toBe(false);
   });
 
+  test("fn_get_details_donnees utilise les mêmes viewparams que fn_get_obs_detaillee", () => {
+    const params = {
+      communes: ["62225"],
+      departements: ["62"],
+      taxons: [],
+      dateDeb: "2020-01-01",
+      dateFin: "2025-12-10",
+      targetLocCode: "2",
+    };
+
+    const details = sinpQueryBuilder.buildRequestOptions(params, "fn_get_obs_detaillee");
+    const donnees = sinpQueryBuilder.buildRequestOptions(params, "fn_get_details_donnees");
+
+    expect(donnees.TYPENAME).toBe("sinp_diffusion:fn_get_details_donnees");
+    expect(donnees.VIEWPARAMS).toBe(details.VIEWPARAMS);
+  });
+
   test("fn_get_obs_detaillee omet les filtres de liste vides", () => {
     const params = {
       communes: ["62225"],

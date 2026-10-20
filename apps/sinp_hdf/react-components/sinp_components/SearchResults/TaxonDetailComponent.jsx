@@ -16,7 +16,7 @@ const getGroupIconUrl = (iconName) => {
   return `${folder.replace(/\/?$/, "/")}${iconName}`;
 };
 
-const renderGroupIcon = (detail) => {
+export const renderGroupIcon = (detail) => {
   const icon = detail?.icone_groupe_principal;
   if (!icon) return null;
   return (
@@ -29,38 +29,41 @@ const renderGroupIcon = (detail) => {
   );
 };
 
+export const GROUP_ICON_COLUMN = {
+  id: "groupIcon",
+  label: "",
+  sortable: false,
+  getValue: (detail) => detail?.icone_groupe_principal,
+  render: renderGroupIcon,
+};
+
+export const OBSERVED_SPECIES_COLUMN = {
+  id: "observedSpecies",
+  label: "Taxon(s) observée(s)",
+  sortable: true,
+  sortType: "string",
+  getValue: (detail) => detail?.nom_vern || detail?.nom_valide || "-",
+  getSortValue: (detail) => [detail?.nom_vern || "", detail?.nom_valide || ""].join(" "),
+  render: (detail) => {
+    const content = (
+      <>
+        <div>{detail?.nom_vern || detail?.nom_valide || "-"}</div>
+        <div className="mv-sr-latin-name">{detail?.nom_valide || ""}</div>
+      </>
+    );
+    return detail?.external_url ? (
+      <a href={detail.external_url} target="_blank" rel="noopener noreferrer">
+        {content}
+      </a>
+    ) : (
+      content
+    );
+  },
+};
+
 const TAXON_COLUMNS = [
-  {
-    id: "groupIcon",
-    label: "",
-    sortable: false,
-    getValue: (detail) => detail?.icone_groupe_principal,
-    render: renderGroupIcon,
-  },
-  {
-    id: "observedSpecies",
-    label: "Taxon(s) observée(s)",
-    sortable: true,
-    sortType: "string",
-    getValue: (detail) => detail?.nom_vern || detail?.nom_valide || "-",
-    getSortValue: (detail) =>
-      [detail?.nom_vern || "", detail?.nom_valide || ""].join(" "),
-    render: (detail) => {
-      const content = (
-        <>
-          <div>{detail?.nom_vern || detail?.nom_valide || "-"}</div>
-          <div className="mv-sr-latin-name">{detail?.nom_valide || ""}</div>
-        </>
-      );
-      return detail?.external_url ? (
-        <a href={detail.external_url} target="_blank" rel="noopener noreferrer">
-          {content}
-        </a>
-      ) : (
-        content
-      );
-    },
-  },
+  GROUP_ICON_COLUMN,
+  OBSERVED_SPECIES_COLUMN,
   {
     id: "lastObservation",
     label: "Dernière observation",

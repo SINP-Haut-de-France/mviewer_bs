@@ -412,7 +412,7 @@ _root.sinpQueryBuilder = (function () {
     }
 
     if (
-      view === "fn_get_obs_detaillee" &&
+      (view === "fn_get_obs_detaillee" || view === "fn_get_details_donnees") &&
       Array.isArray(normalizedParams.mailles) &&
       normalizedParams.mailles.length > 0
     ) {
@@ -620,6 +620,13 @@ _root.sinpQueryBuilder = (function () {
     },
 
     fn_get_obs_detaillee: {
+      cql_filters: {},
+      view_params: _buildSharedSearchViewParams({
+        targetLocCodeSource: ["targetLocCode", "target_loc_code", "TARGET_LOC_CODE"],
+      }),
+    },
+
+    fn_get_details_donnees: {
       cql_filters: {},
       view_params: _buildSharedSearchViewParams({
         targetLocCodeSource: ["targetLocCode", "target_loc_code", "TARGET_LOC_CODE"],

@@ -5,6 +5,7 @@ mviewer.customControls.communeSearch = (function () {
         layerId: "communeSearch",
         mainTypeName: "fn_get_stats",
         detailsTypeName: "fn_get_obs_detaillee",
+        donneesTypeName: "fn_get_details_donnees",
         metadataTypeName: "fn_get_metadonnees",
         targetLocCode: "2",
         entityCodeKeys: [
@@ -97,6 +98,7 @@ mviewer.customControls.communeSearch = (function () {
       controller.getEntityNavigationState(feature),
     selectEntityByIndex: (index) => controller.selectEntityByIndex(index),
     ensureMetadataForFeatures: (features) => controller.ensureMetadataForFeatures(features),
+    ensureDonneesForFeatures: (features) => controller.ensureDonneesForFeatures(features),
     openFilterModal,
     normalizeFilters: (selectedFilters) =>
       controller._normalizeInputParams(selectedFilters),

@@ -140,6 +140,25 @@ const SearchResultsComponent = ({
       ? navigationController?.getEntityNavigationState?.(feature) || null
       : null;
 
+  const donneesDetails = Array.isArray(properties.donnees_details)
+    ? properties.donnees_details
+    : [];
+  const donneesErrorMessage =
+    typeof properties.donnees_data_error === "string" ? properties.donnees_data_error : "";
+  // Tant que les données ne sont pas chargées (y compris avant le déclenchement de la
+  // requête au clic sur l'onglet), on reste en état "chargement".
+  const donneesLoadingState =
+    properties.donnees_data_loading === true ||
+    (properties.donnees_data_loaded !== true && !donneesErrorMessage);
+
+  // Les observations détaillées sont chargées à la demande, au clic sur l'onglet.
+  useEffect(() => {
+    if (activeTab !== TAB_IDS.DONNEES || selectionPrompt || !feature || loadingState) {
+      return;
+    }
+    navigationController?.ensureDonneesForFeatures?.([feature]);
+  }, [activeTab, feature, selectionPrompt, loadingState, navigationController]);
+
   const selectEntity = (index) => {
     navigationController?.selectEntityByIndex?.(index);
   };
@@ -194,6 +213,9 @@ const SearchResultsComponent = ({
         datasetLoadingState={datasetLoadingState}
         datasetErrorMessage={datasetErrorMessage}
         metadataInMaintenance={metadataInMaintenance}
+        donneesDetails={donneesDetails}
+        donneesLoadingState={donneesLoadingState}
+        donneesErrorMessage={donneesErrorMessage}
       />
     </div>
   );

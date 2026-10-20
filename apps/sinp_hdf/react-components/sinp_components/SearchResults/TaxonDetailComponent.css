@@ -56,3 +56,50 @@
   vertical-align: middle;
   margin: 0 8px 0 0;
 }
+
+/* Voyants de validation régionale / nationale */
+.mv-sr-validation {
+  display: inline-flex;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.mv-sr-validation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  cursor: help;
+}
+
+.mv-sr-validation-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #9e9e9e;
+}
+
+.mv-sr-validation-badge.is-valid .mv-sr-validation-dot {
+  background: #2e9d4f;
+}
+
+.mv-sr-validation-badge.is-invalid .mv-sr-validation-dot {
+  background: #d9534f;
+}
+
+/* Filtre "évaluée au niveau régional" */
+.mv-sr-regional-filter {
+  margin-bottom: 8px;
+}
+
+.mv-sr-regional-filter label {
+  font-weight: normal;
+  margin: 0;
+  cursor: pointer;
+}
+
+.mv-sr-regional-filter-warning {
+  display: inline-block;
+  color: #d9534f;
+  font-size: 12px;
+}
