@@ -16,6 +16,7 @@ const MultiSelectSearchComponent = ({
   maxResults = 10,
   maxSelections = null,
   title = "",
+  helpText = null,
   onChange = () => {},
   onSearch = () => {},
   loading = false,
@@ -264,6 +265,7 @@ const MultiSelectSearchComponent = ({
   return (
     <MultiSelectSearchUI
       title={title}
+      helpText={helpText}
       search={search}
       setSearch={handleSearchChange}
       filteredData={filteredResults}

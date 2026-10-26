@@ -33,6 +33,7 @@ const GlobalFilterManager = () => {
   const [isFilterLoading, setIsFilterLoading] = useState(false);
   const [filterActionsState, setFilterActionsState] = useState({
     filterCount: 0,
+    filterTags: [],
     canReset: true,
     canSubmit: false,
     hasSubmittedSearch: false,

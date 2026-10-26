@@ -1,8 +1,10 @@
 import React, { useRef, useEffect } from "react";
+import InfoTooltip from "../InfoTooltip/InfoTooltip";
 import "./MultiSearchComponent.css";
 
 const MultiSelectSearchUI = ({
   title,
+  helpText = null,
   search,
   setSearch,
   filteredData,
@@ -48,6 +50,7 @@ const MultiSelectSearchUI = ({
     <div className="multi-select-container">
       <div className="multi-select-header">
         <label className="multi-select-label">{title}</label>
+        <InfoTooltip text={helpText} />
       </div>
 
       <div className="search-input">

@@ -1,0 +1,56 @@
+/* Encarts « Niveau de précision » et « Sélectionner un contexte géographique » */
+
+.mv-search-context {
+  display: grid;
+  gap: 0.625rem;
+}
+
+.mv-search-context__mode {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.mv-search-context .form-check,
+.mv-search-context__precision .form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.mv-search-context__panel {
+  margin-left: 1.25rem;
+}
+
+/* Le conteneur de sélection est déjà encadré : on neutralise la marge du thème */
+.mv-search-context .mv-selection-filter.mv-search-context__panel {
+  margin-top: 0;
+}
+
+.mv-search-context__precision {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.mv-search-context__coverage {
+  display: grid;
+  gap: 0.25rem;
+  margin-left: 1.25rem;
+}
+
+.mv-search-context__coverage-label {
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.mv-search-context__coverage .form-range {
+  width: 100%;
+  margin: 0;
+}
+
+.mv-search-context__coverage-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6875rem;
+  color: var(--sinp-text-muted, #6c757d);
+}

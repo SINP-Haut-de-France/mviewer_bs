@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import CollapsibleFilterSection from "../../components/CollapsibleFilterSection/CollapsibleFilterSection";
 import DateFilter from "../../components/DateFilter/DateFilter";
 import MultiSelectSearchComponent from "../../components/MultiSelectSearch/MultiSelectSearchComponent";
 import CheckBoxTreeView from "../../components/CheckBoxTreeView/CheckBoxTreeView";
 import Datasource from "../../components/Datasource/Datasource";
+import SearchContextSection from "../SearchContext/SearchContextSection";
 
 const TAXON_FILTER_TOUR_TARGETS = [
   "filter-taxonomic-group",
@@ -19,38 +20,68 @@ const GlobalFiltersUI = ({
   handleTaxChange,
   handleDptChange,
   handleComChange,
+  handleEpciChange,
   handleGrpChange,
   isLoading = false,
+  locationInputMode = false,
   selectionMode = false,
   hasValidSelection = false,
   selectionLabel = null,
   visibleEnvironmentalLayers = [],
   selectedSelectionLayerId = null,
+  onLocationInputModeChange = null,
   onSelectionModeChange = null,
-  onSelectionLayerChange = null,
-  onRequestSelectionChange = null,
   onSelectionChangeRequest = null,
+  onRevealLayers = null,
+  onPrecisionLevelChange = null,
+  onCoverageRateChange = null,
+  useBuffer = true,
+  onUseBufferChange = null,
 }) => {
   const selectedTaxonFilterCount =
     (filters.filteredTaxons || []).length + (filters.filteredGroupes || []).length;
+  const [taxonSectionExpanded, setTaxonSectionExpanded] = useState(true);
+
+  // La recherche par sélection demande de manipuler la carte et le menu des
+  // couches : on replie les filtres pour laisser la place à ces derniers.
+  useEffect(() => {
+    if (selectionMode) {
+      setTaxonSectionExpanded(false);
+    }
+  }, [selectionMode]);
 
   return (
     <div className="global-filters-container">
-        {/*/!* Indicateur du profil actif *!/*/}
-        {/*{activeProfile && (*/}
-        {/*  <div className="filter-profile-indicator">*/}
-        {/*    <small className="text-muted">*/}
-        {/*      <i className="fas fa-layer-group"></i> {activeProfile.name}*/}
-        {/*    </small>*/}
-        {/*  </div>*/}
-        {/*)}*/}
+        <SearchContextSection
+          filters={filters}
+          filterVisibility={filterVisibility}
+          isLoading={isLoading}
+          locationInputMode={locationInputMode}
+          selectionMode={selectionMode}
+          hasValidSelection={hasValidSelection}
+          selectionLabel={selectionLabel}
+          visibleEnvironmentalLayers={visibleEnvironmentalLayers}
+          onLocationInputModeChange={onLocationInputModeChange}
+          onSelectionModeChange={onSelectionModeChange}
+          onSelectionChangeRequest={onSelectionChangeRequest}
+          onRevealLayers={onRevealLayers}
+          handleDptChange={handleDptChange}
+          handleComChange={handleComChange}
+          handleEpciChange={handleEpciChange}
+          onPrecisionLevelChange={onPrecisionLevelChange}
+          onCoverageRateChange={onCoverageRateChange}
+          useBuffer={useBuffer}
+          onUseBufferChange={onUseBufferChange}
+        />
+
         {(filterVisibility.showTaxonomicGroup ||
           filterVisibility.showTaxon ||
           filterVisibility.showDate) && (
           <CollapsibleFilterSection
             title="Taxon"
             icon="fa-leaf"
-            defaultExpanded={true}
+            expanded={taxonSectionExpanded}
+            onExpandedChange={setTaxonSectionExpanded}
             badge={selectedTaxonFilterCount || null}
             dataTour="filter-taxon-group"
             expandOnTourTargets={TAXON_FILTER_TOUR_TARGETS}>
@@ -168,161 +199,6 @@ const GlobalFiltersUI = ({
           )}
         </CollapsibleFilterSection>
       )}
-
-      {/* Section Géographique */}
-      {(filterVisibility.showDepartment ||
-        filterVisibility.showCommune ||
-        visibleEnvironmentalLayers.length > 0 ||
-        selectionMode) && (
-        <CollapsibleFilterSection
-          title="Localisation"
-          icon="fa-map-marker-alt"
-          defaultExpanded={true}
-          badge={
-            selectionMode
-              ? hasValidSelection
-                ? 1
-                : null
-              : filters.filteredCommunes?.length ||
-                filters.filteredDepartments?.length ||
-                null
-          }
-          dataTour="filter-location">
-          <div className="mv-selection-filter">
-            <div className="multi-select-header">
-              <div className="multi-select-label mv-selection-filter__label">
-                Recherche par sélection
-              </div>
-            </div>
-
-            <div className="form-check">
-              <input
-                id="sinp-selection-filter-toggle"
-                className="form-check-input"
-                type="checkbox"
-                checked={selectionMode}
-                disabled={isLoading || visibleEnvironmentalLayers.length === 0}
-                onChange={(event) => onSelectionModeChange?.(event.target.checked)}
-              />
-              <label
-                className="form-check-label"
-                htmlFor="sinp-selection-filter-toggle">
-                Recherche par sélection
-              </label>
-            </div>
-
-            {selectionMode && hasValidSelection ? (
-              <div className="mv-selection-filter__status is-valid" role="status">
-                <i className="fas fa-draw-polygon" aria-hidden="true"></i>
-                <span>
-                  Zonage utilisé : <strong>{selectionLabel}</strong>
-                </span>
-                <button
-                  type="button"
-                  className="btn btn-link btn-sm p-0 ms-2"
-                  onClick={() => onSelectionChangeRequest?.()}>
-                  Modifier la sélection
-                </button>
-              </div>
-            ) : null}
-
-            {selectionMode && !hasValidSelection ? (
-              <div className="mv-selection-filter__status is-pending" role="status">
-                <span>
-                  Cliquez sur un zonage visible sur la carte, puis cliquez sur « Appliquer le filtrage ».
-                </span>
-              </div>
-            ) : null}
-
-            {!selectionMode && visibleEnvironmentalLayers.length === 0 ? (
-              <div className="mv-selection-filter__status is-pending" role="status">
-                Activez au moins une couche de zonage environnemental pour utiliser
-                ce mode.
-              </div>
-            ) : null}
-          </div>
-
-          <div
-            className={`mv-location-standard-filters ${
-              selectionMode ? "is-disabled" : ""
-            }`}
-            aria-disabled={selectionMode}>
-            <Datasource
-              name="departmentsDatasource"
-              datatype="json"
-              datasource="apps/sinp_hdf/data/departements_hdf.json">
-              {({ data: departments, loading, error }) => {
-                if (loading) return <p className="loading-message">Chargement...</p>;
-                if (error)
-                  return <p className="error-message">Erreur de chargement</p>;
-
-                return (
-                  <>
-                    {filterVisibility.showDepartment && (
-                      <div data-tour="filter-department">
-                        <MultiSelectSearchComponent
-                          datasource={departments || []}
-                          selectedValues={filters.filteredDepartments || []}
-                          returnValueKey="code_dpt"
-                          title="Département"
-                          label={(item) => `${item.code_dpt} - ${item.libelle}`}
-                          minCharacters={1}
-                          maxResults={10}
-                          multiselect={false}
-                          onChange={handleDptChange}
-                          disabled={selectionMode}
-                        />
-                      </div>
-                    )}
-
-                    {filterVisibility.showCommune && (
-                      <Datasource
-                        name="communesDatasource"
-                        datatype="json"
-                        datasource="apps/sinp_hdf/data/communes_hdf.json">
-                        {({
-                          data: communes,
-                          loading: loadingCommunes,
-                          error: errorCommunes,
-                        }) => {
-                          if (loadingCommunes)
-                            return <p className="loading-message">Chargement...</p>;
-                          if (errorCommunes)
-                            return <p className="error-message">Erreur</p>;
-
-                          return (
-                            <div data-tour="filter-commune">
-                              <MultiSelectSearchComponent
-                                datasource={communes || []}
-                                selectedValues={filters.filteredCommunes || []}
-                                parentDatasource={filters.filteredDepartments}
-                                parentDatasourceKey="code_dpt"
-                                searchKey="code_dpt"
-                                returnValueKey="code_insee"
-                                minCharacters={1}
-                                maxResults={10}
-                                maxSelections={5}
-                                title="Commune (5 max.)"
-                                label={(item) =>
-                                  `${item.code_insee} - ${item.libelle_commune}`
-                                }
-                                multiselect={true}
-                                onChange={handleComChange}
-                                disabled={selectionMode}
-                              />
-                            </div>
-                          );
-                        }}
-                      </Datasource>
-                    )}
-                  </>
-                );
-              }}
-            </Datasource>
-          </div>
-        </CollapsibleFilterSection>
-      )}
-
     </div>
   );
 };

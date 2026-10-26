@@ -1,0 +1,462 @@
+[
+  {
+    "code_epci": "248000531",
+    "nom_epci": "CA Amiens Métropole",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200071785",
+    "nom_epci": "CA Chauny Tergnier La Fère",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "245901152",
+    "nom_epci": "CA Coeur d'Ostrevent",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200040947",
+    "nom_epci": "CA Coeur de Flandre",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200068047",
+    "nom_epci": "CA Creil Sud Oise",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "246200299",
+    "nom_epci": "CA d'Hénin-Carvin",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200072460",
+    "nom_epci": "CA de Béthune-Bruay, Artois-Lys Romane",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200068500",
+    "nom_epci": "CA de Cambrai",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200070993",
+    "nom_epci": "CA de la Baie de Somme",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200042190",
+    "nom_epci": "CA de la Porte du Hainaut",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200072031",
+    "nom_epci": "CA de la Région de Château-Thierry",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200067965",
+    "nom_epci": "CA de la Région de Compiègne et de la Basse Automne",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "246200364",
+    "nom_epci": "CA de Lens - Liévin",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200069029",
+    "nom_epci": "CA des Deux Baies en Montreuillois",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200044618",
+    "nom_epci": "CA Douaisis Agglo",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200067999",
+    "nom_epci": "CA du Beauvaisis",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "246200729",
+    "nom_epci": "CA du Boulonnais",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200030633",
+    "nom_epci": "CA du Caudrésis et du Catésis",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200043495",
+    "nom_epci": "CA du Pays de Laon",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200069037",
+    "nom_epci": "CA du Pays de Saint-Omer",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200071892",
+    "nom_epci": "CA du Saint-Quentinois",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200090751",
+    "nom_epci": "CA Grand Calais Terres et Mers",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "240200477",
+    "nom_epci": "CA GrandSoissons Agglomération",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200043396",
+    "nom_epci": "CA Maubeuge Val de Sambre",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "245901160",
+    "nom_epci": "CA Valenciennes Métropole",
+    "nature_epci": "CA"
+  },
+  {
+    "code_epci": "200070969",
+    "nom_epci": "CC Avre Luce Noye",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200043263",
+    "nom_epci": "CC Coeur de l'Avesnois",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200018083",
+    "nom_epci": "CC de Desvres-Samer",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246000764",
+    "nom_epci": "CC de l'Aire Cantilienne",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200070985",
+    "nom_epci": "CC de l'Est de la Somme",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200068005",
+    "nom_epci": "CC de l'Oise Picarde",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "240200576",
+    "nom_epci": "CC de la Champagne Picarde",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200037059",
+    "nom_epci": "CC de la Haute Somme (Combles - Péronne - Roisel)",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246000848",
+    "nom_epci": "CC de la Picardie Verte",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246000897",
+    "nom_epci": "CC de la Plaine d'Estrées",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246200844",
+    "nom_epci": "CC de la Région d'Audruicq",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246200380",
+    "nom_epci": "CC de la Terre des Deux Caps",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "240200444",
+    "nom_epci": "CC de la Thiérache du Centre",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200044030",
+    "nom_epci": "CC des 7 Vallées",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200069482",
+    "nom_epci": "CC des Campagnes de l'Artois",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246000772",
+    "nom_epci": "CC des Deux Vallées",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200040954",
+    "nom_epci": "CC des Hauts de Flandre",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246000749",
+    "nom_epci": "CC des Lisières de l'Oise",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246000921",
+    "nom_epci": "CC des Pays d'Oise et d'Halatte",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "240200634",
+    "nom_epci": "CC des Portes de la Thiérache",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246000582",
+    "nom_epci": "CC des Sablons",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "240200600",
+    "nom_epci": "CC des Trois Rivières",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "247600588",
+    "nom_epci": "CC des Villes Soeurs",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "240200519",
+    "nom_epci": "CC du Canton d'Oulchy-le-Château",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "240200584",
+    "nom_epci": "CC du Canton de Charly-sur-Marne",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "240200592",
+    "nom_epci": "CC du Chemin des Dames",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246000376",
+    "nom_epci": "CC du Clermontois",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200070977",
+    "nom_epci": "CC du Grand Roye",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200069235",
+    "nom_epci": "CC du Haut Pays du Montreuillois",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246000129",
+    "nom_epci": "CC du Liancourtois",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246000913",
+    "nom_epci": "CC du Pays de Bray",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "240200469",
+    "nom_epci": "CC du Pays de la Serre",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246201016",
+    "nom_epci": "CC du Pays de Lumbres",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200043321",
+    "nom_epci": "CC du Pays de Mormal",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246000871",
+    "nom_epci": "CC du Pays de Valois",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246000855",
+    "nom_epci": "CC du Pays des Sources",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "248000747",
+    "nom_epci": "CC du Pays du Coquelicot",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "240200493",
+    "nom_epci": "CC du Pays du Vermandois",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246000756",
+    "nom_epci": "CC du Pays Noyonnais",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "245901038",
+    "nom_epci": "CC du Pays Solesmois",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246000566",
+    "nom_epci": "CC du Plateau Picard",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200035442",
+    "nom_epci": "CC du Sud Artois",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200043404",
+    "nom_epci": "CC du Sud Avesnois",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200069672",
+    "nom_epci": "CC du Ternois",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200070951",
+    "nom_epci": "CC du Territoire Nord Picardie",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "240200501",
+    "nom_epci": "CC du Val de l'Aisne",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200040426",
+    "nom_epci": "CC du Val de l'Oise",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "248000499",
+    "nom_epci": "CC du Val de Somme",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "246000707",
+    "nom_epci": "CC du Vexin-Thelle",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200070944",
+    "nom_epci": "CC du Vimeu",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "245900758",
+    "nom_epci": "CC Flandre Lys",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200069722",
+    "nom_epci": "CC Interrégionale Aumale - Blangy-sur-Bresle",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200071223",
+    "nom_epci": "CC Nièvre et Somme",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200044048",
+    "nom_epci": "CC Osartis Marquion",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200072478",
+    "nom_epci": "CC Pays d'Opale",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200071769",
+    "nom_epci": "CC Picardie des Châteaux",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200070936",
+    "nom_epci": "CC Ponthieu-Marquenterre",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200041960",
+    "nom_epci": "CC Pévèle-Carembault",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200071991",
+    "nom_epci": "CC Retz en Valois",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200066975",
+    "nom_epci": "CC Senlis Sud Oise",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200071181",
+    "nom_epci": "CC Somme Sud-Ouest",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200070928",
+    "nom_epci": "CC Terre de Picardie",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200067973",
+    "nom_epci": "CC Thelloise",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200071983",
+    "nom_epci": "CC Thiérache Sambre et Oise",
+    "nature_epci": "CC"
+  },
+  {
+    "code_epci": "200033579",
+    "nom_epci": "CU d'Arras",
+    "nature_epci": "CU"
+  },
+  {
+    "code_epci": "245900428",
+    "nom_epci": "CU de Dunkerque",
+    "nature_epci": "CU"
+  },
+  {
+    "code_epci": "200093201",
+    "nom_epci": "Métropole Européenne de Lille",
+    "nature_epci": "METRO"
+  }
+]
