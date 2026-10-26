@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
+import EntityCard from "./EntityCard";
 import EntityNavigationControls from "./EntityNavigationControls";
 import SearchResultsTabs from "./SearchResultsTabs";
-import { getResultPanelTitle, TAB_IDS } from "./searchResults.utils";
+import { getEntityCardData, getResultPanelTitle, TAB_IDS } from "./searchResults.utils";
 import "./SearchResults.css";
 
 const STATE_EVENT = "sinp:external-layer-observation-state";
@@ -60,6 +61,12 @@ const ExternalLayerObservationResultsComponent = ({ featureUid }) => {
         onNext={() =>
           window.externalLayersObs?.selectEntity?.(featureUid, currentIndex + 1)
         }
+      />
+
+      <EntityCard
+        label={state.currentEntity?.label || state.siteName || ""}
+        cardData={getEntityCardData(state.currentProperties || {}, state.currentDetails || [])}
+        loading={loading}
       />
 
       <SearchResultsTabs

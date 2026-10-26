@@ -217,6 +217,32 @@ export const getSelectedEntitySummary = (layerId, properties = {}, layerConfig =
   };
 };
 
+// Carte de synthèse d'une entité : dernière observation et évènements viennent de
+// fn_get_stats, le total d'observations est la somme de "Nb. de données" (hors pagination).
+export const getEntityCardData = (properties = {}, details = []) => {
+  const rows = Array.isArray(details) ? details : [];
+  const observationCount = rows.reduce((total, detail) => {
+    const count = Number(detail?.nb_observations);
+    return Number.isFinite(count) ? total + count : total;
+  }, 0);
+  const lastObservationDate =
+    properties.last_date_obs ??
+    rows.reduce((latest, detail) => {
+      const candidate = parseDateValue(detail?.last_date_obs);
+      const current = parseDateValue(latest);
+      return candidate && (!current || candidate > current) ? detail.last_date_obs : latest;
+    }, null);
+  const rawEventCount = properties.nb_evenements;
+  const hasEventCount =
+    rawEventCount !== null && rawEventCount !== undefined && String(rawEventCount).trim() !== "";
+
+  return {
+    lastObservationDate: lastObservationDate ?? null,
+    eventCount: hasEventCount ? String(rawEventCount).trim() : "-",
+    observationCount,
+  };
+};
+
 const LAYER_CONFIG = {
   communeSearch: {
     panelLabel: "Détails de la commune",

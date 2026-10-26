@@ -5,6 +5,42 @@
   gap: 0.5rem;
 }
 
+.mv-filter-actions-bar__tags {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  max-height: 5.5rem;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.mv-filter-actions-bar__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
+  padding: 0.3em 0.65em;
+  border-radius: var(--bs-border-radius-pill, 50rem);
+  background-color: var(--bs-primary, #0d6efd);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.mv-filter-actions-bar__tag i {
+  flex-shrink: 0;
+}
+
+.mv-filter-actions-bar__tag span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .mv-filter-actions-bar__count {
   grid-column: 1 / -1;
   font-size: 0.8125rem;
