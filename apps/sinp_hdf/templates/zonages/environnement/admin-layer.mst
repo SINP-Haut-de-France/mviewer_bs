@@ -1,0 +1,121 @@
+{{#features}}
+	<li class="item external-layer-feature" id="{{feature_ol_uid}}">
+		<h3 class="external-layer-feature__title">{{nom_min}}{{nom_epci}}{{NOM_DEP}}{{topooh}}</h3>
+
+		<dl class="external-layer-feature__details">
+			{{#insee_com}}<dt>Code INSEE</dt><dd>{{insee_com}}</dd>{{/insee_com}}
+			{{#statut}}<dt>Statut</dt><dd>{{statut}}</dd>{{/statut}}
+			{{#code_epci}}<dt>Code EPCI</dt><dd>{{code_epci}}</dd>{{/code_epci}}
+			{{#nature_epci}}<dt>Nature</dt><dd>{{nature_epci}}</dd>{{/nature_epci}}
+			{{#INSEE_DEP}}<dt>Code département</dt><dd>{{INSEE_DEP}}</dd>{{/INSEE_DEP}}
+			{{#cdoh}}<dt>Code hydro</dt><dd>{{cdoh}}</dd>{{/cdoh}}
+			{{#typtopooh}}<dt>Type</dt><dd>{{typtopooh}}</dd>{{/typtopooh}}
+			{{#pop_tot}}<dt>Population</dt><dd>{{pop_tot}}</dd>{{/pop_tot}}
+			{{#surf_km2}}<dt>Surface</dt><dd>{{surf_km2}} km²</dd>{{/surf_km2}}
+		</dl>
+		
+
+		<button
+				id="external-layer-apply-{{feature_ol_uid}}"
+				class="external-layer-feature__apply btn btn-sm btn-outline-primary"
+				type="button"
+				onclick="				(function(uid){
+					try{
+						// Request externalLayersObs to open the zonage and then trigger the global submit
+						window.dispatchEvent(new CustomEvent('sinp:external-layer-request-open',{detail:{featureUid:uid}}));
+					}catch(e){console.error(e);} 
+				})('{{feature_ol_uid}}')">
+				Afficher les observations
+			</button>
+
+			<script>(function(btnId){
+				var btn = document.getElementById(btnId);
+				if(!btn) return;
+				var featureUid = btn.id.replace(/^external-layer-apply-/, '');
+				var buttonState = function(state){
+					if(!state || String(state.featureUid) !== String(featureUid)){
+						return;
+					}
+
+					var currentIndex = Number.isInteger(state.currentIndex) ? state.currentIndex : 0;
+					var total = Array.isArray(state.entities) ? state.entities.length : 0;
+					var isLoaded = state.status === 'success';
+					var isLocked = isLoaded && total > 0 && currentIndex === 0;
+
+					btn.disabled = isLocked || state.status === 'loading' || state.status === 'error';
+					btn.innerHTML = 'Afficher les observations';
+				};
+
+				window.addEventListener('sinp:external-layer-observation-state', function(e){
+					buttonState(e && e.detail ? e.detail : null);
+				});
+				window.addEventListener('sinp:filter-loading-state', function(e){
+					if (Boolean(e.detail?.isLoading)) {
+						btn.disabled = true;
+						btn.innerHTML = 'Afficher les observations';
+					}
+				});
+
+				try {
+					var currentState = window.externalLayersObs && typeof window.externalLayersObs.getState === 'function'
+						? window.externalLayersObs.getState(featureUid)
+						: null;
+					buttonState(currentState);
+				} catch (e) {}
+			})('external-layer-apply-{{feature_ol_uid}}');</script>
+		
+		<mv-external-layer-observation-results
+			data-feature-uid="{{feature_ol_uid}}">
+		</mv-external-layer-observation-results>
+	</li>
+{{/features}}
+
+<style>
+	.external-layer-feature {
+		padding: 0.75rem;
+	}
+
+	.external-layer-feature__title {
+		margin: 0 0 1rem;
+		color: #2d5948;
+		font-size: 1.35rem;
+		line-height: 1.2;
+	}
+
+	.external-layer-feature__details {
+		display: grid;
+		grid-template-columns: minmax(8rem, auto) 1fr;
+		gap: 0.4rem 0.75rem;
+		margin-bottom: 1rem;
+	}
+
+	.external-layer-feature__details dt,
+	.external-layer-feature__details dd {
+		margin: 0;
+	}
+
+	.external-layer-feature__details dt {
+		font-weight: 600;
+	}
+
+	.external-layer-feature__link {
+		display: inline-block;
+		padding: 0.5rem 0.75rem;
+		border-radius: 0.25rem;
+		color: #fff;
+		background-color: #2d5948;
+		text-decoration: none;
+	}
+
+	.external-layer-feature__link:hover,
+	.external-layer-feature__link:focus {
+		color: #fff;
+		background-color: #1f4033;
+		text-decoration: none;
+	}
+
+	mv-external-layer-observation-results {
+		display: block;
+		margin-top: 1rem;
+	}
+</style>

@@ -20,7 +20,11 @@
     { "id": "Patrinat_RAMSAR_France", "label": "RAMSAR" },
     { "id": "Patrinat_ZNIEFF1_France", "label": "ZNIEFF de type I" },
     { "id": "Patrinat_ZNIEFF2_France", "label": "ZNIEFF de type II" },
-    { "id": "Patrinat_INPG_France", "label": "INPG" }
+    { "id": "Patrinat_INPG_France", "label": "INPG" },
+    { "id": "communes", "label": "Communes" },
+    { "id": "epci", "label": "EPCI" },
+    { "id": "DEPARTEMENT", "label": "Départements" },
+    { "id": "bassinversanttopographique_fxx", "label": "Bassins versants" }
   ],
   "QUA": {
     "GEOSERVER_BASE_URL": "http://localhost:8080/geoserver/qua_sinp",
@@ -52,6 +56,7 @@
     "GEONETWORK_METADATA_BASE_URL": "https://dev.geo2france.fr/datahub/dataset/",
     "CLICNAT_BASE_URL": "http://localhost:8080/clicnat/sinp/",
     "CBN_BASE_URL": "http://localhost:8080/cbns/sinp/",
-    "INPN_BASE_URL": "http://localhost:8080/inpn/sinp/"
+    "INPN_BASE_URL": "http://localhost:8080/inpn/sinp/",
+    "FOLDER_ICONS": "apps/sinp_hdf/dist/sinp_hdf/custom_theme/img/groups/"
   }
 }

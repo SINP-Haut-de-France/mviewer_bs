@@ -1,4 +1,5 @@
 import React from "react";
+import DonneesDetailComponent from "./DonneesDetailComponent";
 import JddDetailComponent from "./JddDetailComponent";
 import TaxonDetailComponent from "./TaxonDetailComponent";
 import { TAB_IDS } from "./searchResults.utils";
@@ -6,6 +7,7 @@ import { TAB_IDS } from "./searchResults.utils";
 const TAB_DEFINITIONS = [
   { id: TAB_IDS.OBSERVATIONS, label: "Taxon(s) observé(s)" },
   { id: TAB_IDS.DATASETS, label: "Métadonnées" },
+  { id: TAB_IDS.DONNEES, label: "Détails" },
 ];
 
 const SearchResultsTabs = ({
@@ -23,6 +25,9 @@ const SearchResultsTabs = ({
   datasetLoadingState = false,
   datasetErrorMessage = "",
   metadataInMaintenance = false,
+  donneesDetails = [],
+  donneesLoadingState = false,
+  donneesErrorMessage = "",
 }) => {
   return (
     <>
@@ -57,6 +62,15 @@ const SearchResultsTabs = ({
             loadingState={datasetLoadingState}
             errorMessage={datasetErrorMessage}
             inMaintenance={metadataInMaintenance}
+          />
+        ) : null}
+        {activeTab === TAB_IDS.DONNEES ? (
+          <DonneesDetailComponent
+            details={donneesDetails}
+            selectionPrompt={selectionPrompt}
+            selectionPromptMessage={selectionPromptMessage}
+            loadingState={donneesLoadingState}
+            errorMessage={donneesErrorMessage}
           />
         ) : null}
       </div>

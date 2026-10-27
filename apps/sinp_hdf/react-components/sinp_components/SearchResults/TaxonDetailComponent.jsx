@@ -9,29 +9,61 @@ const PAGE_SIZE_OPTIONS = [
   { value: "all", label: "Tous" },
 ];
 
-const TAXON_COLUMNS = [
-  {
-    id: "taxonomicGroup",
-    label: "Groupe taxonomique",
-    sortable: true,
-    sortType: "string",
-    getValue: (detail) => detail?.groupe_taxo,
-  },
-  {
-    id: "observedSpecies",
-    label: "Taxon(s) observée(s)",
-    sortable: true,
-    sortType: "string",
-    getValue: (detail) => detail?.nom_vern || detail?.nom_valide || "-",
-    getSortValue: (detail) =>
-      [detail?.nom_vern || "", detail?.nom_valide || ""].join(" "),
-    render: (detail) => (
+// FOLDER_ICONS : chemin du dossier d'icônes relatif à l'URL de base de l'application
+const getGroupIconUrl = (iconName) => {
+  const folder =
+    window.mviewer?.env?.[window.mviewer?.env?.CURRENT_ENV]?.FOLDER_ICONS || "";
+  return `${folder.replace(/\/?$/, "/")}${iconName}`;
+};
+
+export const renderGroupIcon = (detail) => {
+  const icon = detail?.icone_groupe_principal;
+  if (!icon) return null;
+  return (
+    <img
+      src={getGroupIconUrl(icon)}
+      alt={detail?.nom_groupe_principal || ""}
+      title={detail?.nom_groupe_principal || ""}
+      className="mv-sr-group-icon"
+    />
+  );
+};
+
+export const GROUP_ICON_COLUMN = {
+  id: "groupIcon",
+  label: "",
+  sortable: false,
+  getValue: (detail) => detail?.icone_groupe_principal,
+  render: renderGroupIcon,
+};
+
+export const OBSERVED_SPECIES_COLUMN = {
+  id: "observedSpecies",
+  label: "Taxon(s) observée(s)",
+  sortable: true,
+  sortType: "string",
+  getValue: (detail) => detail?.nom_vern || detail?.nom_valide || "-",
+  getSortValue: (detail) => [detail?.nom_vern || "", detail?.nom_valide || ""].join(" "),
+  render: (detail) => {
+    const content = (
       <>
         <div>{detail?.nom_vern || detail?.nom_valide || "-"}</div>
         <div className="mv-sr-latin-name">{detail?.nom_valide || ""}</div>
       </>
-    ),
+    );
+    return detail?.external_url ? (
+      <a href={detail.external_url} target="_blank" rel="noopener noreferrer">
+        {content}
+      </a>
+    ) : (
+      content
+    );
   },
+};
+
+const TAXON_COLUMNS = [
+  GROUP_ICON_COLUMN,
+  OBSERVED_SPECIES_COLUMN,
   {
     id: "lastObservation",
     label: "Dernière observation",
@@ -69,6 +101,7 @@ const TaxonDetailComponent = ({
         itemLabel="taxons"
         pageSizeOptions={PAGE_SIZE_OPTIONS}
         defaultPageSize={25}
+        defaultSort={{ columnId: "observationCount", direction: "desc" }}
         selectionPrompt={selectionPrompt}
         selectionPromptMessage={selectionPromptMessage}
         loadingState={loadingState}
@@ -76,10 +109,11 @@ const TaxonDetailComponent = ({
         errorMessage={errorMessage}
         emptyMessage="Aucune observation détaillée disponible."
         groupBy={{
-          columnId: "taxonomicGroup",
+          columnId: "groupIcon",
           label: "groupe taxonomique",
           toggleLabel: "Regrouper par groupe taxonomique",
-          getValue: (detail) => detail.groupe_taxo,
+          getValue: (detail) => detail?.nom_groupe_principal,
+          renderIcon: renderGroupIcon,
           emptyLabel: "Groupe non renseigné",
         }}
       />

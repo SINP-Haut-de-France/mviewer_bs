@@ -3,6 +3,7 @@ import { parseDateValue } from "../../utils/date.utils";
 export const TAB_IDS = {
   OBSERVATIONS: "observations",
   DATASETS: "datasets",
+  DONNEES: "donnees",
   INFORMATIONS: "informations",
 };
 
