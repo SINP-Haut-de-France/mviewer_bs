@@ -5,6 +5,7 @@ mviewer.customControls.gridSearch5x5 = (function () {
         layerId: "gridSearch5x5",
         mainTypeName: "fn_get_stats",
         detailsTypeName: "fn_get_obs_detaillee",
+        donneesTypeName: "fn_get_details_donnees",
         metadataTypeName: "fn_get_metadonnees",
         targetLocCode: "7",
         entityCodeKeys: ["code_maille", "id_maille", "maille", "code"],
@@ -103,6 +104,7 @@ mviewer.customControls.gridSearch5x5 = (function () {
       controller.getEntityNavigationState(feature),
     selectEntityByIndex: (index) => controller.selectEntityByIndex(index),
     ensureMetadataForFeatures: (features) => controller.ensureMetadataForFeatures(features),
+    ensureDonneesForFeatures: (features) => controller.ensureDonneesForFeatures(features),
     normalizeFilters: (selectedFilters) =>
       controller._normalizeInputParams(selectedFilters),
     openFilterModal: function () {

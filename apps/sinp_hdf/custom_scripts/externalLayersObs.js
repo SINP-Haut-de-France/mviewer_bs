@@ -257,6 +257,24 @@ window.externalLayersObs = (function () {
     return name || code || typeLabel;
   };
 
+  const FEATURE_LABEL_FIELDS = [
+    "nom_site",
+    "nom_min",
+    "nom_epci",
+    "NOM_DEP",
+    "topooh",
+  ];
+
+  const _getFeatureLabel = function (feature, fallback = "Zonage environnemental") {
+    for (const field of FEATURE_LABEL_FIELDS) {
+      const value = feature?.get?.(field);
+      if (value) {
+        return String(value);
+      }
+    }
+    return fallback;
+  };
+
   const _getLayerName = function (feature) {
     const layerId = feature?.get?.("mviewerid");
     return mviewer.getLayers?.()?.[layerId]?.name || "Zonage environnemental";
@@ -666,7 +684,7 @@ window.externalLayersObs = (function () {
 
     _publishState(featureUid, {
       status: "loading",
-      siteName: feature.get("nom_site") || "Zonage environnemental",
+      siteName: _getFeatureLabel(feature),
       layerName: _getLayerName(feature),
       selectionMode: true,
       entities: [],
@@ -692,7 +710,7 @@ window.externalLayersObs = (function () {
       const metadata = _extractProperties(metadataPayload);
 
       if (wholeSelection) {
-        const siteName = feature.get("nom_site") || "Zonage environnemental";
+        const siteName = _getFeatureLabel(feature);
         const entity = {
           code: normalizedUid,
           label: siteName,
@@ -745,7 +763,7 @@ window.externalLayersObs = (function () {
 
       _publishState(featureUid, {
         status: "success",
-        siteName: feature.get("nom_site") || "Zonage environnemental",
+        siteName: _getFeatureLabel(feature),
         layerName: _getLayerName(feature),
         selectionMode: true,
         entities,
@@ -767,7 +785,7 @@ window.externalLayersObs = (function () {
         overlayLayer?.getSource?.()?.clear?.();
         _publishState(featureUid, {
           status: "error",
-          siteName: feature.get("nom_site") || "Zonage environnemental",
+          siteName: _getFeatureLabel(feature),
           layerName: _getLayerName(feature),
           selectionMode: true,
           entities: [],
@@ -809,7 +827,7 @@ window.externalLayersObs = (function () {
     const layerId = feature.get("mviewerid");
     const layerLabel =
       mviewer.getLayers?.()?.[layerId]?.name || "Zonage environnemental";
-    const featureLabel = feature.get("nom_site") || layerLabel;
+    const featureLabel = _getFeatureLabel(feature, layerLabel);
     clearSelection();
     selectedFeatureUid = _normalizeFeatureUid(featureUid);
     _highlightSelection(feature);
