@@ -41,6 +41,7 @@ class SinpBaseCustom {
     this.layerId = config.layerId;
     this.mainTypeName = config.mainTypeName;
     this.detailsTypeName = config.detailsTypeName || null;
+    this.donneesTypeName = config.donneesTypeName || null;
     this.metadataTypeName = config.metadataTypeName || config.jddDetailsTypeName || null;
     this.targetLocCode = config.targetLocCode || null;
     const defaultEntityCodeKeys = [
@@ -1102,6 +1103,10 @@ class SinpBaseCustom {
       feature.set("jdd_data_loading", false);
       feature.set("jdd_data_error", null);
       feature.set("jdd_data_loaded", false);
+      feature.set("donnees_details", []);
+      feature.set("donnees_data_loading", false);
+      feature.set("donnees_data_error", null);
+      feature.set("donnees_data_loaded", false);
     });
 
     return mainFeatures;
@@ -1216,6 +1221,68 @@ class SinpBaseCustom {
       feature.set("entity_data_error", null);
       feature.set("entity_data_loaded", true);
     });
+
+    return normalizedFeatures;
+  }
+
+  // Observations détaillées (onglet "Détails") : chargées à la demande, au clic sur l'onglet.
+  async ensureDonneesForFeatures(features = [], params = this._lastSearchParams || {}) {
+    const normalizedFeatures = Array.isArray(features) ? features.filter(Boolean) : [];
+    if (!normalizedFeatures.length || !this.donneesTypeName) {
+      return normalizedFeatures;
+    }
+
+    const pendingFeatures = normalizedFeatures.filter((feature) => {
+      return (
+        feature.get("donnees_data_loaded") !== true &&
+        feature.get("donnees_data_loading") !== true
+      );
+    });
+
+    if (!pendingFeatures.length) {
+      return normalizedFeatures;
+    }
+
+    pendingFeatures.forEach((feature) => {
+      feature.set("donnees_details", []);
+      feature.set("donnees_data_loading", true);
+      feature.set("donnees_data_error", null);
+      feature.set("donnees_data_loaded", false);
+    });
+
+    try {
+      const detailParams = this._buildDetailRequestParams(pendingFeatures, params, {
+        preferFeatureScope: true,
+      });
+      const joinConfig = this._getResultJoinConfig(detailParams);
+      const properties = await this._fetchProperties(detailParams, this.donneesTypeName);
+
+      this._attachResolvedPropertiesToFeatures(pendingFeatures, properties, detailParams, {
+        mode: joinConfig ? "match" : "all",
+        featureKey: joinConfig?.featureKey || null,
+        detailKey: joinConfig?.detailKey || null,
+        targetProperty: "donnees_details",
+      });
+
+      pendingFeatures.forEach((feature) => {
+        feature.set("donnees_data_loading", false);
+        feature.set("donnees_data_error", null);
+        feature.set("donnees_data_loaded", true);
+      });
+    } catch (error) {
+      pendingFeatures.forEach((feature) => {
+        feature.set("donnees_data_loading", false);
+        feature.set(
+          "donnees_data_error",
+          "Impossible de charger les observations pour cette entite."
+        );
+        feature.set("donnees_data_loaded", false);
+      });
+      console.error(`[${this.layerId}] Error during donnees loading:`, error);
+    }
+
+    // feature.set() ne déclenche pas d'événement "change" : on prévient explicitement React.
+    this._notifyFeatureInfoDataChanged(pendingFeatures);
 
     return normalizedFeatures;
   }
