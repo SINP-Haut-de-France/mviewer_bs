@@ -176,8 +176,8 @@ let draw = (function () {
       buttonOptions = [buttonOptions, "</div>"].join("");
     }
 
-    $("#toolstoolbar").append(button);
-    $(buttonOptions).insertAfter("#drawBtn");
+    document.querySelector("#toolstoolbar")?.insertAdjacentHTML("beforeend", button);
+    document.querySelector("#drawBtn")?.insertAdjacentHTML("afterend", buttonOptions);
   };
 
   /**
@@ -229,7 +229,7 @@ let draw = (function () {
     }
     // remove help overlay and interaction
     _map.un("pointermove", _pointerMoveHandler);
-    $(_helpTooltipMessage).addClass("hidden");
+    _helpTooltipMessage?.classList.add("hidden");
     _map.removeInteraction(_helpTooltip);
 
     // remove all drawned feature
@@ -246,7 +246,7 @@ let draw = (function () {
       _map.removeInteraction(_helpTooltip);
     }
     _sourceDraw.removeFeature(_currentFeature);
-    $("#drawingPanelInfo").addClass("hidden");
+    document.querySelector("#drawingPanelInfo")?.classList.add("hidden");
   };
 
   /**
@@ -266,9 +266,8 @@ let draw = (function () {
       document.getElementById("drawPolygon").classList.remove("active");
     }
 
-    //TODO remove Jquery
-    $("#drawoptions").hide();
-    $("#drawingPanelInfo").addClass("hidden");
+    document.querySelector("#drawoptions")?.style.setProperty("display", "none");
+    document.querySelector("#drawingPanelInfo")?.classList.add("hidden");
 
     if (document.getElementById("inputButton")) {
       document.getElementById("inputButton").value = "";
@@ -341,7 +340,7 @@ let draw = (function () {
     // Creation of new HTML element
     let drawTooltipElt = document.createElement("input");
     drawTooltipElt.className = "drawTooltip";
-    drawTooltipElt.setAttribute("id", "drawTooltip-" + feature.id_);
+    drawTooltipElt.setAttribute("id", `drawTooltip-${feature.id_}`);
     drawTooltipElt.setAttribute("oninput", "this.setAttribute('size',this.value.length)");
     drawTooltipElt.type = "text";
     drawTooltipElt.value = feature.getProperties().label;
@@ -394,7 +393,7 @@ let draw = (function () {
     }
     _helpTooltipMessage.innerHTML = helpMsg;
     _helpTooltip.setPosition(evt.coordinate);
-    $(_helpTooltipMessage).removeClass("hidden");
+    _helpTooltipMessage.classList.remove("hidden");
   };
 
   /**
@@ -433,28 +432,31 @@ let draw = (function () {
           </div>
         </div>
         <div class="drawingPanel__body">
-          <div id="drawingPanelPosition" class="content" />
-          <div id="drawingPanelLength" class="content" />
-          <div id="drawingPanelArea" class="content" />
-          <div id="drawingPanelHelp" class="content" />
+          <div id="drawingPanelPosition" class="content"></div>
+          <div id="drawingPanelLength" class="content"></div>
+          <div id="drawingPanelArea" class="content"></div>
+          <div id="drawingPanelHelp" class="content"></div>
         </div>
         <div id="drawingPanelExport" class="drawingPanel__footer">
           <button id="dpExportBtn" i18n="draw.button.export" class="btn btn-primary btn-sm" disabled onclick="draw.export();">Enregister le projet</button>
         </div>
       </div>`;
 
-    let existingPanelInfo = $("#drawingPanelInfo");
-    if (existingPanelInfo.length) {
-      existingPanelInfo.replaceWith(panelInfo);
+    const existingPanelInfo = document.querySelector("#drawingPanelInfo");
+    if (existingPanelInfo) {
+      existingPanelInfo.insertAdjacentHTML("afterend", panelInfo);
+      existingPanelInfo.remove();
     } else {
-      $("#page-content-wrapper").append(panelInfo);
+      document
+        .querySelector("#page-content-wrapper")
+        ?.insertAdjacentHTML("beforeend", panelInfo);
     }
 
     document
       .getElementById("drawingPanelInfoLabel")
       .addEventListener("input", function () {
         let inputUser = document.getElementById("drawingPanelInfoLabel").value;
-        document.getElementById("drawTooltip-" + _currentFeature.id_).value = inputUser;
+        document.getElementById(`drawTooltip-${_currentFeature.id_}`).value = inputUser;
         _currentFeature.set("label", inputUser);
       });
   };
@@ -485,7 +487,7 @@ let draw = (function () {
   let _addDrawInteraction = function (type) {
     // if interaction exist disabled it and change button style
     if (_currentDrawType == type) {
-      document.getElementById("draw" + _currentDrawType).classList.remove("active");
+      document.getElementById(`draw${_currentDrawType}`).classList.remove("active");
       _map.removeInteraction(_drawInt);
       _currentDrawType = null;
       _map.removeInteraction(_snapInter);
@@ -494,11 +496,11 @@ let draw = (function () {
       }
     } else {
       if (_currentDrawType) {
-        document.getElementById("draw" + _currentDrawType).classList.remove("active");
+        document.getElementById(`draw${_currentDrawType}`).classList.remove("active");
         _map.removeInteraction(_drawInt);
       }
       _currentDrawType = type;
-      document.getElementById("draw" + _currentDrawType).classList.add("active");
+      document.getElementById(`draw${_currentDrawType}`).classList.add("active");
 
       _drawInt = new DeleteOnRightClick({
         source: _sourceDraw,
@@ -529,8 +531,8 @@ let draw = (function () {
       if (_config.help == "true") {
         _createHelpTooltip();
         _map.on("pointermove", _pointerMoveHandler);
-        $(_map.getViewport()).on("mouseout", function () {
-          $(_helpTooltipMessage).addClass("hidden");
+        _map.getViewport().addEventListener("mouseout", function () {
+          _helpTooltipMessage?.classList.add("hidden");
         });
       }
 
@@ -593,8 +595,12 @@ let draw = (function () {
           }
 
           if (type === "Point") {
-            document.getElementById("drawingPanelPosition").innerHTML =
-              ol.coordinate.toStringHDMS(ol.proj.toLonLat(coordinates));
+            const drawingPanelPosition = document.getElementById("drawingPanelPosition");
+            if (drawingPanelPosition) {
+              drawingPanelPosition.textContent = ol.coordinate.toStringHDMS(
+                ol.proj.toLonLat(coordinates)
+              );
+            }
           }
 
           if (_config.help == "true") {
@@ -603,15 +609,16 @@ let draw = (function () {
             helpMsg = mviewer.lang
               ? mviewer.lang[mviewer.lang.lang]("draw.help.panel")
               : helpMsg;
-            document.getElementById("drawingPanelHelp").innerHTML = helpMsg;
+            const drawingPanelHelp = document.getElementById("drawingPanelHelp");
+            if (drawingPanelHelp) drawingPanelHelp.innerHTML = helpMsg;
           }
 
           if (_config.singleDraw == "true") {
             _map.removeInteraction(_drawInt);
             _map.un("pointermove", _pointerMoveHandler);
-            $(_helpTooltipMessage).addClass("hidden");
+            _helpTooltipMessage?.classList.add("hidden");
             _map.removeInteraction(_helpTooltip);
-            document.getElementById("draw" + _currentDrawType).classList.remove("active");
+            document.getElementById(`draw${_currentDrawType}`).classList.remove("active");
             _currentDrawType = null;
           }
 
@@ -653,7 +660,8 @@ let draw = (function () {
     if (geometry.getType() === "Point") {
       let position = geometry.getCoordinates();
       let outputMeasureDraw = ol.coordinate.toStringHDMS(ol.proj.toLonLat(position));
-      document.getElementById("drawingPanelPosition").innerHTML = outputMeasureDraw;
+      const drawingPanelPosition = document.getElementById("drawingPanelPosition");
+      if (drawingPanelPosition) drawingPanelPosition.textContent = outputMeasureDraw;
     } else if (geometry.getType() === "LineString") {
       _measureDrawLength(geometry.getCoordinates());
     } else if (geometry.getType() === "Polygon") {
@@ -671,21 +679,26 @@ let draw = (function () {
     let length = 0;
 
     for (let i = 0, ii = coordinates.length - 1; i < ii; ++i) {
-      let c1 = ol.proj.transform(coordinates[i], _projection, "EPSG:4326");
-      let c2 = ol.proj.transform(coordinates[i + 1], _projection, "EPSG:4326");
+      let c1 = utils.transformCoordinateSafe(coordinates[i], _projection, "EPSG:4326");
+      let c2 = utils.transformCoordinateSafe(
+        coordinates[i + 1],
+        _projection,
+        "EPSG:4326"
+      );
       length += _wgs84Sphere.getDistance(c1, c2);
     }
     let output;
     if (length > 100) {
-      output = Math.round((length / 1000) * 100) / 100 + " " + "km";
+      output = `${Math.round((length / 1000) * 100) / 100} km`;
     } else {
-      output = Math.round(length * 100) / 100 + " " + "m";
+      output = `${Math.round(length * 100) / 100} m`;
     }
 
     let lineMsg = mviewer.lang
       ? mviewer.lang[mviewer.lang.lang]("draw.measure.line")
       : "Longueur : ";
-    document.getElementById("drawingPanelLength").innerHTML = lineMsg + output;
+    const drawingPanelLength = document.getElementById("drawingPanelLength");
+    if (drawingPanelLength) drawingPanelLength.textContent = `${lineMsg}${output}`;
     return output;
   };
 
@@ -702,17 +715,18 @@ let draw = (function () {
     if (area < 0.0001) {
       output = 0;
     } else if (area < 10000) {
-      output = Math.round(area * 100) / 100 + " " + "m<sup>2</sup>";
+      output = `${Math.round(area * 100) / 100} m<sup>2</sup>`;
     } else if (area < 1000000) {
-      output = Math.round((area / 10000) * 100) / 100 + " " + "ha";
+      output = `${Math.round((area / 10000) * 100) / 100} ha`;
     } else if (area >= 1000000) {
-      output = Math.round((area / 1000000) * 100) / 100 + " " + "km<sup>2</sup>";
+      output = `${Math.round((area / 1000000) * 100) / 100} km<sup>2</sup>`;
     }
 
     let AreaMsg = mviewer.lang
       ? mviewer.lang[mviewer.lang.lang]("draw.measure.area")
       : "Aire : ";
-    document.getElementById("drawingPanelArea").innerHTML = AreaMsg + output;
+    const drawingPanelArea = document.getElementById("drawingPanelArea");
+    if (drawingPanelArea) drawingPanelArea.innerHTML = `${AreaMsg}${output}`;
     return output;
   };
 
