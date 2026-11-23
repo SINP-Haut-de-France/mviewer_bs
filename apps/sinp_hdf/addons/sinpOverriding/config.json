@@ -1,7 +1,7 @@
 {
-  "js": ["sinpOverriding"],
+  "js": ["sinpOverriding.js"],
   "css": null,
-  "html": null,
-  "target": "body",
+  "html": "sinpOverriding.html",
+  "target": "wrapper",
   "options": {}
 }

@@ -32,8 +32,7 @@ const apiFeatures = (function () {
         addLayerResultLoading.style.display = "none";
       })
       .catch(function errorHandler(error) {
-        var message =
-          "Erreur dans la récupération de données <strong>" + url + "</strong><br>";
+        var message = `Erreur dans la récupération de données <strong>${url}</strong><br>`;
         _error(message);
         // Hide the input
         addLayerResultLoading.style.display = "none";
@@ -136,7 +135,7 @@ const apiFeatures = (function () {
     // Empty parentDiv
     parentDiv.innerHTML = "";
 
-    $.each(layerList, function (id, layer) {
+    layerList.forEach(function (layer) {
       let btn = document.createElement("button");
       btn.className = "vcenter";
 
