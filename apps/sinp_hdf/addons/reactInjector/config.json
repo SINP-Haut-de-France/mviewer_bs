@@ -1,7 +1,7 @@
 {
-  "js": ["reactInjector"],
+  "js": ["reactInjector.js"],
   "css": null,
-  "html": null,
-  "target": "body",
+  "html": "reactInjector.html",
+  "target": "wrapper",
   "options": {}
 }

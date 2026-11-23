@@ -23,6 +23,7 @@ Configurer - Les couches
                 scalemax=""
                 visible=""
                 owsoptions=""
+                owslegendoptions=""
                 tiled=""
                 queryable=""
                 fields=""
@@ -101,6 +102,7 @@ Paramètres pour gérer l'affichage de la couche
 * ``visible`` :guilabel:`studio` :  Booléen stipulant si la couche est visible par défaut.
 * ``opacity`` :guilabel:`studio` : Opacité de la couche (1 par défaut).
 * ``tiled`` :guilabel:`studio` : Booléen stipulant si on désire un affichage tuilé de la couche. Très utile pour affichage de grosses couches.
+* ``xyz`` : Booléen optionnel. Si ``true`` sur une couche ``type="wms"``, mviewer charge l'URL comme un flux raster XYZ (`{z}/{x}/{y}`) au lieu d'émettre des requêtes WMS. Dans ce mode, les paramètres WMS et le GetFeatureInfo ne s'appliquent pas.
 * ``style`` :guilabel:`studio` : Style(s) de la couche. Si plusieurs styles , utiliser la virgule comme séparateur. Si la couche est de type wms, il faut faire référence à un style sld. Si la couche est de type geojson, il faut faire référence à un style définit dans lib/featurestyles.js. Si la couche est de type vector-tms, le style correspond à la valeur indiquée en tant que première clé de la propriété "sources" du fichier de style au format JSON. Si la couche est de type customlayer, le style n'est pas défini ici.
 * ``styleurl`` :guilabel:`studio` : pour les couches de type vector-tms uniquement, il indique l'URL vers le fichier de style au format JSON.
 * ``styletitle`` :guilabel:`studio` : Titres à utiliser pour la liste des styles associés.
@@ -112,7 +114,16 @@ Paramètres pour gérer l'affichage de la couche
 * ``dynamiclegend`` :guilabel:`studio` : Booléen précisant si la légende est liée à l'échelle de la carte et si elle nécessite d'être actualisée à chaque changement d'échelle de la carte.
 * ``exclusive`` :guilabel:`studio` :  Booléen stipulant si la couche est exclusive. Si la valeur est "true", l'affichage de cette couche masquera automatiquement toutes les autres couches ayant ce paramètre activé.
 * ``legendurl`` :guilabel:`studio` : Url permettant de récupérer la légende. Si non défini, c'est un GetLegendGraphic qui est effectué.
-* ``filter`` :guilabel:`studio` : Expression CQL permettant de filtrer la couche ex: insee=35000 Ou INTERSECT(the_geom, POINT (-74.817265 40.5296504)) (http://docs.geoserver.org/stable/en/user/tutorials/cql/cql_tutorial.html#cql-tutorial).
+* ``servertype``: Permet d'indiquer le serveur de la couche (valeurs possibles : qgis|geoserver|ogc) pour la syntaxe du paramètre `filter`. `geoserver` par défaut.
+* ``filter``: Expression pour ajouter un filtre WMS (CQL ou Qgis Filter ou OGC). Les expressions OGC Filter Encoding fonctionnent avec le servertype `ogc` (https://www.ogc.org/standards/filter/)
+
+        * ``Avec GeoServer``: Par défaut si `servertype` absent, l'expression doit être du CQL. Ex: insee=35000 Ou INTERSECT(the_geom, POINT (-74.817265 40.5296504)) (http://docs.geoserver.org/stable/en/user/tutorials/cql/cql_tutorial.html#cql-tutorial)
+        * ``Avec geOrchestra Gateway``: Les filtres CQL transmis dans l'URL doivent être encodés pour être correctement traités par la gateway Spring. Par exemple, ``CQL_FILTER=CODE_INSEE_DU_DEPARTEMENT='77'`` doit être transmis sous la forme ``CQL_FILTER=CODE_INSEE_DU_DEPARTEMENT%3D%2777%27``.
+        * ``Avec Qgis Server``: L'expression doit être compatible Qgis Filter. Ex: countries:"name" = 'France' (http://docs.geoserver.org/stable/en/user/tutorials/cql/cql_tutorial.html#cql-tutorial)
+        * ``Avec MapServer``: L'expression doit être compatible OGC Filter Encoding. Ex: <Filter><PropertyIsEqualTo><PropertyName>NAME</PropertyName><Literal>Halifax</Literal></PropertyIsEqualTo></Filter> (https://mapserver.org/ogc/filter_encoding.html#tests)
+
+        * ``Echappement``: Dans tous les cas, l'expression devra être échapée  (https://www.w3.org/TR/xml/#syntax) !
+
 * ``filterstyle`` :guilabel:`studio` : pour les couches de type vector-tms uniquement. Il permet de ne pas conserver, dans le style, la représentation de certaines couches. Cela permet donc de ne pas représenter un type de données présent dans le flux tuilé vectoriel. Il faut indiquer ici le nom d'une ou de plusieurs couches référencées dans la propriété "source-layer" du fichier de style au format JSON. Lorsque plusieurs couches sont à ajouter, le séparateur est la virgule et sans espace.
 * ``toplayer`` :guilabel:`studio` : Booléan stipulant si la couche est affichée au premier plan sur la carte. La valeur par défaut est false. Si plusieurs couches sont en toplayer, elles seront affichées dans l’ordre d’écriture du XML.
 * ``expanded`` :guilabel:`studio` : Booléan précisant si le panneau de la couche est agrandi au démarrage. La valeur par défaut est false.
@@ -172,7 +183,16 @@ Plus d'informations sur le type de couche OGC SensorThings :
 Paramètres pour les couches non WMS
 =======================================
 
-* ``type``: Type de la couche (wms|geojson|kml|vector-tms|sensorthings|customlayer|import) default=wms. Si customlayer est défini, il faut instancier un Layer OpenLayers dans un fichier javascript ayant pour nom l'id de la couche (voir ":ref:`configfuse`"). Ce fichier js doit être placé dans le répertoire customlayers/. Pour le type import l'extension `fileimport` doit être activée.
+* ``type``: Type de la couche (wms|geojson|kml|vector-tms|sensorthings|customlayer|import|csv) default=wms.
+    * ``wms`` : couche WMS classique (OGC).
+    * ``geojson`` : couche vectorielle au format GeoJSON.
+    * ``kml`` : couche vectorielle au format KML.
+    * ``vector-tms`` : couche vectorielle au format tuilé vectoriel (VectorTile) avec un style au format JSON.
+    * ``csv`` : couche vectorielle au format CSV. L'encodage par défaut est UTF-8 et peut être modifié avec l'attribut ``encoding``. Certains CSV peuvent utiliser une authentification (e.g grist et le mode secure="apikey" à utiliser de préférence avec un proxy !)
+    * ``sensorthings`` : couche de type OGC SensorThings.
+    * ``customlayer`` : couche vectorielle personnalisée. Si customlayer est défini, il faut instancier un Layer OpenLayers dans un fichier javascript ayant pour nom l'id de la couche (voir ":ref:`configfuse`"). Ce fichier js doit être placé dans le répertoire customlayers/.
+    * ``import`` : couche vectorielle importée par l'utilisateur. Le format de la couche importée peut être GeoJSON, KML ou GPX. Le style de la couche importée est défini dans le fichier featurestyles.js. L’extension fileimport doit être obligatoirement activée.
+* ``encoding`` : Encodage du fichier pour les couches de type ``csv``. Si cet attribut est absent ou vide, le fichier est lu avec ``response.text()``, qui décode toujours en UTF-8, indépendamment de l'encodage du système et du charset indiqué dans l'en-tête HTTP ``Content-Type``. Si cet attribut est renseigné, utiliser un encodage reconnu par ``TextDecoder``, par exemple ``utf8``, ``windows-1252`` ou ``iso-8859-1``. Exemple : ``<layer type="csv" encoding="windows-1252" ...></layer>``.
 * ``tooltip``: Pour les couches de type vecteur uniquement. Booléen précisant si les entités de la couche sont affichées sous forme d'infobulle au survol de la souris. (Les infobulles ne fonctionnent qu'avec une seule couche à la fois). Valeur par défaut = false.
 * ``tooltipenabled``: Précise la couche prioritaire pour l'affichage des infobulles.
 * ``tooltipcontent``: Chaîne de caractères décrivant l'information à afficher dans les infobulles. Cette chaîne contient soit le nom d'un champ de la couche soit un template Mustache (code html) combinant plusieurs noms de champs. Exemple : ``tooltipcontent="{{name}} - ({{city}})"``.
@@ -205,11 +225,12 @@ Paramètres pour gérer le filtre attributaire (liste déroulante) des couches W
 * ``attributefilter`` :guilabel:`studio` :  Booléen précisant si on active la sélection attributaire par menu déroulant.
 * ``attributefield`` :guilabel:`studio` : Nom du champ à utiliser avec le contrôle attributefilter.
 * ``attributevalues`` :guilabel:`studio` : Valeurs de la sélection attributaire séparées par des virgules.
-* ``attributelabel``:  Texte à afficher pour chaque atttribut de la liste déroulante associée.
+* ``attributealias``:  Noms affichsé dans la carte pour chaque valeur attributaire séparées par des virgules. [optionnel]
+* ``attributelabel``:  Titre donnée à la liste des filtres.
 * ``attributestylesync``: Booléen qui précise s'il convient d'appliquer un style (sld) spécifique lors du filtre attributaire. Dans ce cas la convention est la suivante : nom_style@attributevalue ou url_style_externe@attributevalue.sld.
 * ``attributefilterenabled``: Booléen précisant si le filtre est activé par défaut (avec la première valeur de la liste attributevalues). Si cette option n'est pas activée, une valeur "Par défaut" apparaît dans la liste et ne filtre pas les données. Valeur par défaut = false.
-* ``attributeoperator`` : Opérateur utilisé pour construire le filtre. (= ou like). Defaut = "=". Attention dans le cas de like, le wildcard est harcodé : %
-* ``wildcardpattern`` : Pattern à utiliser pour les filtre utilisant l'opérateur like. Defaut = "%value%, autres possibilités "%value" et "value%".
+* ``attributeoperator`` : Opérateur utilisé pour construire le filtre OGC (XML) : ``=``, ``like``, ``<``, ``>``, ``<=``, ``>=``, ``!=``. Defaut = ``=``. Par défaut, la comparaison est insensible à la casse.
+* ``wildcardpattern`` : Pattern à utiliser pour les filtres utilisant l'opérateur ``like``. Defaut = ``%value%``. Autres possibilités : ``%value`` et ``value%``.
 
 Si vous souhaitez effectuer un filtre sur plusieurs couches, voir :ref:`configcustomcontrol`
 
@@ -230,14 +251,85 @@ Autres paramètres
     * ``public`` : (ou paramètre absent), l'accès à la couche est public
     * ``global`` : l'accès à la couche est contrainte par le CAS geoserver. Un test est effectué pour savoir si la couche est accessible. Si ce n'est pas le cas, la couche est retirée du panneau et de la carte.
     * ``layer`` : l'accès à la couche nécessite une authentification sur le service (WMS). Un bouton "cadenas" est ajouté dans la légende pour cette couche. Au clic sur ce bouton, un formulaire est affiché permettant de saisir des identifiants d'accès qui seront envoyés à chaque appel au service.
+    * ``apikey`` : l'accès à la couche nécessite une authentification via une clé API. Un bouton "cadenas" est ajouté dans la légende pour cette couche. Au clic sur ce bouton, un formulaire est affiché permettant de saisir la clé API qui sera envoyée à chaque appel au service.
 
 * ``authorization`` : Permet d'indiquer des identifiants par défaut si secure est à "layer"
 * ``useproxy`` :guilabel:`studio` : Booléen précisant s'il faut passer par le proxy ajax (nécessaire pour fixer les erreurs de crossOrigin lorsque CORS n'est pas activé sur le serveur distant.
 * ``owsoptions`` : Pour une couche WMS, permet de forcer certains paramètres des requêtes GetMap. Exemple : "VERSION:1.1.1,EXCEPTIONS:application/vnd.ogc.se_inimage".
+* ``owslegendoptions`` : Pour une couche WMS, Permet de personnaliser certains paramètres des requêtes GetLegend. Exemple Qgis serveur : "LAYERTITLE:false,ITEMFONTSIZE:15".
 * ``infopanel`` : Permet d'indiquer quel panel d'interrogation utiliser parmis top-panel ou bottom-panel ou modal-panel. Exemple: `infopanel="bottom-panel"`.
 
+Zoom sur le paramétrage d'une couche provenant de Grist
+=======================================================
+
+Une couche Grist est exposée sous forme de CSV. Si le document n'est pas public, la couche doit utiliser ``secure="apikey"``.
+Le cadenas affiché dans la légende ouvre un formulaire de saisie de la clé API. La clé est ensuite conservée dans le stockage de session du navigateur et les requêtes CSV utilisent l'en-tête ``Authorization: Bearer <clé-api>``.
+
+De l'autre côté, le serveur qui héberge Grist doit autoriser les requêtes CORS provenant de l'application.
+Si ce n'est pas le cas, vous pouvez utiliser un proxy (e.g Nginx).
+
+L'exemple ci-dessous utilise un proxy inverse Nginx servi sous le chemin ``/grist/``.
+Le paramètre ``useproxy="true"`` redirige l'URL Grist vers le proxy défini via ``<proxy>``.
+L'attribut ``url`` de la couche reste l'URL Grist d'origine.
+
+.. code-block:: xml
+
+       <proxy url="https://mon-proxy.exemple/grist/"/>
+
+.. code-block:: xml
+       :linenos:
+
+       <layer type="csv" id="csvType" name="Couche Grist"
+           encoding="utf8"
+           visible="true"
+           queryable="true"
+           useproxy="true"
+           secure="apikey"
+           xfield="LONGITUDE"
+           yfield="LATITUDE"
+           srs="EPSG:4326"
+           tooltipcontent="{{CODE_FINESS}}"
+           url="https://grist.numerique.gouv.fr/o/docs/api/docs/<id_doc>/download/csv?viewSection=4&amp;tableId=<id_table>"
+           tooltip="true"
+           searchable="true"
+           searchengine="fuse"
+           fusesearchkeys="nom,adresse"
+           fusesearchresult="{{CODE_FINESS}}">
+       </layer>
+
+Avec cette configuration, la requête suivante :
+
+.. code-block:: text
+
+       https://grist.numerique.gouv.fr/o/docs/api/docs/<id_doc>/download/csv?tableId=<id_table>
+
+est appelée par le navigateur via :
+
+.. code-block:: text
+
+       https://mywebsite/grist/o/docs/api/docs/<id_doc>/download/csv?viewSection=4&tableId=<id_table>
+
+Le proxy doit transmettre l'en-tête d'autorisation à Grist. Voici un exemple minimal de configuration Nginx :
+
+.. code-block:: nginx
+
+       location /grist/ {
+           proxy_pass https://grist.numerique.gouv.fr/;
+           proxy_ssl_server_name on;
+           proxy_set_header Host grist.numerique.gouv.fr;
+           proxy_set_header Authorization $http_authorization;
+       }
+
+Si mviewer et le proxy sont sur des origines différentes, le proxy doit aussi retourner les en-têtes CORS appropriés, notamment :
+
+* ``Access-Control-Allow-Origin``
+* ``Access-Control-Allow-Headers`` (incluant ``Authorization``).
+
+Pour un usage local, l'origine doit correspondre exactement à celle de mviewer (par exemple ``http://localhost:5051``).
+Vous pouvez aussi utiliser ``*`` pour autoriser toutes les origines, mais cette syntaxe n'est pas recommandé pour un usage en production.
+
 Zoom sur le paramétrage de gestion de l'ordre d'affichage des couches
-====================
+=====================================================================
 
 .. code-block:: xml
        :linenos:
@@ -248,8 +340,11 @@ Par défaut, les couches sont affichées sur la carte par ordre d'appararition d
 L'utilisateur a la possibilité d'utiliser les paramètres suivants pour forcer l'affichage au démarrage de l'application :
 
 * ``toplayer`` :guilabel:`studio` : Ce paramètre va forcer l'affichage de la couche au dessus des autres couches.
-Si plusieurs toplayers sont renseignés dans le fichier de configuration, toutes les toplayers seront au dessus et selon l'ordre d'apparition dans la configuration XML.
+
 Si une couche a un toplayer et un index de renseigné, l'index est ignoré.
+
+Si plusieurs toplayers sont renseignés dans le fichier de configuration, l'ordre d'affichage est inversé par rapport à l'ordre d'apparition dans le XML. Ce fonctionnement correspond à une logique d'empilement.
+La première couche est ajouté sur la carte, la seconde ensuite par dessus et ainsi de suite...
 
 * ``index`` :guilabel:`studio` : L'objectif de ce paramètre est donc d'afficher la légende de façon identique à l'affichage sur la carte à l'initialisation de la carte.
 
@@ -268,14 +363,15 @@ Si deux couches ont le même index dans un même fichier de configuration XML, p
 
 * ``showintoc`` :guilabel:`studio`
 
-Avec ce paramètre renseigné, les paramètres index et toplayer sont également pris en compte pour l'affichage sur la carte.
+Ce paramètre est fonctionnel avec les paramètres index ou toplayer car il ne gère pas l'ordre sur la carte. Il impactera l'affichage de la couche dans TOC ou dans la légende car la couche ne sera affichée que sur la carte et nulle part ailleurs. 
 
 .. code-block:: xml
        :linenos:
 
 	   <layer   index="1" />
-           <layer   index="2" toplayer="true" showintoc="true"/>
-           <layer   index="3" />
+           <layer   index="2" showintoc="true"/>
+           <layer   toplayer="true" showintoc="true"/>
+           <layer   index="4" />
 
 * couches sans index, sans toplayer, sans showintoc
 
@@ -289,7 +385,7 @@ Avec ce paramètre renseigné, les paramètres index et toplayer sont également
            <layer />
 
 Pour le cas primaire où aucun paramètre n'est renseigné, c'est l'ordre d'apparition dans le fichier de configuration XML qui permet de définir l'ordre d'affichage des couches au démarrage.
-Dans le cas où une configuration XML comprend des couches avec le paramètre `index` et / ou `toplayer` et des couches sans aucun de ces paramètres, alors les couches sans paramètre respectent ce principe.
+Dans le cas où une configuration XML comprend des couches avec le paramètre `index` ou `toplayer` et des couches sans aucun de ces paramètres, alors les couches sans paramètre respectent ce principe.
 
 On retrouvera donc en premier les toplayer, ensuite les couches avec index et enfin les couches sans index.
 Pour rappel, les couches avec un index en doublon et placée en seconde position dans le XML sont considérée sans index et sont concernées par ce mécanisme d'affichage. Elles s'afficheront donc selon les autres couches sans paramètres dans l'ordre d'apparition dans XML.
@@ -312,5 +408,3 @@ Cet élément optionnel, permet d'associer un template type Mustache (https://gi
 **Paramètres**
 
 * ``url`` :guilabel:`studio` : paramètre obligatoire de type url qui indique l'emplacement du template à utiliser.
-
-

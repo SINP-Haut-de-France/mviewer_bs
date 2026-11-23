@@ -5,7 +5,7 @@ var utils = (function () {
 
   /**
    * Public Method: lonlat2osmtile
-   * from http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Zoom_levels
+   * from https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Zoom_levels
    *
    */
   //Not used but great
@@ -18,30 +18,11 @@ var utils = (function () {
         2) *
         Math.pow(2, zoom)
     );
-    var osmtile = "http://tile.openstreetmap.org/" + zoom + "/" + x + "/" + y + ".png";
+    var osmtile = "https://tile.openstreetmap.org/" + zoom + "/" + x + "/" + y + ".png";
     return osmtile;
   };
 
   var _tests = {};
-
-  _tests.sld = function (layers) {
-    var regexp = /^(?:http(s)?:\/\/)?[\w-./@]+.(sld|SLD)$/i;
-    var test = 1;
-    layers.forEach(function (layer) {
-      if (layer && layer.sld) {
-        var name = layer.name;
-        var slds = layer.sld.split(",");
-        slds = slds.map((sld) => configuration.renderEnvPath(sld));
-        slds.forEach(function (sld, i) {
-          if (!regexp.test(sld)) {
-            test = 0;
-            console.log("sld " + sld + "\nnon valide pour la couche " + name);
-          }
-        });
-      }
-    });
-    return test;
-  };
 
   _tests.wildcardpattern = function (layers) {
     var test = 1;
@@ -59,7 +40,7 @@ var utils = (function () {
         if (!allowedwilcards.includes(wildcards)) {
           test = 0;
           console.log(
-            "pattern " + layer.wildcardpattern + "\nnon valide pour la couche " + name
+            `pattern ${layer.wildcardpattern}\nnon valide pour la couche ${name}`
           );
         }
       }
@@ -75,12 +56,7 @@ var utils = (function () {
           if (theme.icon.indexOf(" ") === -1) {
             test = 0;
             console.log(
-              "Problème Icone thématique " +
-                theme.name +
-                " : " +
-                theme.icon +
-                "\nnotation dépréciée avec font-awesome 5.6.3. Utiliser une notation du type 'fas fa-" +
-                theme.icon
+              `Problème Icone thématique ${theme.name} : ${theme.icon}\nnotation dépréciée avec font-awesome 5.6.3. Utiliser une notation du type 'fas fa-${theme.icon}`
             );
           }
         }
@@ -99,7 +75,7 @@ var utils = (function () {
           duplicates.push(name);
         } else {
           test = 0;
-          console.log("doublon " + name + " in layers");
+          console.log(`doublon ${name} in layers`);
         }
       }
     });
@@ -116,7 +92,7 @@ var utils = (function () {
     });
     if (visibleBaseLayers !== 1) {
       test = 0;
-      console.log(visibleBaseLayers + " baselayer(s) visible(s)");
+      console.log(`${visibleBaseLayers} baselayer(s) visible(s)`);
     }
     return test;
   };
@@ -153,7 +129,7 @@ var utils = (function () {
     nbtests += 1;
 
     // test validité sld
-    score += _tests.sld(layers);
+    score += utils.testSld(layers);
     nbtests += 1;
 
     // test validité pattern like operator
@@ -165,7 +141,7 @@ var utils = (function () {
     nbtests += 1;
 
     //Résultats tests
-    console.log("tests config :" + (score / nbtests === 1));
+    console.log(`tests config :${score / nbtests === 1}`);
   };
 
   var _initWMTSMatrixsets = function (projection) {
@@ -176,11 +152,11 @@ var utils = (function () {
     for (var z = 0; z < 22; ++z) {
       // generate resolutions and matrixIds arrays for this GEOSERVER WMTS
       _WMTSTileResolutions["EPSG:3857"][z] = size / Math.pow(2, z);
-      _WMTSTileMatrix["EPSG:3857"][z] = "EPSG:3857:" + z;
+      _WMTSTileMatrix["EPSG:3857"][z] = `EPSG:3857:${z}`;
       _WMTSTileResolutions["EPSG:4326"][z] = size / Math.pow(2, z);
-      _WMTSTileMatrix["EPSG:4326"][z] = "EPSG:4326:" + z;
+      _WMTSTileMatrix["EPSG:4326"][z] = `EPSG:4326:${z}`;
       _WMTSTileResolutions["EPSG:2154"][z] = size / Math.pow(2, z);
-      _WMTSTileMatrix["EPSG:2154"][z] = "EPSG:2154:" + z;
+      _WMTSTileMatrix["EPSG:2154"][z] = `EPSG:2154:${z}`;
     }
     for (var z = 0; z < 20; ++z) {
       // generate resolutions and matrixIds arrays for this GEOPORTAIL WMTS
@@ -239,6 +215,120 @@ var utils = (function () {
     return template_url;
   };
 
+  var _warnedProjectionPairs = {};
+
+  /**
+   * Resolve a projection from an OpenLayers projection instance or a projection code.
+   * @param {ol.proj.Projection|string|null|undefined} projectionLike
+   * @returns {ol.proj.Projection|null}
+   */
+  var _resolveProjection = function (projectionLike) {
+    if (!projectionLike) {
+      return null;
+    }
+
+    if (typeof projectionLike.getCode === "function") {
+      return projectionLike;
+    }
+
+    if (typeof projectionLike === "string") {
+      return ol.proj.get(projectionLike) || null;
+    }
+
+    return null;
+  };
+
+  /**
+   * Warn once when a projection transformation cannot be applied because a projection is missing.
+   * @param {ol.proj.Projection|string|null|undefined} source
+   * @param {ol.proj.Projection|string|null|undefined} destination
+   * @returns {void}
+   */
+  var _warnProjectionFallback = function (source, destination) {
+    var sourceCode =
+      source && typeof source.getCode === "function"
+        ? source.getCode()
+        : source || "unknown";
+    var destinationCode =
+      destination && typeof destination.getCode === "function"
+        ? destination.getCode()
+        : destination || "unknown";
+    var key = [sourceCode, destinationCode].join("->");
+
+    if (_warnedProjectionPairs[key]) {
+      return;
+    }
+
+    _warnedProjectionPairs[key] = true;
+    console.warn(
+      `Projection transformation skipped because a projection is not registered: ${key}`
+    );
+  };
+
+  /**
+   * Transform coordinates only when both projections are registered.
+   * Falls back to a shallow copy of the original coordinates otherwise.
+   * @param {Array<number>} coordinate
+   * @param {ol.proj.Projection|string|null|undefined} source
+   * @param {ol.proj.Projection|string|null|undefined} destination
+   * @returns {Array<number>}
+   */
+  var _transformCoordinateSafe = function (coordinate, source, destination) {
+    var resolvedSource = _resolveProjection(source);
+    var resolvedDestination = _resolveProjection(destination);
+
+    if (!resolvedSource || !resolvedDestination) {
+      _warnProjectionFallback(source, destination);
+      return coordinate && coordinate.slice ? coordinate.slice() : coordinate;
+    }
+
+    return ol.proj.transform(coordinate, resolvedSource, resolvedDestination);
+  };
+
+  /**
+   * Transform an extent only when both projections are registered.
+   * Falls back to a shallow copy of the original extent otherwise.
+   * @param {ol.Extent} extent
+   * @param {ol.proj.Projection|string|null|undefined} source
+   * @param {ol.proj.Projection|string|null|undefined} destination
+   * @returns {ol.Extent}
+   */
+  var _transformExtentSafe = function (extent, source, destination) {
+    var resolvedSource = _resolveProjection(source);
+    var resolvedDestination = _resolveProjection(destination);
+
+    if (!resolvedSource || !resolvedDestination) {
+      _warnProjectionFallback(source, destination);
+      return extent && extent.slice ? extent.slice() : extent;
+    }
+
+    return ol.proj.transformExtent(extent, resolvedSource, resolvedDestination);
+  };
+
+  /**
+   * Transform a geometry clone only when both projections are registered.
+   * Falls back to a cloned geometry without reprojection otherwise.
+   * @param {ol.geom.Geometry} geometry
+   * @param {ol.proj.Projection|string|null|undefined} source
+   * @param {ol.proj.Projection|string|null|undefined} destination
+   * @returns {ol.geom.Geometry}
+   */
+  var _transformGeometrySafe = function (geometry, source, destination) {
+    if (!geometry) {
+      return geometry;
+    }
+
+    var resolvedSource = _resolveProjection(source);
+    var resolvedDestination = _resolveProjection(destination);
+
+    if (!resolvedSource || !resolvedDestination) {
+      _warnProjectionFallback(source, destination);
+      return geometry.clone();
+    }
+
+    return geometry.clone().transform(resolvedSource, resolvedDestination);
+  };
+
   return {
     lonlat2osmtile: _lonlat2osmtile,
     testConfiguration: _testConfiguration,
@@ -248,5 +338,9 @@ var utils = (function () {
     calculateZoomExtent: _calculateZoomExtent,
     zoomToFeaturesExtent: _zoomToFeaturesExtent,
     getTemplateUrl: _getTemplateUrl,
+    resolveProjection: _resolveProjection,
+    transformCoordinateSafe: _transformCoordinateSafe,
+    transformExtentSafe: _transformExtentSafe,
+    transformGeometrySafe: _transformGeometrySafe,
   };
 })();
