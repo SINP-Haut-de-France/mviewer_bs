@@ -1,5 +1,5 @@
 {
-  "CURRENT_ENV": "PREPROD",
+  "CURRENT_ENV": "DEV",
   "VERSION": "1.0.2.3",
   "EXTERNAL_LAYERS_OBS": [
     { "id": "Patrinat_APB_France", "label": "APPB" },
