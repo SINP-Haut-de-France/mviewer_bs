@@ -1,7 +1,16 @@
 name: "Publish SINP HDF to sinp-hdf/sinp_hdf (manual)"
 
+# Aucun rebuild : on republie le package de test déjà validé (release 1.0.X.XX
+# de ce dépôt) sous le tag 1.0.X du dépôt cible, et on y pousse le code
+# correspondant à ce tag.
+
 on:
   workflow_dispatch:
+    inputs:
+      source_tag:
+        description: "Tag de test à publier (ex: 1.0.2.8). Vide = dernier tag 1.0.X.XX"
+        required: false
+        default: ""
 
 env:
   TARGET_REPO: sinp-hdf/sinp_hdf
@@ -12,62 +21,66 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     concurrency: publish-sinp-hdf
-    env:
-      # PAT du compte propriétaire de sinp-hdf/sinp_hdf (scopes: repo)
-      GH_TOKEN: ${{ secrets.GH_TOKEN_SINP_HDF }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Compute release tag (3 premiers chiffres de package.json)
-        id: tag
+      - name: Resolve source tag and release tag
+        id: tags
+        env:
+          INPUT_TAG: ${{ inputs.source_tag }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN_SINP_HDF }}
         run: |
           set -euo pipefail
           [ -n "${GH_TOKEN:-}" ] || { echo "::error::secret GH_TOKEN_SINP_HDF manquant"; exit 1; }
-          v=$(node -p "require('./apps/sinp_hdf/package.json').version")
-          tag=$(echo "${v#v}" | cut -d. -f1-3)
-          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
-          echo "Release tag: ${tag}"
+          src="${INPUT_TAG#v}"
+          if [ -z "$src" ]; then
+            src=$(git tag -l | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+          fi
+          [ -n "$src" ] || { echo "::error::aucun tag de test 1.0.X.XX trouvé"; exit 1; }
+          git rev-parse -q --verify "refs/tags/${src}" >/dev/null \
+            || { echo "::error::tag ${src} introuvable"; exit 1; }
+          rel=$(echo "$src" | cut -d. -f1-3)
+          echo "src=${src}"  >> "$GITHUB_OUTPUT"
+          echo "rel=${rel}"  >> "$GITHUB_OUTPUT"
+          echo "Package de test ${src} -> release ${rel} dans ${TARGET_REPO}"
 
-      - name: Build package
-        working-directory: apps/sinp_hdf
+      - name: Download validated test package
         env:
-          NODE_ENV: production
+          GH_TOKEN: ${{ github.token }}
+          SRC: ${{ steps.tags.outputs.src }}
         run: |
-          npm ci --prefer-offline --no-audit --progress=false
-          npm run build:dist
-          tar -czf "$GITHUB_WORKSPACE/${ASSET_NAME}" -C dist sinp_hdf
+          gh release download "$SRC" --repo "$GITHUB_REPOSITORY" \
+            --pattern "$ASSET_NAME" --dir "$RUNNER_TEMP"
+          ls -la "$RUNNER_TEMP/$ASSET_NAME"
 
-      - name: Push apps/sinp_hdf (subtree) to target repo
+      - name: Push apps/sinp_hdf (code du tag de test) to target repo
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN_SINP_HDF }}
+          SRC: ${{ steps.tags.outputs.src }}
         run: |
           set -euo pipefail
+          git checkout -q "refs/tags/${SRC}"
           git subtree split --prefix=apps/sinp_hdf -b sinp-hdf-split
           git push "https://x-access-token:${GH_TOKEN}@github.com/${TARGET_REPO}.git" \
             "sinp-hdf-split:refs/heads/${TARGET_BRANCH}"
 
-      - name: Create/update release in target repo
+      - name: Create or update release in target repo
         env:
-          TAG: ${{ steps.tag.outputs.tag }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN_SINP_HDF }}
+          SRC: ${{ steps.tags.outputs.src }}
+          REL: ${{ steps.tags.outputs.rel }}
         run: |
           set -euo pipefail
-          ASSET="$GITHUB_WORKSPACE/${ASSET_NAME}"
-          notes="Release ${TAG} (source: ${GITHUB_REPOSITORY}@${GITHUB_SHA::7}, run ${GITHUB_RUN_ID})"
-          if gh release view "$TAG" --repo "$TARGET_REPO" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$ASSET" --repo "$TARGET_REPO" --clobber
+          ASSET="$RUNNER_TEMP/$ASSET_NAME"
+          notes="Release ${REL} (package de test ${SRC}, source: ${GITHUB_REPOSITORY}, run ${GITHUB_RUN_ID})"
+          if gh release view "$REL" --repo "$TARGET_REPO" >/dev/null 2>&1; then
+            gh release upload "$REL" "$ASSET" --repo "$TARGET_REPO" --clobber
+            gh release edit "$REL" --repo "$TARGET_REPO" --notes "$notes"
           else
-            gh release create "$TAG" "$ASSET" --repo "$TARGET_REPO" \
-              --target "$TARGET_BRANCH" --title "$TAG" --notes "$notes"
+            gh release create "$REL" "$ASSET" --repo "$TARGET_REPO" \
+              --target "$TARGET_BRANCH" --title "$REL" --notes "$notes"
           fi
-          if gh release view Latest --repo "$TARGET_REPO" >/dev/null 2>&1; then
-            gh release upload Latest "$ASSET" --repo "$TARGET_REPO" --clobber
-            gh release edit Latest --repo "$TARGET_REPO" --notes "Latest = ${TAG}"
-          else
-            gh release create Latest "$ASSET" --repo "$TARGET_REPO" \
-              --target "$TARGET_BRANCH" --title Latest --notes "Latest = ${TAG}"
-          fi
+          echo "https://github.com/${TARGET_REPO}/releases/tag/${REL}"
