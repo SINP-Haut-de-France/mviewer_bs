@@ -1,0 +1,73 @@
+name: "Publish SINP HDF to sinp-hdf/sinp_hdf (manual)"
+
+on:
+  workflow_dispatch:
+
+env:
+  TARGET_REPO: sinp-hdf/sinp_hdf
+  TARGET_BRANCH: main
+  ASSET_NAME: sinp_hdf.tar.gz
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    concurrency: publish-sinp-hdf
+    env:
+      # PAT du compte propriétaire de sinp-hdf/sinp_hdf (scopes: repo)
+      GH_TOKEN: ${{ secrets.GH_TOKEN_SINP_HDF }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Compute release tag (3 premiers chiffres de package.json)
+        id: tag
+        run: |
+          set -euo pipefail
+          [ -n "${GH_TOKEN:-}" ] || { echo "::error::secret GH_TOKEN_SINP_HDF manquant"; exit 1; }
+          v=$(node -p "require('./apps/sinp_hdf/package.json').version")
+          tag=$(echo "${v#v}" | cut -d. -f1-3)
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "Release tag: ${tag}"
+
+      - name: Build package
+        working-directory: apps/sinp_hdf
+        env:
+          NODE_ENV: production
+        run: |
+          npm ci --prefer-offline --no-audit --progress=false
+          npm run build:dist
+          tar -czf "$GITHUB_WORKSPACE/${ASSET_NAME}" -C dist sinp_hdf
+
+      - name: Push apps/sinp_hdf (subtree) to target repo
+        run: |
+          set -euo pipefail
+          git subtree split --prefix=apps/sinp_hdf -b sinp-hdf-split
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${TARGET_REPO}.git" \
+            "sinp-hdf-split:refs/heads/${TARGET_BRANCH}"
+
+      - name: Create/update release in target repo
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          ASSET="$GITHUB_WORKSPACE/${ASSET_NAME}"
+          notes="Release ${TAG} (source: ${GITHUB_REPOSITORY}@${GITHUB_SHA::7}, run ${GITHUB_RUN_ID})"
+          if gh release view "$TAG" --repo "$TARGET_REPO" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ASSET" --repo "$TARGET_REPO" --clobber
+          else
+            gh release create "$TAG" "$ASSET" --repo "$TARGET_REPO" \
+              --target "$TARGET_BRANCH" --title "$TAG" --notes "$notes"
+          fi
+          if gh release view Latest --repo "$TARGET_REPO" >/dev/null 2>&1; then
+            gh release upload Latest "$ASSET" --repo "$TARGET_REPO" --clobber
+            gh release edit Latest --repo "$TARGET_REPO" --notes "Latest = ${TAG}"
+          else
+            gh release create Latest "$ASSET" --repo "$TARGET_REPO" \
+              --target "$TARGET_BRANCH" --title Latest --notes "Latest = ${TAG}"
+          fi
