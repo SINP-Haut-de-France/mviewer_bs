@@ -64,7 +64,8 @@ jobs:
           set -euo pipefail
           git checkout -q "refs/tags/${SRC}"
           git subtree split --prefix=apps/sinp_hdf -b sinp-hdf-split
-          git push "https://x-access-token:${GH_TOKEN}@github.com/${TARGET_REPO}.git" \
+          # Le dépôt cible est un miroir de apps/sinp_hdf : on écrase sa branche.
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${TARGET_REPO}.git" \
             "sinp-hdf-split:refs/heads/${TARGET_BRANCH}"
 
       - name: Create or update release in target repo
